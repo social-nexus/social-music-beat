@@ -1,6 +1,6 @@
 # Social Sound Beat
 
-Ferramenta **local** para Windows que:
+Ferramenta **local** para Windows, Linux e macOS que:
 
 1. **Cria uma música cantada** a partir da sua letra e de um estilo (motor: [ACE-Step 1.5](https://github.com/ACE-Step/ACE-Step-1.5));
 2. **Separa voz e instrumental** (separador: [Demucs](https://github.com/facebookresearch/demucs));
@@ -15,13 +15,16 @@ Tudo roda no seu computador. A internet só é usada na instalação, para baixa
 
 ## Requisitos
 
-- Windows, com placa NVIDIA e drivers atualizados
-- Python 3.11 (marque **Add python.exe to PATH** na instalação)
+- **Windows, Linux ou macOS**
+- Placa NVIDIA com drivers atualizados (Windows e Linux). No Mac com chip Apple, o ACE-Step usa o backend MLX; consulte o [ACE-Step](https://github.com/ACE-Step/ACE-Step-1.5) para os requisitos atuais.
+- Python 3.11 (no Windows, marque **Add python.exe to PATH** na instalação)
 - Cerca de **30 GB livres** no disco (os downloads somam cerca de 20 GB)
-- Um programa para abrir arquivos `.7z`, como o [7-Zip](https://7-zip.org)
-- O pacote portátil do **ACE-Step 1.5** para Windows (veja o passo 2 abaixo). Ele **não** faz parte deste repositório.
+- **Windows:** o pacote portátil do ACE-Step 1.5 (`.7z`) e um programa para abri-lo, como o [7-Zip](https://7-zip.org). **Linux/macOS:** `git` e o [uv](https://docs.astral.sh/uv/) (o instalador baixa o ACE-Step e oferece instalar o uv).
+- O ACE-Step **não** faz parte deste repositório.
 
-## Instalação (só uma vez)
+> Os scripts de Linux e macOS são novos e foram verificados só quanto à lógica de ligar e desligar os servidores. A instalação completa neles ainda não foi testada em máquinas reais.
+
+## Instalação no Windows (só uma vez)
 
 1. **Baixe este repositório:** botão verde **Code → Download ZIP** (ou `git clone`) e extraia numa pasta de fácil acesso, por exemplo `C:\SocialSoundBeat`.
 2. **Baixe o ACE-Step:** no [GitHub do ACE-Step 1.5](https://github.com/ACE-Step/ACE-Step-1.5), use o link do pacote para Windows (`ACE-Step-1.5.7z`) e extraia em `C:\ACE-Step-1.5`. Confira que dentro dessa pasta existe o arquivo `start_api_server.bat`.
@@ -30,7 +33,27 @@ Tudo roda no seu computador. A internet só é usada na instalação, para baixa
 
 Se algum download falhar, rode o `instalar.bat` de novo: o que já foi baixado não é baixado outra vez.
 
-## Uso diário
+## Instalação no Linux e macOS (só uma vez)
+
+1. Baixe este repositório (Code → Download ZIP ou `git clone`) e extraia numa pasta, por exemplo `~/SocialSoundBeat`.
+2. Abra um terminal nessa pasta e libere a execução dos scripts:
+   ```
+   chmod +x *.sh *.command
+   ```
+   No Mac, se o sistema bloquear os `.command` ("desenvolvedor não identificado"), rode também `xattr -dr com.apple.quarantine .`.
+3. O ACE-Step fica por padrão em `~/ACE-Step-1.5` (veja o `config.sh`). Se a pasta não existir, o instalador oferece baixá-lo do GitHub.
+4. Rode `./instalar.sh` (Mac: também dá para dar duplo clique em `instalar.command`). Ele instala o ACE-Step com o `uv`, cria o ambiente do separador de voz e baixa os modelos. **Demora e baixa vários GB.**
+
+**Python 3.11:** `brew install python@3.11` no Mac, ou `sudo apt install python3.11 python3.11-venv` no Debian/Ubuntu. Sem o 3.11, o `instalar.sh` usa o `uv` para baixá-lo.
+
+**Mac com Intel:** o instalador usa PyTorch 2.2.2 no separador de voz, porque o 2.5.1 não existe para esse Mac. O ACE-Step nesse Mac pode não funcionar bem; consulte a página dele.
+
+## Uso diário (Linux e macOS)
+
+- **Ligar:** `./iniciar.sh` (Mac: duplo clique em `iniciar.command`). O motor de música e o servidor rodam em segundo plano, e a janela abre no Chrome, Edge, Brave ou Chromium, se houver; senão, no navegador padrão, em `http://localhost:8002`. Os logs ficam na pasta `logs` (`logs/acestep.log` mostra o andamento do motor).
+- **Desligar:** `./parar.sh` (Mac: `parar.command`). Fechar só a janela não desliga os motores.
+
+## Uso diário (Windows)
 
 - **Antes de ligar:** feche o ComfyUI e o servidor do [Social Sound](https://github.com/pedroibd/social-sound). A memória da placa de vídeo não dá para dois programas pesados ao mesmo tempo.
 - **Ligar:** duplo clique em `iniciar.bat`. Abrem duas janelas pretas (**não feche**) e uma janela própria do Edge em `http://localhost:8002`. Na primeira vez, o motor demora alguns minutos para ligar; um aviso amarelo aparece no topo até ficar pronto.
@@ -54,7 +77,9 @@ O arquivo [Musica-Prompt-Mestre.txt](Musica-Prompt-Mestre.txt) tem um prompt pro
 
 ```
 social-sound-beat/
-├── instalar.bat / iniciar.bat / parar.bat / config.bat
+├── instalar / iniciar / parar    .bat (Windows) · .sh e .command (Linux/macOS)
+├── config.bat / config.sh        configuração (caminho do ACE-Step)
+├── _comum.sh                     funções de apoio dos scripts Linux/macOS
 ├── helper/              servidor Python (FastAPI), separador de voz e legendas
 │   ├── server.py, legenda.py, requirements.txt
 │   ├── web/             interface já compilada
@@ -86,4 +111,4 @@ Código deste repositório sob licença [MIT](LICENSE). ACE-Step, Demucs, PyTorc
 
 **Use com responsabilidade:** use apenas letras, vozes e músicas suas ou autorizadas, não imite artistas reais e informe o uso de IA ao publicar. Leia as regras atuais da plataforma e da distribuidora antes de publicar.
 
-Autor: **Pedroibd** · Comunidade: [IA Voz e Vídeo no Discord](https://discord.gg/nEjHQzgz3d)
+Autor: **Pedoibd** · Comunidade: [IA Voz e Vídeo no Discord](https://discord.gg/nEjHQzgz3d)

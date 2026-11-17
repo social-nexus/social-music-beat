@@ -22,6 +22,7 @@ Nada abaixo está dentro deste repositório. O instalador baixa direto das fonte
 | FastAPI | MIT | fastapi.tiangolo.com |
 | Uvicorn, HTTPX | BSD-3 | uvicorn.org, python-httpx.org |
 | python-multipart | Apache-2.0 | pypi.org/project/python-multipart |
+| uv (Linux/macOS, gerenciador do ACE-Step) | MIT / Apache-2.0 | github.com/astral-sh/uv |
 | faster-whisper e CTranslate2 (opcional, legendas no modo Preciso) | MIT | github.com/SYSTRAN/faster-whisper |
 | PyAV (usado pelo faster-whisper) | BSD-3 | pypi.org/project/av |
 | Modelos Whisper (opcional) | MIT | github.com/openai/whisper |

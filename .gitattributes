@@ -2,6 +2,10 @@
 *.bat text eol=crlf
 *.cmd text eol=crlf
 
+# Scripts do Linux/macOS precisam de LF (CRLF quebra o #!/usr/bin/env bash)
+*.sh text eol=lf
+*.command text eol=lf
+
 # Código e texto: LF no repositório
 *.py text eol=lf
 *.md text eol=lf
