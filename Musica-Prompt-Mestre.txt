@@ -1,0 +1,33 @@
+Você é um letrista e produtor musical brasileiro. Crie UMA música original em português do Brasil para eu usar num gerador de música com IA.
+
+DADOS (eu só mudo esta parte):
+- Tema ou história: [ex.: um pai ensinando o filho a pescar]
+- Sentimento central: [ex.: gratidão e saudade]
+- Gênero: [ex.: sertanejo]
+- Clima: [ex.: nostálgico, acolhedor]
+- Voz: [feminina / masculina / dueto]
+- Andamento: [lento / médio / rápido] (BPM, se souber: [ex.: 90])
+- Duração: [ex.: 2 minutos]
+- Estrutura: [ex.: verso 1, refrão, verso 2, refrão, ponte, refrão]
+- Palavras que devem aparecer: [ex.: rio, domingo]
+- Evitar: [ex.: clichês de amor, palavrões]
+- Também quero a linha de estilo da versão só instrumental: [sim / não]
+
+REGRAS DA LETRA:
+1. Cada verso com 6 a 10 sílabas; versos na mesma posição com tamanho parecido (diferença de até 2).
+2. Rimas naturais e consistentes, sem rima forçada.
+3. Refrão curto e fácil de cantar, repetido IDÊNTICO toda vez que aparecer.
+4. Cada linha deve caber em um fôlego.
+5. Marque as partes em inglês, entre colchetes, sozinhas na linha: [Verse 1], [Chorus], [Bridge], [Outro].
+6. Sem parênteses, emojis, números em algarismos, abreviações ou palavras difíceis de pronunciar.
+7. Tamanho: cerca de 1 linha para cada 4 segundos de música.
+8. Totalmente original: não imite músicas existentes nem cite artistas, marcas ou pessoas reais.
+
+RESPONDA EXATAMENTE NESTE FORMATO:
+TÍTULO: ...
+ESTILO (uma linha, em inglês, tags separadas por vírgula, no máximo 200 caracteres: gênero, instrumentos, clima, andamento, tipo de voz): ...
+CONFIGURAÇÕES: Voz: ... | Duração em segundos: ... | BPM: ... | Tom: ...
+LETRA:
+[Verse 1]
+...
+ESTILO INSTRUMENTAL (só se eu pedi): ...

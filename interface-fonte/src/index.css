@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+body { margin: 0; background: #0c0c10; }
+input[type="range"] { accent-color: #ec4899; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2a2a33; border-radius: 8px; }

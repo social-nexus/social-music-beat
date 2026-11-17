@@ -1,0 +1,24 @@
+# Ambiente Python e dependências
+.venv/
+venv/
+__pycache__/
+*.pyc
+node_modules/
+
+# Dados pessoais e arquivos gerados (nunca enviar)
+helper/musicas/
+*.wav
+*.mp3
+*.flac
+*.srt
+*.lrc
+
+# Build local temporário
+interface-fonte/dist/
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

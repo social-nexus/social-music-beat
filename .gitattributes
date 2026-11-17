@@ -1,0 +1,18 @@
+# Scripts do Windows precisam de CRLF para funcionar corretamente
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Código e texto: LF no repositório
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+
+# Interface compilada: não contar nas estatísticas de linguagem
+helper/web/** linguist-generated
+helper/web/** -diff
+
+*.png binary
+*.ico binary
