@@ -1,4 +1,4 @@
-"""Social Sound Beat - servidor auxiliar.
+"""Social Music Beat - servidor auxiliar.
 Serve a interface, guarda a biblioteca de músicas, faz a ponte com o motor ACE-Step
 e separa voz e instrumental (Demucs, na CPU, para não disputar a placa de vídeo)."""
 import json
@@ -209,5 +209,5 @@ if WEB.is_dir():
 if __name__ == "__main__":
     import uvicorn
 
-    print("Social Sound Beat: abra http://localhost:8002 no navegador")
+    print("Social Music Beat: abra http://localhost:8002 no navegador")
     uvicorn.run(app, host="127.0.0.1", port=8002)

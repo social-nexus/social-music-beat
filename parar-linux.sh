@@ -5,4 +5,4 @@ AQUI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 encerrar_pidfile "$AQUI/logs/acestep.pid"
 encerrar_pidfile "$AQUI/logs/servidor.pid"
 for p in 8001 8002; do encerrar_porta "$p"; done
-echo "Social Sound Beat encerrado."
+echo "Social Music Beat encerrado."

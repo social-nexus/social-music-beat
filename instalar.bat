@@ -3,7 +3,7 @@ chcp 65001 >nul
 set HF_HUB_DISABLE_SYMLINKS_WARNING=1
 call "%~dp0config.bat"
 echo ==================================================
-echo  Social Sound Beat - instalacao completa
+echo  Social Music Beat - instalacao completa
 echo ==================================================
 if not exist "%ACESTEP_DIR%\start_api_server.bat" goto sem_acestep
 

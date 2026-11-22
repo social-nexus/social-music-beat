@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Social Sound Beat - liga o motor de musica e o servidor da interface (equivalente ao iniciar.bat)
+# Social Music Beat - liga o motor de musica e o servidor da interface (equivalente ao iniciar.bat)
 AQUI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$AQUI/_comum.sh"
 . "$AQUI/config.sh"
 mkdir -p "$AQUI/logs"
 
 if [ ! -x "$AQUI/helper/.venv/bin/python" ]; then
-  echo "O Social Sound Beat ainda nao foi instalado. Rode o instalar.sh primeiro."
+  echo "O Social Music Beat ainda nao foi instalado. Rode o instalar.sh primeiro."
   exit 1
 fi
 if [ ! -f "$ACESTEP_DIR/pyproject.toml" ]; then

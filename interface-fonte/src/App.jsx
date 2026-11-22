@@ -545,8 +545,7 @@ export default function App() {
       {/* barra lateral */}
       <aside className="hidden md:flex w-56 shrink-0 flex-col gap-1 border-r border-white/5 p-4">
         <div className="mb-6 px-2">
-          <div className="text-xl font-black tracking-tight">SOCIAL <span className="text-pink-500">SOUND</span></div>
-          <div className="text-[11px] uppercase tracking-[0.25em] text-zinc-500">Beat</div>
+          <img src="./logo.png" alt="Social Music Beat" className="w-full h-auto select-none" draggable="false" />
         </div>
         {[
           { id: "criar", label: "Criar", icon: <Sparkles size={16} /> },

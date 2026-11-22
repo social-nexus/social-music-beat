@@ -1,4 +1,4 @@
-"""Social Sound Beat - legenda (SRT e LRC) a partir de um áudio cantado e da letra.
+"""Social Music Beat - legenda (SRT e LRC) a partir de um áudio cantado e da letra.
 
 Dois modos:
   rapido  : usa só as pausas do próprio áudio (sem baixar nada). Bom para as narrações geradas aqui.

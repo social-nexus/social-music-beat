@@ -1,4 +1,4 @@
-# Social Sound Beat
+# Social Music Beat
 
 Ferramenta **local** para Windows, Linux e macOS que:
 
@@ -26,7 +26,7 @@ Tudo roda no seu computador. A internet só é usada na instalação, para baixa
 
 ## Instalação no Windows (só uma vez)
 
-1. **Baixe este repositório:** botão verde **Code → Download ZIP** (ou `git clone`) e extraia numa pasta de fácil acesso, por exemplo `C:\SocialSoundBeat`.
+1. **Baixe este repositório:** botão verde **Code → Download ZIP** (ou `git clone`) e extraia numa pasta de fácil acesso, por exemplo `C:\SocialMusicBeat`.
 2. **Baixe o ACE-Step:** no [GitHub do ACE-Step 1.5](https://github.com/ACE-Step/ACE-Step-1.5), use o link do pacote para Windows (`ACE-Step-1.5.7z`) e extraia em `C:\ACE-Step-1.5`. Confira que dentro dessa pasta existe o arquivo `start_api_server.bat`.
 3. Se extraiu o ACE-Step em outro lugar, abra o `config.bat` com o Bloco de Notas e troque o caminho da linha `set ACESTEP_DIR=`.
 4. Dê duplo clique em `instalar.bat`. Ele cria o ambiente do separador de voz, instala o Whisper (legendas modo Preciso) e baixa os modelos. **Demora e baixa vários GB.**
@@ -35,7 +35,7 @@ Se algum download falhar, rode o `instalar.bat` de novo: o que já foi baixado n
 
 ## Instalação no Linux e macOS (só uma vez)
 
-1. Baixe este repositório (Code → Download ZIP ou `git clone`) e extraia numa pasta, por exemplo `~/SocialSoundBeat`.
+1. Baixe este repositório (Code → Download ZIP ou `git clone`) e extraia numa pasta, por exemplo `~/SocialMusicBeat`.
 2. Abra um terminal nessa pasta e libere a execução dos scripts:
    ```
    chmod +x *.sh *.command
@@ -76,7 +76,7 @@ O arquivo [Musica-Prompt-Mestre.txt](Musica-Prompt-Mestre.txt) tem um prompt pro
 ## Estrutura do projeto
 
 ```
-social-sound-beat/
+social-music-beat/
 ├── instalar / iniciar / parar    .bat (Windows) · .sh e .command (Linux/macOS)
 ├── config.bat / config.sh        configuração (caminho do ACE-Step)
 ├── _comum.sh                     funções de apoio dos scripts Linux/macOS

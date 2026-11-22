@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Social Sound Beat - instalacao completa para Linux e macOS (equivalente ao instalar.bat)
+# Social Music Beat - instalacao completa para Linux e macOS (equivalente ao instalar.bat)
 set -u
 AQUI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$AQUI/_comum.sh"
@@ -14,7 +14,7 @@ perguntar() {  # perguntar "texto" -> 0 se sim (padrao sim; sem terminal, assume
 }
 
 echo "=================================================="
-echo " Social Sound Beat - instalacao completa"
+echo " Social Music Beat - instalacao completa"
 echo "=================================================="
 
 echo

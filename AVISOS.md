@@ -2,7 +2,7 @@
 
 ## 1. O que é este projeto
 
-Social Sound Beat: ferramenta local para criar música a partir de uma letra, separar voz e instrumental, criar uma banda para a sua voz e gerar legendas (SRT e LRC).
+Social Music Beat: ferramenta local para criar música a partir de uma letra, separar voz e instrumental, criar uma banda para a sua voz e gerar legendas (SRT e LRC).
 
 Foi criado com ajuda de inteligência artificial (Claude, da Anthropic) e testado só em parte. É oferecido "como está", sem garantia de funcionamento, e o uso é por conta e risco de quem usa.
 

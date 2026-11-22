@@ -1,5 +1,5 @@
 {
-  "name": "social-sound-beat-interface",
+  "name": "social-music-beat-interface",
   "private": true,
   "type": "module",
   "scripts": { "dev": "vite", "build": "vite build" },
