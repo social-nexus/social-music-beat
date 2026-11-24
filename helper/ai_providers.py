@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import platform
+import re
 from pathlib import Path
 from typing import Any
 
@@ -177,7 +178,7 @@ async def generate_with_provider(provider: str, model: str, system: str, user: s
     key = _get_key(provider)
     if not key:
         raise RuntimeError(f"Cadastre a chave de API de {PROVIDERS[provider]['name']} nas configurações de IA.")
-    if not model or len(model) > 160:
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,159}", model) or ".." in model:
         raise ValueError("Informe um identificador de modelo válido.")
     try:
         return await _request_completion(provider, model, key, system, user)
