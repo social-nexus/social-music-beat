@@ -91,7 +91,7 @@ if (Test-AceStep $installPath) {
                 Where-Object { $_.Directory.Name -in @("python_embeded","python_embedded") })
             $validRoots = @()
             foreach ($pythonFile in $pythonMatches) {
-                $candidateRoot = Split-Path (Split-Path $pythonFile.Directory.FullName -Parent) -Parent
+                $candidateRoot = Split-Path $pythonFile.Directory.FullName -Parent
                 if ((Test-Path -LiteralPath (Join-Path $candidateRoot "acestep\model_downloader.py")) -and
                     (Test-Path -LiteralPath (Join-Path $candidateRoot "start_api_server.bat"))) {
                     $validRoots += $candidateRoot
