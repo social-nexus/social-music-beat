@@ -9,7 +9,18 @@ Write-Host "Este assistente move os caches/modelos para uma pasta central."
 Write-Host "Os programas e ambientes Python permanecem onde estao."
 Write-Host ""
 
-$defaultRoot = "D:\IA_MODELS"
+$systemDrive = [IO.Path]::GetPathRoot($env:SystemRoot)
+$fixedDrives = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction SilentlyContinue |
+    Where-Object { $_.DeviceID -and $_.FreeSpace -ne $null } |
+    Sort-Object -Property FreeSpace -Descending)
+$preferredDrive = $systemDrive
+$secondaryDrive = $fixedDrives | Where-Object { ($_.DeviceID + '\') -ne $systemDrive } | Select-Object -First 1
+if ($secondaryDrive) {
+    $preferredDrive = $secondaryDrive.DeviceID + '\'
+} elseif ($fixedDrives.Count -gt 0) {
+    $preferredDrive = $fixedDrives[0].DeviceID + '\'
+}
+$defaultRoot = Join-Path $preferredDrive "IA_MODELS"
 $answer = Read-Host "Pasta central dos modelos [$defaultRoot]"
 if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $defaultRoot }
 $root = [IO.Path]::GetFullPath($answer.Trim().Trim('"')).TrimEnd('\')
@@ -136,14 +147,27 @@ function Install-AceStepJunction([string]$Source, [string]$Destination) {
         throw "A origem do ACE-Step nao pode ficar dentro da pasta central."
     }
 
-    if (Test-Path -LiteralPath $src) {
-        $sourceItem = Get-Item -LiteralPath $src -Force
-        if (($sourceItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
-            throw "A pasta $src ja e um link/junction. A operacao foi interrompida para nao alterar um redirecionamento existente."
+    New-Item -ItemType Directory -Force -Path $dst | Out-Null
+
+    # Reutiliza o Junction correto, inclusive quando o destino tinha sido apagado
+    # e acabou de ser recriado acima. Nunca remove links que apontam para outro local.
+    $sourceItem = Get-Item -LiteralPath $src -Force -ErrorAction SilentlyContinue
+    if ($sourceItem -and (($sourceItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) {
+        $targetValue = @($sourceItem.Target)[0]
+        if ([string]::IsNullOrWhiteSpace([string]$targetValue)) {
+            throw "A origem $src ja e um link, mas o Windows nao informou seu destino. Nenhum arquivo foi alterado."
         }
+        $targetFull = [IO.Path]::GetFullPath([string]$targetValue).TrimEnd('\')
+        if ($targetFull.Equals($dst, [StringComparison]::OrdinalIgnoreCase)) {
+            if (-not (Test-Path -LiteralPath $src -PathType Container)) {
+                throw "O Junction do ACE-Step aponta para $dst, mas o destino ainda nao esta acessivel."
+            }
+            Write-Host "[ACE-Step] Junction existente e destino verificado: $src -> $dst"
+            return
+        }
+        throw "A pasta $src ja e um link/junction para '$targetFull', diferente do destino escolhido '$dst'. Nenhum link foi removido."
     }
 
-    New-Item -ItemType Directory -Force -Path $dst | Out-Null
     if (Test-Path -LiteralPath $src -PathType Container) {
         $files = @(Get-ChildItem -LiteralPath $src -File -Recurse -Force -ErrorAction Stop)
         if ($files.Count -gt 0) {
@@ -199,7 +223,6 @@ function Install-AceStepJunction([string]$Source, [string]$Destination) {
         Write-Host "[ACE-Step] Junction criada para novos downloads: $src -> $dst"
     }
 }
-
 $moved = New-Object System.Collections.ArrayList
 Move-VerifiedDirectory "Qwen/Gemma (GGUF)" $llmSource (Join-Path $root "LLM") $moved
 Move-VerifiedDirectory "Whisper/Hugging Face" $hfSource (Join-Path $root "HuggingFace") $moved
