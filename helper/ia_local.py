@@ -476,6 +476,9 @@ async def import_model(request: Request, file: UploadFile = File(...)):
                 out.write(chunk)
         if total < 1024 * 1024:
             raise HTTPException(400, "O arquivo GGUF parece incompleto.")
+        with target.open("rb") as check:
+            if check.read(4) != b"GGUF":
+                raise HTTPException(400, "O arquivo selecionado não tem cabeçalho GGUF válido.")
     except Exception:
         shutil.rmtree(folder, ignore_errors=True)
         raise
@@ -519,7 +522,7 @@ def delete_model(model_id: str, request: Request):
         _stop_runtime()
     if model_id in MODEL_CATALOG:
         folder = MODELS_DIR / model_id
-    elif model_id.startswith("imported-") and len(model_id) <= 32:
+    elif re.fullmatch(r"imported-[0-9a-f]{10}", model_id):
         folder = MODELS_DIR / model_id
     else:
         raise HTTPException(400, "Modelo inválido.")
