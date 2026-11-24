@@ -364,6 +364,8 @@ function CompositorPanel({ onUseLyrics }) {
   const [model, setModel] = useState("qwen3-4b-q4km");
   const [gemmaAccepted, setGemmaAccepted] = useState(false);
   const [gpuLayers, setGpuLayers] = useState(0);
+  const [compositionMode, setCompositionMode] = useState("full");
+  const [sourceLyrics, setSourceLyrics] = useState("");
   const [theme, setTheme] = useState("");
   const [genre, setGenre] = useState("MPB");
   const [mood, setMood] = useState("emocionante e acolhedor");
@@ -427,11 +429,14 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const generate = async () => {
+    if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
+    if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
     setBusy(true); setError(""); setMessage("Compondo a letra localmente…"); setResult("");
     try {
-      const r = await jsonPost("/api/ai/generate-lyrics", { theme, genre, mood, voice, duration, language });
+      const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language });
       setResult(r.lyrics);
-      setMessage("Letra criada com " + r.model + ".");
+      const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
+      setMessage((labels[compositionMode] || "Composição concluída") + " com " + r.model + ".");
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   };
@@ -522,25 +527,37 @@ function CompositorPanel({ onUseLyrics }) {
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
-        <h2 className="font-bold">3. Compor uma música</h2>
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-zinc-300">Tema ou história</label>
-          <textarea rows={3} className={inputCls} value={theme} onChange={(e) => setTheme(e.target.value)} placeholder="Ex.: um pai ensinando o filho a pescar e lembrando da própria infância" />
+        <div><h2 className="font-bold">3. Assistente de composição</h2><p className="mt-1 text-xs text-zinc-400">Escolha o que deseja fazer. A IA trabalha localmente com o modelo ativado.</p></div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {[{id:"full",title:"Música completa",desc:"Começar uma letra do zero."},{id:"continue",title:"Continuar composição",desc:"Preservar sua letra e desenvolver o restante."},{id:"chorus",title:"Criar somente refrão",desc:"Escrever um refrão para sua composição."}].map((item)=>(
+            <button key={item.id} type="button" onClick={()=>{setCompositionMode(item.id);setResult("");setError("");}}
+              className={`rounded-xl border p-3 text-left transition ${compositionMode===item.id?"border-pink-500 bg-pink-500/10":"border-white/10 bg-white/[0.02] hover:bg-white/[0.05]"}`}>
+              <span className="block text-sm font-bold text-white">{item.title}</span><span className="mt-1 block text-[11px] leading-relaxed text-zinc-400">{item.desc}</span>
+            </button>
+          ))}
+        </div>
+        {compositionMode!=="full"&&<div>
+          <label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="continue"?"Sua composição (a IA manterá o que você já escreveu)":"Sua composição (base para criar o refrão)"}</label>
+          <textarea rows={9} className={inputCls} value={sourceLyrics} onChange={(e)=>setSourceLyrics(e.target.value)} placeholder={"Cole aqui sua letra. Você pode incluir marcações como [Verse 1] e [Bridge]."}/>
+          <p className="mt-1 text-[11px] text-zinc-500">{compositionMode==="continue"?"A IA deve preservar seus versos e completar as partes que faltam, sem reescrever sua identidade.":"A IA analisará o tema, a mensagem e o sentimento da letra para criar apenas o refrão."}</p>
+        </div>}
+        <div><label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="full"?"Tema ou história":"Orientação adicional (opcional)"}</label>
+          <textarea rows={2} className={inputCls} value={theme} onChange={(e)=>setTheme(e.target.value)} placeholder={compositionMode==="full"?"Ex.: um pai ensinando o filho a pescar e lembrando da própria infância":"Ex.: deixe o refrão mais emocionante, simples e fácil de memorizar"}/>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-xs font-semibold text-zinc-300">Gênero musical<input className={inputCls + " mt-1"} value={genre} onChange={(e) => setGenre(e.target.value)} /></label>
-          <label className="text-xs font-semibold text-zinc-300">Clima / sentimento<input className={inputCls + " mt-1"} value={mood} onChange={(e) => setMood(e.target.value)} /></label>
-          <label className="text-xs font-semibold text-zinc-300">Voz<select className={inputCls + " mt-1"} value={voice} onChange={(e) => setVoice(e.target.value)}><option>indiferente</option><option>masculina</option><option>feminina</option><option>dueto</option></select></label>
-          <label className="text-xs font-semibold text-zinc-300">Idioma<select className={inputCls + " mt-1"} value={language} onChange={(e) => setLanguage(e.target.value)}><option>português do Brasil</option><option>inglês</option><option>espanhol</option></select></label>
-          <label className="text-xs font-semibold text-zinc-300">Duração aproximada<select className={inputCls + " mt-1"} value={duration} onChange={(e) => setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>
+          <label className="text-xs font-semibold text-zinc-300">Gênero musical<input className={inputCls+" mt-1"} value={genre} onChange={(e)=>setGenre(e.target.value)}/></label>
+          <label className="text-xs font-semibold text-zinc-300">Clima / sentimento<input className={inputCls+" mt-1"} value={mood} onChange={(e)=>setMood(e.target.value)}/></label>
+          <label className="text-xs font-semibold text-zinc-300">Voz<select className={inputCls+" mt-1"} value={voice} onChange={(e)=>setVoice(e.target.value)}><option>indiferente</option><option>masculina</option><option>feminina</option><option>dueto</option></select></label>
+          <label className="text-xs font-semibold text-zinc-300">Idioma<select className={inputCls+" mt-1"} value={language} onChange={(e)=>setLanguage(e.target.value)}><option>português do Brasil</option><option>inglês</option><option>espanhol</option></select></label>
+          {compositionMode!=="chorus"&&<label className="text-xs font-semibold text-zinc-300">Duração aproximada<select className={inputCls+" mt-1"} value={duration} onChange={(e)=>setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>}
         </div>
-        <button disabled={busy || !status.runtime_running || !status.active_model || !theme.trim()} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
-          {busy ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />} Gerar letra localmente
+        <button disabled={busy||!status.runtime_running||!status.active_model||(compositionMode==="full"?!theme.trim():!sourceLyrics.trim())} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
+          {busy?<Loader2 size={18} className="animate-spin"/>:<Sparkles size={18}/>}
+          {compositionMode==="full"?"Criar música completa":compositionMode==="continue"?"Continuar minha composição":"Criar somente o refrão"}
         </button>
-        {result && <div className="space-y-3">
-          <label className="block text-xs font-semibold text-zinc-300">Letra gerada — você pode editar antes de usar</label>
-          <textarea rows={18} className={inputCls} value={result} onChange={(e) => setResult(e.target.value)} />
-          <button onClick={() => onUseLyrics(result)} className="w-full rounded-xl bg-white px-4 py-3 font-black text-black">Usar esta letra na criação musical</button>
+        {result&&<div className="space-y-3"><label className="block text-xs font-semibold text-zinc-300">{compositionMode==="chorus"?"Refrão gerado — você pode editar":"Resultado — você pode editar antes de usar"}</label>
+          <textarea rows={18} className={inputCls} value={result} onChange={(e)=>setResult(e.target.value)}/>
+          <button onClick={()=>onUseLyrics(result)} className="w-full rounded-xl bg-white px-4 py-3 font-black text-black">Usar esta letra na criação musical</button>
         </div>}
       </section>
     </div>
