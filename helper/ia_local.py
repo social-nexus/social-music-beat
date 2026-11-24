@@ -48,7 +48,9 @@ def data_root() -> Path:
 
 ROOT = data_root()
 RUNTIME_DIR = ROOT / "runtime"
-MODELS_DIR = ROOT / "models"
+# Os arquivos GGUF podem ser compartilhados entre ferramentas Social Nexus.
+# O runtime llama.cpp e os logs continuam locais a esta instalacao.
+MODELS_DIR = Path(os.environ.get("SOCIAL_MUSIC_BEAT_MODELS_DIR", str(ROOT / "models"))).expanduser()
 LOG_DIR = ROOT / "logs"
 for directory in (RUNTIME_DIR, MODELS_DIR, LOG_DIR):
     directory.mkdir(parents=True, exist_ok=True)
