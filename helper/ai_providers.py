@@ -25,7 +25,10 @@ PROVIDERS = {
     "openai": {"name": "OpenAI", "models": ["gpt-4.1-mini", "gpt-4.1", "gpt-4o-mini"], "kind": "openai"},
     "anthropic": {"name": "Anthropic Claude", "models": ["claude-3-5-haiku-latest", "claude-sonnet-4-5", "claude-opus-4-1"], "kind": "anthropic"},
     "gemini": {"name": "Google Gemini", "models": ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"], "kind": "gemini"},
-    "openrouter": {"name": "OpenRouter", "models": ["openai/gpt-4.1-mini", "anthropic/claude-sonnet-4", "google/gemini-2.5-flash"], "kind": "openai"},
+    "openrouter": {"name": "OpenRouter", "models": ["openai/gpt-4.1-mini", "anthropic/claude-sonnet-4", "google/gemini-2.5-flash"], "kind": "openai", "base_url": "https://openrouter.ai/api/v1"},
+    "deepseek": {"name": "DeepSeek", "models": ["deepseek-chat", "deepseek-reasoner"], "kind": "openai", "base_url": "https://api.deepseek.com/v1"},
+    "groq": {"name": "Groq", "models": ["llama-3.3-70b-versatile", "openai/gpt-oss-20b"], "kind": "openai", "base_url": "https://api.groq.com/openai/v1"},
+    "mistral": {"name": "Mistral AI", "models": ["mistral-small-latest", "mistral-large-latest"], "kind": "openai", "base_url": "https://api.mistral.ai/v1"},
 }
 DEFAULT_CONFIG = {"provider": "local", "models": {}}
 
@@ -132,7 +135,7 @@ async def _request_completion(provider: str, model: str, api_key: str, system: s
     timeout = httpx.Timeout(120.0, connect=15.0)
     async with httpx.AsyncClient(timeout=timeout) as client:
         if meta["kind"] == "openai":
-            base = "https://openrouter.ai/api/v1" if provider == "openrouter" else "https://api.openai.com/v1"
+            base = meta.get("base_url", "https://api.openai.com/v1")
             response = await client.post(
                 base + "/chat/completions",
                 headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
