@@ -445,14 +445,32 @@ async function analyzeMelodyReference(file) {
     const avg = envelope.reduce((a, b) => a + b, 0) / Math.max(1, envelope.length);
     const variance = envelope.reduce((a, b) => a + (b - avg) ** 2, 0) / Math.max(1, envelope.length);
     const dynamics = Math.sqrt(variance) > avg * 0.55 ? "dinâmica variada, com mudanças de intensidade" : "dinâmica relativamente constante";
+    // Segmentação aproximada por energia: identifica blocos cantados e pausas entre frases.
+    const activeThreshold = Math.max(0.006, avg * 0.32);
+    const active = envelope.map((v) => v > activeThreshold);
+    const phraseDurations = [];
+    let phraseStart = -1, lastActive = -1;
+    for (let i = 0; i < active.length; i++) {
+      if (active[i]) { if (phraseStart < 0) phraseStart = i; lastActive = i; }
+      else if (phraseStart >= 0 && i - lastActive >= 18) {
+        const d = (lastActive - phraseStart + 1) * 0.02;
+        if (d >= 0.18) phraseDurations.push(d);
+        phraseStart = -1; lastActive = -1;
+      }
+    }
+    if (phraseStart >= 0) { const d = (lastActive - phraseStart + 1) * 0.02; if (d >= 0.18) phraseDurations.push(d); }
+    const phraseText = phraseDurations.length
+      ? "frases vocais aproximadas: " + phraseDurations.length + ", duração média " + (phraseDurations.reduce((a,b)=>a+b,0)/phraseDurations.length).toFixed(1) + " s, pausas detectadas: " + Math.max(0, phraseDurations.length - 1)
+      : "não foi possível separar frases e pausas com confiança";
     const tempoText = bestTempo && bestScore > 0.12 ? `pulso estimado em torno de ${bestTempo} BPM (estimativa automática)` : "pulso não identificado com confiança";
     const summary = [
       `Duração analisada: ${seconds.toFixed(1)} segundos.`,
       tempoText + ".",
+      phraseText + ".",
       `Dinâmica: ${dynamics}.`,
       `Contorno de altura aproximado: ${contour}.`,
       range ? `Tessitura estimada: ${range}.` : "",
-      "Use apenas como referência de andamento, fraseado e movimento melódico; não reproduza notas, melodia, arranjo ou letra da gravação."
+      "Todas as medidas são aproximadas; use como orientação de fraseado, não como transcrição exata de notas."
     ].filter(Boolean).join(" ");
     return { summary, seconds, tempo: bestTempo && bestScore > 0.12 ? bestTempo : null, contour };
   } finally {
