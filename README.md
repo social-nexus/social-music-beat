@@ -19,7 +19,7 @@ Tudo roda no seu computador. A internet só é usada na instalação, para baixa
 - Placa NVIDIA com drivers atualizados (Windows e Linux). No Mac com chip Apple, o ACE-Step usa o backend MLX; consulte o [ACE-Step](https://github.com/ACE-Step/ACE-Step-1.5) para os requisitos atuais.
 - Python 3.11 (no Windows, marque **Add python.exe to PATH** na instalação)
 - Cerca de **30 GB livres** no disco (os downloads somam cerca de 20 GB)
-- **Windows:** o pacote portátil do ACE-Step 1.5 (`.7z`) e um programa para abri-lo, como o [7-Zip](https://7-zip.org). **Linux/macOS:** `git` e o [uv](https://docs.astral.sh/uv/) (o instalador baixa o ACE-Step e oferece instalar o uv).
+- **Windows:** o instalador baixa e extrai automaticamente o pacote portátil oficial do ACE-Step 1.5 quando ele ainda não está instalado. **Linux/macOS:** `git` e o [uv](https://docs.astral.sh/uv/) (o instalador baixa o ACE-Step e oferece instalar o uv).
 - O ACE-Step **não** faz parte deste repositório.
 
 > Os scripts de Linux e macOS são novos e foram verificados só quanto à lógica de ligar e desligar os servidores. A instalação completa neles ainda não foi testada em máquinas reais.
@@ -27,9 +27,9 @@ Tudo roda no seu computador. A internet só é usada na instalação, para baixa
 ## Instalação no Windows (só uma vez)
 
 1. **Baixe este repositório:** botão verde **Code → Download ZIP** (ou `git clone`) e extraia numa pasta de fácil acesso, por exemplo `C:\SocialMusicBeat`.
-2. **Baixe o ACE-Step:** no [GitHub do ACE-Step 1.5](https://github.com/ACE-Step/ACE-Step-1.5), use o link do pacote para Windows (`ACE-Step-1.5.7z`) e extraia em `C:\ACE-Step-1.5`. Confira que dentro dessa pasta existe o arquivo `start_api_server.bat`.
-3. Se extraiu o ACE-Step em outro lugar, abra o `config.bat` com o Bloco de Notas e troque o caminho da linha `set ACESTEP_DIR=`.
-4. Dê duplo clique em `instalar.bat`. Ele cria o ambiente do separador de voz, instala as dependências (incluindo o Keyring para armazenar chaves de API no cofre do sistema), verifica se o Keyring pode ser importado, instala o Whisper (legendas modo Preciso) e baixa os modelos. **Demora e baixa vários GB.**
+2. Dê duplo clique em `instalar.bat`. Se o ACE-Step ainda não estiver instalado, o assistente oferece baixar automaticamente o pacote portátil oficial e extraí-lo em `C:\ACE-Step-1.5`. Se você já tiver o ACE-Step em outra pasta, informe o caminho quando solicitado.
+3. Na primeira execução, o instalador também configura a biblioteca de modelos: prefere um segundo SSD disponível (por exemplo, `D:\IA_MODELS`) e usa o SSD do Windows quando há apenas um. Você pode aceitar o caminho sugerido ou digitar outro.
+4. O instalador cria o ambiente do separador de voz, instala as dependências (incluindo o Keyring para armazenar chaves de API no cofre do sistema), verifica o Keyring, instala o Whisper (legendas modo Preciso) e baixa os modelos. **Demora e baixa vários GB; mantenha a internet conectada e tenha espaço livre suficiente.**
 
 Se algum download falhar, rode o `instalar.bat` de novo: o que já foi baixado não é baixado outra vez.
 
