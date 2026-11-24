@@ -349,7 +349,7 @@ def _start_runtime(model_id: str, variant: str, gpu_layers: int = 0):
     binary = _runtime_binary(variant)
     log = (LOG_DIR / "llama-server.log").open("ab")
     args = [str(binary), "--host", "127.0.0.1", "--port", str(PORT),
-            "--model", str(model_path), "--ctx-size", "4096", "--jinja",
+            "--model", str(model_path), "--alias", "social-music-beat-local", "--ctx-size", "4096", "--jinja",
             "--n-gpu-layers", str(max(0, min(int(gpu_layers), 200))),
             "--parallel", "1"]
     try:
@@ -519,16 +519,22 @@ async def generate_lyrics(payload: dict, request: Request):
               "Não imite artistas ou músicas existentes. Responda em português do Brasil quando solicitado. "
               "Use tags de estrutura em inglês, cada uma sozinha na linha: [Verse 1], [Chorus], [Verse 2], "
               "[Bridge], [Outro]. Não inclua explicações fora do formato pedido.")
+    target_lines = max(8, min(80, round(duration / 4)))
     user = (f"Crie uma música original. Idioma: {language}. Tema: {theme}. Gênero: {genre or 'livre'}. "
             f"Clima: {mood or 'coerente com o tema'}. Voz: {voice}. Duração aproximada: {duration} segundos. "
+            f"Use aproximadamente {target_lines} linhas cantadas, ajustando à estrutura e à naturalidade. "
+            "Cada verso deve ter métrica regular e fácil de cantar; procure linhas curtas, naturais e com rimas "
+            "consistentes, sem sacrificar o sentido. O refrão deve ser curto, marcante e repetido exatamente "
+            "igual quando voltar. Cada linha deve caber em um fôlego. Não use parênteses, emojis ou nomes de "
+            "artistas. Use tags de seção em inglês, sozinhas na linha. "
             "Entregue exatamente neste formato:\nTÍTULO: ...\n"
             "ESTILO: uma linha em inglês, tags separadas por vírgula, até 200 caracteres.\n"
             "CONFIGURAÇÕES: Voz: ... | Duração em segundos: ... | BPM: ... | Tom: ...\n"
             "LETRA:\n[Verse 1]\n...\n[Chorus]\n...\n"
-            "Mantenha o refrão idêntico nas repetições, versos fáceis de cantar e rimas naturais.")
-    body = {"model": ACTIVE_MODEL, "messages": [{"role": "system", "content": system},
-            {"role": "user", "content": user}], "temperature": 0.75, "top_p": 0.85,
-            "max_tokens": 1800, "stream": False}
+            "Não escreva comentários antes ou depois do formato.")
+    body = {"model": "social-music-beat-local", "messages": [{"role": "system", "content": system},
+            {"role": "user", "content": user}], "temperature": 0.7, "top_p": 0.8,
+            "top_k": 20, "presence_penalty": 1.5, "max_tokens": 1800, "stream": False}
     try:
         async with httpx.AsyncClient(timeout=240) as client:
             response = await client.post(f"http://127.0.0.1:{PORT}/v1/chat/completions", json=body)
