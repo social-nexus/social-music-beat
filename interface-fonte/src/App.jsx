@@ -477,6 +477,7 @@ function CompositorPanel({ onUseLyrics }) {
   const recorderRef = useRef(null);
   const streamRef = useRef(null);
   const recordedChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
 
   const [theme, setTheme] = useState("");
   const [genre, setGenre] = useState("MPB");
@@ -488,6 +489,15 @@ function CompositorPanel({ onUseLyrics }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => () => {
+    if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.onstop = null;
+      recorderRef.current.stop();
+    }
+    if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
+  }, []);
 
   const refresh = useCallback(async () => {
     const [c, s] = await Promise.all([http("/api/ai/catalog"), http("/api/ai/status")]);
@@ -568,12 +578,17 @@ function CompositorPanel({ onUseLyrics }) {
       recorder.onstop = () => {
         const type = recorder.mimeType || "audio/webm";
         const file = new File(recordedChunksRef.current, "melodia-gravada.webm", { type });
+        if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
+        recordingTimerRef.current = null;
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
         setRecording(false);
         if (file.size) loadMelodyReference(file);
       };
       recorder.start();
+      recordingTimerRef.current = window.setTimeout(() => {
+        if (recorderRef.current && recorderRef.current.state === "recording") recorderRef.current.stop();
+      }, 30000);
       setRecording(true); setError(""); setMessage("Gravando… canteolar ou toque uma ideia musical e depois pressione Parar.");
     } catch (e) {
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
