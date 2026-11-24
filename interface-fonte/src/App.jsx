@@ -8,19 +8,79 @@ const TURBO = "acestep-v15-turbo"; // criar músicas (rápido, melhor qualidade)
 const BASE_MODEL = "acestep-v15-base"; // criar a banda para a sua voz (tarefa "complete")
 
 const STYLES = [
-  { label: "Pop", v: "pop, upbeat, catchy" },
-  { label: "Sertanejo", v: "sertanejo, brazilian country, acoustic guitar, viola" },
-  { label: "Rock", v: "rock, electric guitars, driving drums" },
-  { label: "MPB", v: "MPB, brazilian acoustic, nylon guitar, soft percussion" },
-  { label: "Gospel", v: "gospel, worship, piano, uplifting" },
-  { label: "Funk", v: "funk carioca, heavy bass, brazilian funk beat" },
-  { label: "Samba / Pagode", v: "samba, pagode, cavaquinho, percussion" },
-  { label: "Forró", v: "forró, accordion, zabumba, triangle" },
-  { label: "Eletrônica", v: "electronic dance, synth, four-on-the-floor" },
-  { label: "Lo-fi", v: "lo-fi hip hop, chill, mellow" },
-  { label: "Balada", v: "ballad, piano, strings, emotional" },
-  { label: "Reggae", v: "reggae, offbeat guitar, relaxed" },
+  // Infantil: energia, balanço e instrumentação explícitos para evitar pop lento genérico.
+  { category: "Infantil", label: "Pop infantil dançante", v: "upbeat Brazilian children's dance pop, 132 BPM, bouncy bass, lively drums, bright keyboards, handclaps, playful percussion, joyful theatrical vocals, catchy sing-along chorus" },
+  { category: "Infantil", label: "Festa infantil", v: "high-energy children's party music, 138 BPM, punchy dance beat, bouncing bass, bright brass and synth accents, claps, group shouts, playful call-and-response vocals" },
+  { category: "Infantil", label: "Marchinha divertida", v: "cheerful Brazilian children's march, 120 BPM, bouncy marching snare, brass section, tuba-like bass, tambourine, playful group vocals, humorous parade atmosphere" },
+  { category: "Infantil", label: "Cantiga moderna", v: "modern Brazilian nursery rhyme, 112 BPM, light bouncing rhythm, ukulele, acoustic guitar, glockenspiel, hand percussion, warm playful vocals, simple memorable melody" },
+  { category: "Infantil", label: "Desenho animado", v: "playful cartoon soundtrack, 130 BPM, quirky pizzicato strings, bassoon, xylophone, bouncy drums, comic musical accents, expressive character vocals" },
+  { category: "Infantil", label: "Pop rock infantil", v: "upbeat children's pop rock, 126 BPM, bright electric guitars, energetic live drums, melodic bass, handclaps, joyful youthful vocals, big catchy chorus" },
+  { category: "Infantil", label: "Ukulele alegre", v: "cheerful acoustic children's folk pop, 116 BPM, strummed ukulele, acoustic bass, shaker, tambourine, finger snaps, sweet playful vocals, sunny sing-along melody" },
+  { category: "Infantil", label: "Ska infantil", v: "bouncy children's ska pop, 140 BPM, upbeat offbeat guitar skanks, walking bass, lively drums, playful brass stabs, energetic cheerful vocals" },
+
+  // Pop e rock.
+  { category: "Pop e Rock", label: "Pop dançante", v: "upbeat contemporary dance pop, 122 BPM, four-on-the-floor kick, punchy snare, groovy bass, bright synthesizers, rhythmic guitars, energetic confident vocals, explosive catchy chorus" },
+  { category: "Pop e Rock", label: "Pop rock animado", v: "energetic pop rock, 124 BPM, driving live drums, crunchy electric rhythm guitars, melodic bass guitar, bright hooks, expressive adult lead vocals, powerful sing-along chorus" },
+  { category: "Pop e Rock", label: "Pop acústico", v: "upbeat acoustic pop, 108 BPM, strummed steel-string guitar, organic percussion, warm bass, piano accents, lively natural vocals, uplifting melodic chorus" },
+  { category: "Pop e Rock", label: "Rock clássico", v: "classic upbeat rock and roll, 128 BPM, electric guitar riffs, live drum kit, walking electric bass, piano accents, energetic raw lead vocals, strong backbeat" },
+  { category: "Pop e Rock", label: "Indie pop", v: "bright indie pop, 116 BPM, jangly guitars, melodic bass, crisp drums, shimmering keyboards, layered harmonies, buoyant modern groove" },
+  { category: "Pop e Rock", label: "Punk pop", v: "fast melodic pop punk, 164 BPM, distorted power-chord guitars, fast live drums, driving bass, youthful energetic vocals, anthemic shout-along chorus" },
+  { category: "Pop e Rock", label: "Hard rock", v: "energetic hard rock, 132 BPM, heavy distorted guitar riffs, powerful acoustic drums, thick bass guitar, strong gritty vocals, dramatic guitar breaks" },
+
+  // Ritmos brasileiros.
+  { category: "Brasil", label: "Samba", v: "joyful Brazilian samba, 102 BPM, syncopated surdo, pandeiro, tamborim, cavaquinho, agogo bell, lively bass, swinging expressive vocals" },
+  { category: "Brasil", label: "Pagode", v: "upbeat Brazilian pagode,  honderd BPM, tantan, pandeiro, repique de mao, cavaquinho, banjo, warm bass, rhythmic group backing vocals, relaxed swinging groove".replace(" honderd", "100") },
+  { category: "Brasil", label: "Samba-enredo", v: "high-energy Brazilian samba-enredo, 146 BPM, powerful bateria percussion, surdo, caixa, tamborim, cuica, brass accents, massed joyful chorus, carnival parade drive" },
+  { category: "Brasil", label: "Forró pé de serra", v: "lively traditional Brazilian forro, 132 BPM, accordion lead, zabumba groove, triangle pulse, acoustic bass, playful dance rhythm, warm regional vocals" },
+  { category: "Brasil", label: "Forró eletrônico", v: "upbeat modern Brazilian forro, 138 BPM, accordion hooks, electronic drums, strong bass, synth textures, bright rhythmic guitar, energetic romantic vocals" },
+  { category: "Brasil", label: "Piseiro", v: "energetic Brazilian piseiro, 150 BPM, punchy electronic kick, syncopated bass, bright keyboard riffs, claps, repetitive dance groove, catchy direct vocals" },
+  { category: "Brasil", label: "Sertanejo universitário", v: "upbeat Brazilian sertanejo universitario,  churrasqueira BPM, driving acoustic guitar strums, sertanejo rhythm guitar, punchy drums, bass, bright accordion touches, energetic duo vocals".replace(" churrasqueira", "126") },
+  { category: "Brasil", label: "Sertanejo raiz", v: "traditional Brazilian sertanejo raiz, 96 BPM, viola caipira, acoustic guitar, accordion, organic percussion, warm storytelling vocals, countryside feel" },
+  { category: "Brasil", label: "Axé", v: "high-energy Brazilian axe music, 138 BPM, swinging bloco percussion, surdo, timbau, electric guitar, bass, brass accents, exuberant vocals, carnival dance groove" },
+  { category: "Brasil", label: "MPB animada", v: "upbeat Brazilian MPB, 112 BPM, nylon-string guitar, piano, melodic bass, Brazilian percussion, tasteful strings, expressive sophisticated vocals, flowing groove" },
+  { category: "Brasil", label: "Bossa nova", v: "Brazilian bossa nova,  שה BPM, soft syncopated nylon guitar, brushed drums, upright bass, gentle piano, intimate understated vocals, relaxed elegant sway".replace(" שה", "92") },
+  { category: "Brasil", label: "Funk carioca", v: "upbeat Brazilian funk carioca, 130 BPM, hard tamborzao beat, deep sub bass, syncopated percussion, sharp synth stabs, rhythmic vocal delivery, high-energy baile groove" },
+
+  // Urbano e grooves.
+  { category: "Urbano", label: "Hip-hop", v: "groovy hip hop, 92 BPM, punchy boom bap drums, deep bass, sampled soul keys, rhythmic rap vocals, confident laid-back flow" },
+  { category: "Urbano", label: "Trap", v: "modern melodic trap, 140 BPM half-time feel, deep 808 bass, crisp hi-hat rolls, punchy kick and snare, atmospheric synths, melodic rap vocals" },
+  { category: "Urbano", label: "R&B", v: "smooth contemporary R&B,  is BPM, deep rounded bass, laid-back syncopated drums, electric piano, warm synth pads, soulful expressive vocals, rich harmonies".replace(" is", "88") },
+  { category: "Urbano", label: "Soul", v: "uplifting classic soul, 110 BPM, live drums, warm bass, Hammond organ, rhythmic guitar, brass section, powerful soulful vocals, rich backing harmonies" },
+  { category: "Urbano", label: "Reggae", v: "positive roots reggae, 76 BPM, relaxed one-drop drums, deep melodic bass, offbeat skank guitar, organ bubbles, warm laid-back vocals" },
+  { category: "Urbano", label: "Ska", v: "upbeat ska, 148 BPM, fast offbeat guitar and piano, walking bass, lively drums, bright brass section, energetic vocals, danceable bounce" },
+
+  // Romântico e emocional (com variação real de andamento).
+  { category: "Romântico", label: "Balada pop", v: "emotional pop ballad,  callback BPM, expressive piano, warm strings, gentle drums building into a powerful chorus, intimate adult lead vocals".replace(" callback", "76") },
+  { category: "Romântico", label: "Balada rock", v: "dramatic rock ballad, 78 BPM, piano intro, sustained electric guitars, live drums building gradually, melodic bass, emotional powerful vocals, soaring chorus" },
+  { category: "Romântico", label: "Romântico acústico", v: "intimate acoustic love song, 84 BPM, fingerpicked acoustic guitar, soft piano, subtle strings, warm bass, tender close-miked vocals" },
+  { category: "Romântico", label: "Bolero", v: "classic Latin bolero, 72 BPM, nylon guitar, soft strings, gentle Latin percussion, warm bass, expressive romantic crooning vocals" },
+  { category: "Romântico", label: "Bachata", v: "romantic Dominican bachata, 126 BPM, bright requinto guitar, syncopated bachata rhythm guitar, bongos, guira, melodic bass, expressive vocals" },
+
+  // Dança e festa.
+  { category: "Dança", label: "Disco", v: "joyful disco dance music, 120 BPM, four-on-the-floor drums, funky octave bass, rhythmic strings, wah guitar, bright brass, joyful vocals, uplifting dancefloor energy" },
+  { category: "Dança", label: "Funk / groove", v: "upbeat funk groove, 108 BPM, syncopated electric bass, tight live drums, wah guitar, clavinet, brass stabs, soulful rhythmic vocals" },
+  { category: "Dança", label: "House", v: "uplifting house music, 124 BPM, steady four-on-the-floor kick, deep pulsing bass, bright piano chords, crisp claps, uplifting synths, energetic dance groove" },
+  { category: "Dança", label: "EDM festival", v: "energetic festival EDM, 128 BPM, powerful electronic kick, sidechain synth bass, bright supersaw leads, risers, big melodic drop, euphoric vocals" },
+  { category: "Dança", label: "Salsa", v: "energetic salsa, 184 BPM, piano montuno, congas, timbales, cowbell, tumbao bass, bright brass section, lively call-and-response vocals" },
+  { category: "Dança", label: "Cumbia", v: "joyful Latin cumbia, 96 BPM, syncopated percussion, guiro, congas, melodic bass, bright accordion or keyboard hooks, festive vocals" },
+  { category: "Dança", label: "Merengue", v: "fast joyful merengue,  experto BPM, tambora, guira, lively bass, bright accordion and brass, energetic dance vocals".replace(" experto", "128") },
+
+  // Internacional e tradicional.
+  { category: "Internacional", label: "Country", v: "upbeat modern country, 116 BPM, acoustic guitar, banjo, fiddle, pedal steel accents, steady drums, warm bass, lively storytelling vocals" },
+  { category: "Internacional", label: "Blues", v: "upbeat blues shuffle, 112 BPM, electric blues guitar, walking bass, shuffle drums, piano fills, expressive gritty vocals" },
+  { category: "Internacional", label: "Jazz swing", v: "joyful swing jazz, 150 BPM, walking upright bass, swinging brushed drums, piano, saxophone, trumpet, playful melodic vocals" },
+  { category: "Internacional", label: "Flamenco pop", v: "energetic flamenco pop, 118 BPM, Spanish nylon guitar, palmas handclaps, cajon, melodic bass, passionate vocals, rhythmic guitar flourishes" },
+  { category: "Internacional", label: "Afrobeat", v: "upbeat contemporary afrobeat,  ಸಂ BPM, syncopated polyrhythmic percussion, deep bass, bright guitar patterns, warm keyboards, melodic rhythmic vocals".replace(" ಸಂ", "108") },
+
+  // Instrumental e trilhas.
+  { category: "Instrumental", label: "Orquestral épico", v: "cinematic orchestral instrumental, 100 BPM, sweeping strings, bold brass, deep timpani, dynamic percussion, dramatic melodic development, no vocals" },
+  { category: "Instrumental", label: "Piano emocional", v: "emotional solo piano instrumental, 72 BPM, expressive piano melody, delicate dynamics, intimate cinematic atmosphere, no vocals" },
+  { category: "Instrumental", label: "Lo-fi chill", v: "laid-back lo-fi hip hop instrumental, 82 BPM, dusty drums, mellow electric piano, warm bass, vinyl texture, relaxed groove, no vocals" },
+  { category: "Instrumental", label: "Synthwave", v: "retro synthwave instrumental, 105 BPM, analog synthesizers, pulsing arpeggios, gated drums, deep synth bass, nostalgic cinematic atmosphere, no vocals" },
+  { category: "Instrumental", label: "Trilha de aventura", v: "playful adventure soundtrack, 124 BPM, orchestral pizzicato strings, bright woodwinds, rhythmic percussion, brass flourishes, uplifting energetic theme, no vocals" },
 ];
+
+const STYLE_CATEGORIES = ["Infantil", "Pop e Rock", "Brasil", "Urbano", "Romântico", "Dança", "Internacional", "Instrumental"];
 
 const KEYS = ["", "C Major", "G Major", "D Major", "A Major", "E Major", "F Major", "A minor", "E minor", "D minor", "B minor", "F# minor", "C minor"];
 
@@ -926,6 +986,7 @@ export default function App() {
     duration: 120, versions: 1, bpm: "", key: "", lang: "pt",
   });
   const [showAdv, setShowAdv] = useState(false);
+  const [styleCategory, setStyleCategory] = useState("Infantil");
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   useEffect(() => {
@@ -1192,16 +1253,31 @@ export default function App() {
                   value={form.style}
                   onChange={(e) => set("style", e.target.value)}
                 />
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {STYLES.map((s) => (
-                    <button
-                      key={s.label}
-                      onClick={() => set("style", form.style.trim() ? `${form.style.trim().replace(/,$/, "")}, ${s.v}` : s.v)}
-                      className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-zinc-300 hover:border-pink-500/60 hover:text-white"
-                    >
-                      + {s.label}
-                    </button>
-                  ))}
+                <div className="mt-2">
+                  <p className="mb-2 text-[11px] text-zinc-400">Escolha uma categoria para ver ritmos diferentes. Os estilos já descrevem andamento, instrumentos e energia — não apenas o sentimento.</p>
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {STYLE_CATEGORIES.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setStyleCategory(category)}
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${styleCategory === category ? "border-pink-500 bg-pink-500/15 text-pink-200" : "border-white/10 text-zinc-400 hover:border-white/30 hover:text-white"}`}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {STYLES.filter((s) => s.category === styleCategory).map((s) => (
+                      <button
+                        key={s.label}
+                        title={s.v}
+                        onClick={() => set("style", form.style.trim() ? `${form.style.trim().replace(/,$/, "")}, ${s.v}` : s.v)}
+                        className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-zinc-300 hover:border-pink-500/60 hover:text-white"
+                      >
+                        + {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
