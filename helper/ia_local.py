@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import socket
 import subprocess
@@ -287,7 +288,14 @@ def _model_file(model_id: str) -> Path:
         raise ValueError("Modelo não encontrado no catálogo.")
     return MODELS_DIR / model_id / MODEL_CATALOG[model_id]["filename"]
 
-def _hf_file_digest(repo: str, filename: str) -> tuple[str | None, int | None]:
+def _normalize_sha256(value: str) -> str:
+    digest = str(value or "").lower().removeprefix("sha256:")
+    if len(digest) != 64 or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        raise ValueError("O Hugging Face não forneceu um SHA-256 válido para este modelo.")
+    return digest
+
+
+def _hf_file_digest(repo: str, filename: str) -> tuple[str, int]:
     url = f"https://huggingface.co/api/models/{repo}/tree/main?recursive=false"
     req = Request(url, headers={"User-Agent": "SocialMusicBeat/1.0"})
     with urlopen(req, timeout=30) as response:
@@ -296,10 +304,10 @@ def _hf_file_digest(repo: str, filename: str) -> tuple[str | None, int | None]:
     if not item:
         raise ValueError("O arquivo do modelo não foi encontrado no repositório oficial.")
     lfs = item.get("lfs") or {}
-    digest = lfs.get("oid") or item.get("oid")
+    digest = _normalize_sha256(lfs.get("oid") or item.get("oid"))
     size = item.get("size") or lfs.get("size")
-    if not digest or not isinstance(size, int):
-        raise ValueError("O repositório não forneceu hash e tamanho verificáveis para este modelo.")
+    if not isinstance(size, int) or size <= 0:
+        raise ValueError("O repositório não forneceu um tamanho verificável para este modelo.")
     return digest, size
 
 def _download_model_worker(jid: str, model_id: str):
