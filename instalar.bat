@@ -2,6 +2,12 @@
 chcp 65001 >nul
 set HF_HUB_DISABLE_SYMLINKS_WARNING=1
 call "%~dp0config.bat"
+if defined SOCIAL_NEXUS_MODELS_DIR if not exist "%SOCIAL_NEXUS_MODELS_DIR%" (
+  echo A biblioteca compartilhada de modelos nao esta disponivel: %SOCIAL_NEXUS_MODELS_DIR%
+  echo Conecte o disco configurado ou execute configurar_armazenamento.bat para escolher outro local.
+  pause
+  exit /b 1
+)
 echo ==================================================
 echo  Social Music Beat - instalacao completa
 echo ==================================================
