@@ -518,7 +518,7 @@ function CompositorPanel({ onUseLyrics }) {
           <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">Ativar modelo</button>
           {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">Desligar IA</button>}
         </div>
-        <p className="text-xs text-zinc-500">Você também pode importar outros GGUF, inclusive versões Gemma obtidas após aceitar os termos oficiais. A licença de arquivos importados não é verificada automaticamente.</p>
+        <p className="text-xs text-zinc-500">Você também pode importar outros GGUF. A licença de arquivos importados não é verificada automaticamente.</p>
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
