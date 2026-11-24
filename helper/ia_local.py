@@ -134,8 +134,13 @@ def _guard_local_request(request):
 
 def _job(kind: str) -> str:
     jid = uuid.uuid4().hex[:12]
+    now = time.time()
     with LOCK:
-        JOBS[jid] = {"id": jid, "kind": kind, "status": "queued", "progress": 0, "message": "Na fila"}
+        for old_id, old in list(JOBS.items()):
+            if old.get("status") in ("done", "error") and now - old.get("created_at", now) > 3600:
+                JOBS.pop(old_id, None)
+        JOBS[jid] = {"id": jid, "kind": kind, "status": "queued", "progress": 0,
+                     "message": "Na fila", "created_at": now}
     return jid
 
 def _update_job(jid: str, **values):
@@ -164,7 +169,7 @@ def _download(url: str, dest: Path, expected_size: int | None, jid: str):
             total += len(chunk)
             pct = int(total * 100 / length) if length else 0
             _update_job(jid, status="downloading", progress=min(pct, 99),
-                        message=f"Baixando: {total / (1024**2):.0f} MB")
+                        message=f"Baixando: {pct}% ({total / (1024**2):.0f} MB)")
     if expected_size and total != expected_size:
         tmp.unlink(missing_ok=True)
         raise ValueError(f"Tamanho inesperado: {total} bytes (esperado {expected_size}).")
@@ -183,7 +188,10 @@ def _extract_archive(archive: Path, dest: Path, kind: str):
     dest.mkdir(parents=True, exist_ok=True)
     if kind == "zip":
         with zipfile.ZipFile(archive) as zf:
-            for item in zf.infolist():
+            members = zf.infolist()
+            if len(members) > 20000 or sum(x.file_size for x in members) > 2 * 1024**3:
+                raise ValueError("O pacote compactado excede os limites de extração.")
+            for item in members:
                 target = _safe_member_path(dest, item.filename)
                 if item.is_dir():
                     target.mkdir(parents=True, exist_ok=True)
@@ -193,11 +201,23 @@ def _extract_archive(archive: Path, dest: Path, kind: str):
                     shutil.copyfileobj(src, out)
     else:
         with tarfile.open(archive, "r:gz") as tf:
-            for item in tf.getmembers():
+            members = tf.getmembers()
+            if len(members) > 20000 or sum(x.size for x in members if x.isfile()) > 2 * 1024**3:
+                raise ValueError("O pacote compactado excede os limites de extração.")
+            for item in members:
                 target = _safe_member_path(dest, item.name)
-                if item.issym() or item.islnk() or item.isdev():
+                if item.isdev() or item.islnk():
                     continue
-                if item.isdir():
+                if item.issym():
+                    link = PurePosixPath(item.linkname.replace("\\", "/"))
+                    if link.is_absolute():
+                        raise ValueError("Link simbólico inseguro no pacote.")
+                    resolved_link = (target.parent / Path(*link.parts)).resolve()
+                    if dest.resolve() not in resolved_link.parents and resolved_link != dest.resolve():
+                        raise ValueError("Link simbólico fora da pasta de instalação.")
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.symlink_to(item.linkname)
+                elif item.isdir():
                     target.mkdir(parents=True, exist_ok=True)
                 elif item.isfile():
                     target.parent.mkdir(parents=True, exist_ok=True)
