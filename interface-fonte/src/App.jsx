@@ -356,6 +356,190 @@ function LegendaModal({ track, tracks, onClose }) {
   );
 }
 
+
+function CompositorPanel({ onUseLyrics }) {
+  const [catalog, setCatalog] = useState({ runtimes: [], models: [], installed_models: [] });
+  const [status, setStatus] = useState({});
+  const [runtime, setRuntime] = useState("");
+  const [model, setModel] = useState("qwen3-4b-q4km");
+  const [gpuLayers, setGpuLayers] = useState(0);
+  const [theme, setTheme] = useState("");
+  const [genre, setGenre] = useState("MPB");
+  const [mood, setMood] = useState("emocionante e acolhedor");
+  const [voice, setVoice] = useState("indiferente");
+  const [duration, setDuration] = useState(120);
+  const [language, setLanguage] = useState("português do Brasil");
+  const [result, setResult] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const refresh = useCallback(async () => {
+    const [c, s] = await Promise.all([http("/api/ai/catalog"), http("/api/ai/status")]);
+    setCatalog(c);
+    setStatus(s);
+    const compatible = c.runtimes.filter((r) => r.compatible);
+    setRuntime((old) => old && compatible.some((r) => r.id === old) ? old : (compatible.find((r) => r.installed)?.id || compatible.find((r) => r.backend === "cpu")?.id || compatible[0]?.id || ""));
+    if (!model && c.models.length) setModel(c.models[0].id);
+  }, [model]);
+
+  useEffect(() => { refresh().catch((e) => setError(e.message)); }, [refresh]);
+
+  const waitJob = async (id, doneMessage) => {
+    for (;;) {
+      const j = await http("/api/ai/jobs/" + id);
+      setMessage(j.message || "Processando…");
+      if (j.status === "done") { setMessage(doneMessage); return; }
+      if (j.status === "error") throw new Error(j.message || "A operação falhou.");
+      await sleep(1200);
+    }
+  };
+
+  const installRuntime = async () => {
+    setBusy(true); setError(""); setMessage("Preparando o motor local…");
+    try {
+      const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
+      if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
+      await refresh();
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const downloadModel = async () => {
+    setBusy(true); setError(""); setMessage("Preparando o download do modelo…");
+    try {
+      const r = await jsonPost("/api/ai/models/download", { model_id: model });
+      if (r.job_id) await waitJob(r.job_id, "Modelo instalado e verificado.");
+      await refresh();
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const activate = async () => {
+    setBusy(true); setError(""); setMessage("Carregando o modelo na memória…");
+    try {
+      await jsonPost("/api/ai/models/activate", { model_id: model, variant: runtime, gpu_layers: Number(gpuLayers) });
+      await refresh();
+      setMessage("Modelo ativo. Você já pode compor.");
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const generate = async () => {
+    setBusy(true); setError(""); setMessage("Compondo a letra localmente…"); setResult("");
+    try {
+      const r = await jsonPost("/api/ai/generate-lyrics", { theme, genre, mood, voice, duration, language });
+      setResult(r.lyrics);
+      setMessage("Letra criada com " + r.model + ".");
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const importModel = async (file) => {
+    if (!file) return;
+    setBusy(true); setError(""); setMessage("Importando arquivo GGUF…");
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      await http("/api/ai/models/import", { method: "POST", body: fd });
+      await refresh();
+      setMessage("Modelo importado. Confirme a licença e selecione-o para ativar.");
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const compatibleRuntimes = catalog.runtimes.filter((r) => r.compatible);
+  const selectedRuntime = catalog.runtimes.find((r) => r.id === runtime);
+  const selectedModel = catalog.models.find((m) => m.id === model);
+  const installedSelected = catalog.installed_models.some((m) => m.id === model);
+  const runtimeInstalled = !!selectedRuntime?.installed;
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-5 p-4 lg:p-6">
+      <div>
+        <h1 className="text-2xl font-black">Compositor de letras com IA local</h1>
+        <p className="mt-1 text-sm text-zinc-400">Crie letras no seu computador. Nenhum texto precisa ser enviado para serviços externos.</p>
+      </div>
+
+      {(error || message) && (
+        <div className={error ? "rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200" : "rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-sm text-sky-200"}>
+          {error || message}
+        </div>
+      )}
+
+      <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
+        <h2 className="font-bold">1. Motor de IA</h2>
+        {compatibleRuntimes.length ? (
+          <>
+            <label className="block text-xs font-semibold text-zinc-300">Pacote compatível com este computador</label>
+            <select className={inputCls} value={runtime} onChange={(e) => setRuntime(e.target.value)}>
+              {compatibleRuntimes.map((r) => <option key={r.id} value={r.id}>{r.label} {r.installed ? "— instalado" : "— " + (r.size_bytes / 1024 / 1024).toFixed(0) + " MB"}</option>)}
+            </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <button disabled={busy || !runtime || runtimeInstalled} onClick={installRuntime} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black disabled:opacity-40">
+                {runtimeInstalled ? "Motor instalado" : "Baixar e instalar motor"}
+              </button>
+              {runtimeInstalled && <span className="text-xs text-emerald-300">SHA-256 verificado</span>}
+            </div>
+            {selectedRuntime?.backend !== "cpu" && (
+              <label className="block max-w-xs text-xs text-zinc-300">
+                Camadas na GPU (0 = CPU)
+                <input type="number" min="0" max="200" value={gpuLayers} onChange={(e) => setGpuLayers(e.target.value)} className={inputCls + " mt-1"} />
+              </label>
+            )}
+            <p className="text-xs text-zinc-500">O pacote CPU é o caminho mais compatível. CUDA/Vulkan/Metal dependem dos drivers e do hardware. A aceleração pode exigir ajustes de memória.</p>
+          </>
+        ) : <p className="text-sm text-amber-200">Não encontrei um pacote pronto para este sistema/arquitetura. A ferramenta continua funcionando sem o compositor.</p>}
+      </section>
+
+      <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
+        <h2 className="font-bold">2. Modelo de linguagem</h2>
+        <label className="block text-xs font-semibold text-zinc-300">Modelo do catálogo</label>
+        <select className={inputCls} value={model} onChange={(e) => setModel(e.target.value)}>
+          {catalog.models.map((m) => <option key={m.id} value={m.id}>{m.name} {m.installed ? "— instalado" : "— aprox. " + m.approx_size_gb + " GB"}</option>)}
+          {catalog.installed_models.filter((m) => !catalog.models.some((c) => c.id === m.id)).map((m) => <option key={m.id} value={m.id}>{m.name} — importado</option>)}
+        </select>
+        {selectedModel && <div className="rounded-xl bg-white/[0.03] p-3 text-xs text-zinc-400">
+          <p>{selectedModel.description}</p>
+          <p className="mt-2">Licença: <b className="text-zinc-200">{selectedModel.license}</b> · <a className="underline" href={selectedModel.license_url} target="_blank" rel="noreferrer">ver licença</a> · <a className="underline" href={selectedModel.model_url} target="_blank" rel="noreferrer">origem oficial</a></p>
+        </div>}
+        <div className="flex flex-wrap gap-2">
+          <button disabled={busy || installedSelected || !selectedModel} onClick={downloadModel} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold disabled:opacity-40">{installedSelected ? "Modelo instalado" : "Baixar modelo"}</button>
+          <label className="cursor-pointer rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold hover:bg-white/5">
+            Importar GGUF
+            <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
+          </label>
+          <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">Ativar modelo</button>
+          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">Desligar IA</button>}
+        </div>
+        <p className="text-xs text-zinc-500">Você também pode importar outros GGUF, inclusive versões Gemma obtidas após aceitar os termos oficiais. A licença de arquivos importados não é verificada automaticamente.</p>
+      </section>
+
+      <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
+        <h2 className="font-bold">3. Compor uma música</h2>
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-zinc-300">Tema ou história</label>
+          <textarea rows={3} className={inputCls} value={theme} onChange={(e) => setTheme(e.target.value)} placeholder="Ex.: um pai ensinando o filho a pescar e lembrando da própria infância" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-zinc-300">Gênero musical<input className={inputCls + " mt-1"} value={genre} onChange={(e) => setGenre(e.target.value)} /></label>
+          <label className="text-xs font-semibold text-zinc-300">Clima / sentimento<input className={inputCls + " mt-1"} value={mood} onChange={(e) => setMood(e.target.value)} /></label>
+          <label className="text-xs font-semibold text-zinc-300">Voz<select className={inputCls + " mt-1"} value={voice} onChange={(e) => setVoice(e.target.value)}><option>indiferente</option><option>masculina</option><option>feminina</option><option>dueto</option></select></label>
+          <label className="text-xs font-semibold text-zinc-300">Idioma<select className={inputCls + " mt-1"} value={language} onChange={(e) => setLanguage(e.target.value)}><option>português do Brasil</option><option>inglês</option><option>espanhol</option></select></label>
+          <label className="text-xs font-semibold text-zinc-300">Duração aproximada<select className={inputCls + " mt-1"} value={duration} onChange={(e) => setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>
+        </div>
+        <button disabled={busy || !status.runtime_running || !status.active_model || !theme.trim()} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
+          {busy ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />} Gerar letra localmente
+        </button>
+        {result && <div className="space-y-3">
+          <label className="block text-xs font-semibold text-zinc-300">Letra gerada — você pode editar antes de usar</label>
+          <textarea rows={18} className={inputCls} value={result} onChange={(e) => setResult(e.target.value)} />
+          <button onClick={() => onUseLyrics(result)} className="w-full rounded-xl bg-white px-4 py-3 font-black text-black">Usar esta letra na criação musical</button>
+        </div>}
+      </section>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ aplicativo
 export default function App() {
   const [tab, setTab] = useState("criar");
@@ -549,6 +733,7 @@ export default function App() {
         </div>
         {[
           { id: "criar", label: "Criar", icon: <Sparkles size={16} /> },
+          { id: "compositor", label: "Compositor IA", icon: <Music size={16} /> },
           { id: "ajuda", label: "Como usar", icon: <HelpCircle size={16} /> },
         ].map((n) => (
           <button
@@ -585,6 +770,8 @@ export default function App() {
             <p><b className="text-white">4. Ajustar a banda.</b> Clique em “Cantar por cima”, envie a sua gravação e escolha os instrumentos. O programa cria uma banda nova que acompanha o seu jeito de cantar.</p>
             <p className="text-zinc-500">Mantenha abertas as duas janelas pretas enquanto usa. Para fechar tudo, feche as janelas pretas.</p>
           </div>
+        ) : tab === "compositor" ? (
+          <CompositorPanel onUseLyrics={(lyrics) => { setForm((f) => ({ ...f, lyrics, instrumentalOnly: false })); setTab("criar"); }} />
         ) : (
           <div className="grid gap-6 p-4 lg:p-6 lg:grid-cols-[430px_1fr]">
             {/* ---------------- formulário ---------------- */}
