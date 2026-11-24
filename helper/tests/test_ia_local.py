@@ -40,7 +40,14 @@ class RuntimeCatalogTests(unittest.TestCase):
         model = ia_local.MODEL_CATALOG["qwen3-4b-q4km"]
         self.assertEqual(model["repo"], "Qwen/Qwen3-4B-GGUF")
         self.assertEqual(model["license"], "Apache-2.0")
+        self.assertFalse(model["requires_license_acceptance"])
         self.assertTrue(model["filename"].endswith(".gguf"))
+
+    def test_gemma_requires_explicit_terms_acceptance(self):
+        model = ia_local.MODEL_CATALOG["gemma3-4b-it-q4km"]
+        self.assertEqual(model["repo"], "ggml-org/gemma-3-4b-it-GGUF")
+        self.assertEqual(model["license"], "Gemma Terms of Use")
+        self.assertTrue(model["requires_license_acceptance"])
 
     def test_data_is_outside_source_music_folder(self):
         self.assertNotEqual(ia_local.ROOT, Path(ia_local.__file__).parent / "musicas")
