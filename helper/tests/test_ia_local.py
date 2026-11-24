@@ -56,6 +56,16 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertEqual(model["license"], "Gemma Terms of Use")
         self.assertTrue(model["requires_license_acceptance"])
 
+    def test_shared_models_directory_override_is_respected(self):
+        shared = Path(TEMP_DATA) / "shared" / "LLM"
+        with unittest.mock.patch.dict(os.environ, {"SOCIAL_MUSIC_BEAT_MODELS_DIR": str(shared)}):
+            self.assertEqual(ia_local.models_dir(), shared)
+
+    def test_default_models_directory_remains_inside_user_data(self):
+        with unittest.mock.patch.dict(os.environ):
+            os.environ.pop("SOCIAL_MUSIC_BEAT_MODELS_DIR", None)
+            self.assertEqual(ia_local.models_dir(), ia_local.ROOT / "models")
+
     def test_data_is_outside_source_music_folder(self):
         self.assertNotEqual(ia_local.ROOT, Path(ia_local.__file__).parent / "musicas")
 
