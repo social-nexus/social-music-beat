@@ -42,16 +42,16 @@ Se algum download falhar, rode o `instalar.bat` de novo: o que já foi baixado n
    ```
    No Mac, se o sistema bloquear os `.command` ("desenvolvedor não identificado"), rode também `xattr -dr com.apple.quarantine .`.
 3. O ACE-Step fica por padrão em `~/ACE-Step-1.5` (veja o `config.sh`). Se a pasta não existir, o instalador oferece baixá-lo do GitHub.
-4. Rode `./instalar.sh` (Mac: também dá para dar duplo clique em `instalar.command`). Ele instala o ACE-Step com o `uv`, cria o ambiente do separador de voz e baixa os modelos. **Demora e baixa vários GB.**
+4. Rode `./instalar-linux.sh` (Mac: dê duplo clique em `instalar-mac.command`). Ele instala o ACE-Step com o `uv`, cria o ambiente do separador de voz e baixa os modelos. **Demora e baixa vários GB.**
 
-**Python 3.11:** `brew install python@3.11` no Mac, ou `sudo apt install python3.11 python3.11-venv` no Debian/Ubuntu. Sem o 3.11, o `instalar.sh` usa o `uv` para baixá-lo.
+**Python 3.11:** `brew install python@3.11` no Mac, ou `sudo apt install python3.11 python3.11-venv` no Debian/Ubuntu. Sem o 3.11, o `instalar-linux.sh` usa o `uv` para baixá-lo.
 
 **Mac com Intel:** o instalador usa PyTorch 2.2.2 no separador de voz, porque o 2.5.1 não existe para esse Mac. O ACE-Step nesse Mac pode não funcionar bem; consulte a página dele.
 
 ## Uso diário (Linux e macOS)
 
-- **Ligar:** `./iniciar.sh` (Mac: duplo clique em `iniciar.command`). O motor de música e o servidor rodam em segundo plano, e a janela abre no Chrome, Edge, Brave ou Chromium, se houver; senão, no navegador padrão, em `http://localhost:8002`. Os logs ficam na pasta `logs` (`logs/acestep.log` mostra o andamento do motor).
-- **Desligar:** `./parar.sh` (Mac: `parar.command`). Fechar só a janela não desliga os motores.
+- **Ligar:** `./iniciar-linux.sh` (Mac: duplo clique em `iniciar-mac.command`). O motor de música e o servidor rodam em segundo plano, e a janela abre no Chrome, Edge, Brave ou Chromium, se houver; senão, no navegador padrão, em `http://localhost:8002`. Os logs ficam na pasta `logs` (`logs/acestep.log` mostra o andamento do motor).
+- **Desligar:** `./parar-linux.sh` (Mac: duplo clique em `parar-mac.command`). Fechar só a janela não desliga os motores.
 
 ## Uso diário (Windows)
 
