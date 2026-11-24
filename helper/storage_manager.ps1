@@ -73,11 +73,11 @@ function Move-VerifiedDirectory([string]$Label, [string]$Source, [string]$Destin
         $relative = $file.FullName.Substring($src.Length).TrimStart('\')
         $target = Join-Path $dst $relative
         if (-not (Test-Path -LiteralPath $target -PathType Leaf)) {
-            throw "Verificacao falhou em $Label: arquivo ausente no destino: $relative. Os originais foram preservados."
+            throw "Verificacao falhou em ${Label}: arquivo ausente no destino: $relative. Os originais foram preservados."
         }
         $targetInfo = Get-Item -LiteralPath $target
         if ($targetInfo.Length -ne $file.Length) {
-            throw "Verificacao falhou em $Label: tamanho diferente em $relative. Os originais foram preservados."
+            throw "Verificacao falhou em ${Label}: tamanho diferente em $relative. Os originais foram preservados."
         }
     }
     [void]$Moved.Add([pscustomobject]@{ Label = $Label; Source = $src; Destination = $dst })
