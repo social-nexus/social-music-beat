@@ -102,7 +102,7 @@ O arquivo [Musica-Prompt-Mestre.txt](Musica-Prompt-Mestre.txt) tem um prompt pro
 
 Também é possível importar um arquivo GGUF já existente. A licença de modelos importados precisa ser conferida pelo próprio usuário.
 
-O runtime e os modelos são opcionais e ficam na pasta de dados do usuário, fora do repositório. A IA local usa a porta 8010 em `127.0.0.1`; o ACE-Step continua na porta 8001 e o servidor da interface na 8002.
+O runtime e os modelos são opcionais e ficam na pasta de dados do usuário, fora do repositório. A IA local usa a porta 8010 em `127.0.0.1`; o ACE-Step continua na porta 8001 e o servidor da interface em 8002.
 
 **Atenção:** esta primeira versão ainda precisa de teste de execução real em Windows, Linux e macOS. O pacote CUDA depende de drivers NVIDIA compatíveis e pode consumir muita VRAM; comece com poucas camadas na GPU ou use CPU. O compositor não é necessário para usar as funções musicais já existentes.
 
@@ -113,13 +113,13 @@ social-music-beat/
 ├── instalar / iniciar / parar    .bat (Windows) · .sh e .command (Linux/macOS)
 ├── config.bat / config.sh        configuração (caminho do ACE-Step)
 ├── _comum.sh                     funções de apoio dos scripts Linux/macOS
-├── helper/              servidor Python (FastAPI), separador de voz e legendas
+├── helper/                       servidor Python (FastAPI), separador de voz e legendas
 │   ├── server.py, legenda.py, ia_local.py, requirements.txt
-│   ├── tests/           testes do gerenciador de IA local
-│   ├── web/             interface já compilada
-│   └── musicas/         criada sozinha: suas músicas e biblioteca (não vai para o GitHub)
-├── interface-fonte/     código-fonte da interface (React + Vite + Tailwind)
-├── docs/               planos técnicos
+│   ├── tests/                     testes do gerenciador de IA local e provedores
+│   ├── web/                       interface já compilada
+│   └── musicas/                   criada sozinha: suas músicas e biblioteca (não vai para o GitHub)
+├── interface-fonte/               código-fonte da interface (React + Vite + Tailwind)
+├── docs/                           planos técnicos
 ├── MODEL_LICENSES.md, THIRD_PARTY_NOTICES.md
 ├── Musica-Prompt-Mestre.txt
 └── MANUAL DE USO.pdf
@@ -177,3 +177,17 @@ O modo **Local — Gemma / Qwen** continua disponível sem chave e sem cobrança
 Se o cofre seguro de credenciais não estiver disponível no sistema, o aplicativo não grava a chave em texto simples e mantém o modo local funcional. No Windows, use o Gerenciador de Credenciais do sistema; em macOS/Linux, o backend seguro do Keyring deve estar instalado e desbloqueado.
 
 As chaves são específicas deste usuário e desta instalação. Não as inclua em capturas de tela, logs, issues ou commits.
+
+## Validação por plataforma e testes da comunidade
+
+O CI do projeto executa os testes Python em quatro ambientes: Windows, Linux, macOS Intel e macOS Apple Silicon. Isso ajuda a encontrar incompatibilidades de código e de dependências sem exigir que o desenvolvedor tenha fisicamente todos esses computadores.
+
+**Importante:** passar no CI não significa que a instalação completa, os drivers, o ACE-Step, os modelos ou todos os recursos de áudio/vídeo foram testados em um computador real daquela plataforma. O desenvolvimento principal é feito e testado diretamente em Windows. Linux e macOS precisam também de validação prática com a comunidade.
+
+Se você usar Linux ou macOS (Intel ou Apple Silicon), e encontrar erro, compartilhe no [Discord da comunidade](https://discord.gg/nEjHQzgz3d), informando:
+- Sistema e versão (ex.: Ubuntu 24.04, macOS 15);
+- Arquitetura do computador (Intel ou Apple Silicon/M1 ou posterior);
+- Etapa em que ocorreu o erro;
+- Mensagem completa do erro e, se possível, o trecho correspondente do log.
+
+**Nunca envie chaves de API, senhas ou tokens** nos prints ou logs.
