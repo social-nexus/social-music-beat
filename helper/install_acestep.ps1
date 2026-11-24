@@ -41,6 +41,10 @@ if (Test-AceStep $installPath) {
             exit 2
         }
 
+        $installChoice = Read-Host "Pasta para instalar o ACE-Step [$installPath] (ENTER para manter)"
+        if (-not [string]::IsNullOrWhiteSpace($installChoice)) {
+            $installPath = $installChoice.Trim().Trim('"')
+        }
         $installPath = [IO.Path]::GetFullPath($installPath)
         if (Test-Path -LiteralPath $installPath) {
             $existing = Get-ChildItem -LiteralPath $installPath -Force -ErrorAction SilentlyContinue
@@ -53,12 +57,14 @@ if (Test-AceStep $installPath) {
         $driveInfo = Get-PSDrive -Name $drive.Substring(0,1) -PSProvider FileSystem -ErrorAction Stop
         $freeGB = [math]::Round($driveInfo.Free / 1GB, 1)
         Write-Host "Espaco livre em $drive : $freeGB GB"
-        if ($driveInfo.Free -lt 20GB) {
-            throw "Sao recomendados pelo menos 20 GB livres para baixar e extrair o ACE-Step portatil. Libere espaco ou escolha outra pasta."
+        if ($driveInfo.Free -lt 30GB) {
+            throw "Sao recomendados pelo menos 30 GB livres no disco de instalacao para baixar e extrair o ACE-Step portatil. Libere espaco ou escolha outra pasta."
         }
 
         $downloadUrl = "https://files.acemusic.ai/acemusic/win/ACE-Step-1.5.7z"
-        $tempRoot = Join-Path $env:TEMP ("SocialMusicBeat-ACE-" + [guid]::NewGuid().ToString("N"))
+        $tempParent = Split-Path $installPath -Parent
+        New-Item -ItemType Directory -Path $tempParent -Force | Out-Null
+        $tempRoot = Join-Path $tempParent (".SocialMusicBeat-ACE-" + [guid]::NewGuid().ToString("N"))
         $archive = Join-Path $tempRoot "ACE-Step-1.5.7z"
         $extractDir = Join-Path $tempRoot "extraido"
         $sevenZip = Join-Path $tempRoot "7zr.exe"
