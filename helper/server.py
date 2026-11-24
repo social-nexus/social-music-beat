@@ -25,6 +25,10 @@ app = FastAPI()
 from legenda import router as legenda_router  # noqa: E402
 
 app.include_router(legenda_router)
+
+from ia_local import router as ai_router  # noqa: E402
+
+app.include_router(ai_router)
 _lib_lock = threading.Lock()
 
 
