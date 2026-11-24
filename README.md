@@ -81,10 +81,13 @@ social-music-beat/
 ├── config.bat / config.sh        configuração (caminho do ACE-Step)
 ├── _comum.sh                     funções de apoio dos scripts Linux/macOS
 ├── helper/              servidor Python (FastAPI), separador de voz e legendas
-│   ├── server.py, legenda.py, requirements.txt
+│   ├── server.py, legenda.py, ia_local.py, requirements.txt
+│   ├── tests/           testes do gerenciador de IA local
 │   ├── web/             interface já compilada
 │   └── musicas/         criada sozinha: suas músicas e biblioteca (não vai para o GitHub)
 ├── interface-fonte/     código-fonte da interface (React + Vite + Tailwind)
+├── docs/               planos técnicos
+├── MODEL_LICENSES.md, THIRD_PARTY_NOTICES.md
 ├── Musica-Prompt-Mestre.txt
 └── MANUAL DE USO.pdf
 ```
@@ -103,9 +106,15 @@ O build já grava o resultado em `helper\web`.
 
 ## Compositor de letras com IA local
 
-Está em desenvolvimento uma expansão opcional para criar letras com modelos de linguagem executados no próprio computador. A ferramenta continuará funcionando sem baixar modelos de texto, e a geração musical continuará usando o ACE-Step.
+A branch de desenvolvimento inclui um compositor opcional com modelos de linguagem executados localmente. O runtime llama.cpp é baixado de releases oficiais fixados por versão e SHA-256; o primeiro modelo do catálogo é Qwen3-4B GGUF Q4_K_M. Também é possível importar arquivos GGUF que o usuário já possua.
 
-A arquitetura e o plano de implementação estão em [docs/PLANO-IA-LOCAL.md](docs/PLANO-IA-LOCAL.md). Ainda não há modelos de linguagem ou pesos incluídos nesta versão.
+A ferramenta continua funcionando sem baixar o runtime ou modelos de texto, e a geração musical continua usando o ACE-Step. O motor local escuta somente em 127.0.0.1.
+
+- Arquitetura e etapas: [docs/PLANO-IA-LOCAL.md](docs/PLANO-IA-LOCAL.md)
+- Avisos de terceiros: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+- Licenças dos modelos: [MODEL_LICENSES.md](MODEL_LICENSES.md)
+
+**Estado:** implementação inicial em desenvolvimento. Os pacotes e o fluxo precisam ser validados em instalações reais antes de uma publicação estável.
 
 ## Projeto relacionado
 
