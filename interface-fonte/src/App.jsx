@@ -471,6 +471,8 @@ function CompositorPanel({ onUseLyrics }) {
   const [sourceLyrics, setSourceLyrics] = useState("");
   const [melodyFile, setMelodyFile] = useState(null);
   const [melodyAnalysis, setMelodyAnalysis] = useState(null);
+  const [melodyRole, setMelodyRole] = useState("missing");
+  const [melodyWords, setMelodyWords] = useState("");
   const [melodyBusy, setMelodyBusy] = useState(false);
   const [recording, setRecording] = useState(false);
   const melodyInputRef = useRef(null);
@@ -589,7 +591,7 @@ function CompositorPanel({ onUseLyrics }) {
       recordingTimerRef.current = window.setTimeout(() => {
         if (recorderRef.current && recorderRef.current.state === "recording") recorderRef.current.stop();
       }, 30000);
-      setRecording(true); setError(""); setMessage("Gravando… canteolar ou toque uma ideia musical e depois pressione Parar.");
+      setRecording(true); setError(""); setMessage("Gravando… cante a ideia musical e depois pressione Parar.");
     } catch (e) {
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null; setRecording(false);
@@ -611,7 +613,7 @@ function CompositorPanel({ onUseLyrics }) {
     if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
     setBusy(true); setError(""); setMessage("Compondo a letra localmente…"); setResult("");
     try {
-      const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "" });
+      const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
       setResult(r.lyrics);
       const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
       setMessage((labels[compositionMode] || "Composição concluída") + " com " + r.model + ".");
@@ -721,9 +723,18 @@ function CompositorPanel({ onUseLyrics }) {
         </div>}
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
           <div>
-            <p className="text-sm font-bold text-white">Melodia de referência (opcional)</p>
-            <p className="mt-1 text-xs leading-relaxed text-zinc-400">Grave cantarolando ou importe um trecho de até 30 segundos. A ferramenta estima pulso, dinâmica e contorno melódico para orientar o fraseado da letra.</p>
+            <p className="text-sm font-bold text-white">Minha voz como referência (opcional)</p>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-400">Cante sua ideia, mesmo com palavras incompletas, sílabas inventadas ou apenas cantarolando. A ferramenta estima fraseado e movimento melódico para ajudar a encaixar a letra.</p>
           </div>
+          <label className="block text-xs font-semibold text-zinc-300">O trecho gravado representa:
+            <select className={inputCls + " mt-1"} value={melodyRole} onChange={(e) => setMelodyRole(e.target.value)}>
+              <option value="missing">A melodia da parte que ainda falta criar</option>
+              <option value="existing">Uma parte da letra que já escrevi/cantei</option>
+            </select>
+          </label>
+          <label className="block text-xs font-semibold text-zinc-300">Palavras que cantei (opcional)
+            <textarea rows={2} className={inputCls + " mt-1"} value={melodyWords} onChange={(e) => setMelodyWords(e.target.value)} placeholder="Escreva as palavras, mesmo que estejam incompletas. Se foi só cantarolado, deixe vazio."/>
+          </label>
           <div className="flex flex-wrap gap-2">
             <button type="button" disabled={melodyBusy || recording} onClick={() => melodyInputRef.current?.click()} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-40">Importar áudio</button>
             {!recording ? (
