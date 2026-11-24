@@ -29,28 +29,28 @@ const STYLES = [
 
   // Ritmos brasileiros.
   { category: "Brasil", label: "Samba", v: "joyful Brazilian samba, 102 BPM, syncopated surdo, pandeiro, tamborim, cavaquinho, agogo bell, lively bass, swinging expressive vocals" },
-  { category: "Brasil", label: "Pagode", v: "upbeat Brazilian pagode,  honderd BPM, tantan, pandeiro, repique de mao, cavaquinho, banjo, warm bass, rhythmic group backing vocals, relaxed swinging groove".replace(" honderd", "100") },
+  { category: "Brasil", label: "Pagode", v: "upbeat Brazilian pagode, 100 BPM, tantan, pandeiro, repique de mao, cavaquinho, banjo, warm bass, rhythmic group backing vocals, relaxed swinging groove" },
   { category: "Brasil", label: "Samba-enredo", v: "high-energy Brazilian samba-enredo, 146 BPM, powerful bateria percussion, surdo, caixa, tamborim, cuica, brass accents, massed joyful chorus, carnival parade drive" },
   { category: "Brasil", label: "Forró pé de serra", v: "lively traditional Brazilian forro, 132 BPM, accordion lead, zabumba groove, triangle pulse, acoustic bass, playful dance rhythm, warm regional vocals" },
   { category: "Brasil", label: "Forró eletrônico", v: "upbeat modern Brazilian forro, 138 BPM, accordion hooks, electronic drums, strong bass, synth textures, bright rhythmic guitar, energetic romantic vocals" },
   { category: "Brasil", label: "Piseiro", v: "energetic Brazilian piseiro, 150 BPM, punchy electronic kick, syncopated bass, bright keyboard riffs, claps, repetitive dance groove, catchy direct vocals" },
-  { category: "Brasil", label: "Sertanejo universitário", v: "upbeat Brazilian sertanejo universitario,  churrasqueira BPM, driving acoustic guitar strums, sertanejo rhythm guitar, punchy drums, bass, bright accordion touches, energetic duo vocals".replace(" churrasqueira", "126") },
+  { category: "Brasil", label: "Sertanejo universitário", v: "upbeat Brazilian sertanejo universitario, 126 BPM, driving acoustic guitar strums, sertanejo rhythm guitar, punchy drums, bass, bright accordion touches, energetic duo vocals" },
   { category: "Brasil", label: "Sertanejo raiz", v: "traditional Brazilian sertanejo raiz, 96 BPM, viola caipira, acoustic guitar, accordion, organic percussion, warm storytelling vocals, countryside feel" },
   { category: "Brasil", label: "Axé", v: "high-energy Brazilian axe music, 138 BPM, swinging bloco percussion, surdo, timbau, electric guitar, bass, brass accents, exuberant vocals, carnival dance groove" },
   { category: "Brasil", label: "MPB animada", v: "upbeat Brazilian MPB, 112 BPM, nylon-string guitar, piano, melodic bass, Brazilian percussion, tasteful strings, expressive sophisticated vocals, flowing groove" },
-  { category: "Brasil", label: "Bossa nova", v: "Brazilian bossa nova,  שה BPM, soft syncopated nylon guitar, brushed drums, upright bass, gentle piano, intimate understated vocals, relaxed elegant sway".replace(" שה", "92") },
+  { category: "Brasil", label: "Bossa nova", v: "Brazilian bossa nova, 92 BPM, soft syncopated nylon guitar, brushed drums, upright bass, gentle piano, intimate understated vocals, relaxed elegant sway" },
   { category: "Brasil", label: "Funk carioca", v: "upbeat Brazilian funk carioca, 130 BPM, hard tamborzao beat, deep sub bass, syncopated percussion, sharp synth stabs, rhythmic vocal delivery, high-energy baile groove" },
 
   // Urbano e grooves.
   { category: "Urbano", label: "Hip-hop", v: "groovy hip hop, 92 BPM, punchy boom bap drums, deep bass, sampled soul keys, rhythmic rap vocals, confident laid-back flow" },
   { category: "Urbano", label: "Trap", v: "modern melodic trap, 140 BPM half-time feel, deep 808 bass, crisp hi-hat rolls, punchy kick and snare, atmospheric synths, melodic rap vocals" },
-  { category: "Urbano", label: "R&B", v: "smooth contemporary R&B,  is BPM, deep rounded bass, laid-back syncopated drums, electric piano, warm synth pads, soulful expressive vocals, rich harmonies".replace(" is", "88") },
+  { category: "Urbano", label: "R&B", v: "smooth contemporary R&B, 88 BPM, deep rounded bass, laid-back syncopated drums, electric piano, warm synth pads, soulful expressive vocals, rich harmonies" },
   { category: "Urbano", label: "Soul", v: "uplifting classic soul, 110 BPM, live drums, warm bass, Hammond organ, rhythmic guitar, brass section, powerful soulful vocals, rich backing harmonies" },
   { category: "Urbano", label: "Reggae", v: "positive roots reggae, 76 BPM, relaxed one-drop drums, deep melodic bass, offbeat skank guitar, organ bubbles, warm laid-back vocals" },
   { category: "Urbano", label: "Ska", v: "upbeat ska, 148 BPM, fast offbeat guitar and piano, walking bass, lively drums, bright brass section, energetic vocals, danceable bounce" },
 
   // Romântico e emocional (com variação real de andamento).
-  { category: "Romântico", label: "Balada pop", v: "emotional pop ballad,  callback BPM, expressive piano, warm strings, gentle drums building into a powerful chorus, intimate adult lead vocals".replace(" callback", "76") },
+  { category: "Romântico", label: "Balada pop", v: "emotional pop ballad, 76 BPM, expressive piano, warm strings, gentle drums building into a powerful chorus, intimate adult lead vocals" },
   { category: "Romântico", label: "Balada rock", v: "dramatic rock ballad, 78 BPM, piano intro, sustained electric guitars, live drums building gradually, melodic bass, emotional powerful vocals, soaring chorus" },
   { category: "Romântico", label: "Romântico acústico", v: "intimate acoustic love song, 84 BPM, fingerpicked acoustic guitar, soft piano, subtle strings, warm bass, tender close-miked vocals" },
   { category: "Romântico", label: "Bolero", v: "classic Latin bolero, 72 BPM, nylon guitar, soft strings, gentle Latin percussion, warm bass, expressive romantic crooning vocals" },
@@ -63,14 +63,14 @@ const STYLES = [
   { category: "Dança", label: "EDM festival", v: "energetic festival EDM, 128 BPM, powerful electronic kick, sidechain synth bass, bright supersaw leads, risers, big melodic drop, euphoric vocals" },
   { category: "Dança", label: "Salsa", v: "energetic salsa, 184 BPM, piano montuno, congas, timbales, cowbell, tumbao bass, bright brass section, lively call-and-response vocals" },
   { category: "Dança", label: "Cumbia", v: "joyful Latin cumbia, 96 BPM, syncopated percussion, guiro, congas, melodic bass, bright accordion or keyboard hooks, festive vocals" },
-  { category: "Dança", label: "Merengue", v: "fast joyful merengue,  experto BPM, tambora, guira, lively bass, bright accordion and brass, energetic dance vocals".replace(" experto", "128") },
+  { category: "Dança", label: "Merengue", v: "fast joyful merengue, 128 BPM, tambora, guira, lively bass, bright accordion and brass, energetic dance vocals" },
 
   // Internacional e tradicional.
   { category: "Internacional", label: "Country", v: "upbeat modern country, 116 BPM, acoustic guitar, banjo, fiddle, pedal steel accents, steady drums, warm bass, lively storytelling vocals" },
   { category: "Internacional", label: "Blues", v: "upbeat blues shuffle, 112 BPM, electric blues guitar, walking bass, shuffle drums, piano fills, expressive gritty vocals" },
   { category: "Internacional", label: "Jazz swing", v: "joyful swing jazz, 150 BPM, walking upright bass, swinging brushed drums, piano, saxophone, trumpet, playful melodic vocals" },
   { category: "Internacional", label: "Flamenco pop", v: "energetic flamenco pop, 118 BPM, Spanish nylon guitar, palmas handclaps, cajon, melodic bass, passionate vocals, rhythmic guitar flourishes" },
-  { category: "Internacional", label: "Afrobeat", v: "upbeat contemporary afrobeat,  ಸಂ BPM, syncopated polyrhythmic percussion, deep bass, bright guitar patterns, warm keyboards, melodic rhythmic vocals".replace(" ಸಂ", "108") },
+  { category: "Internacional", label: "Afrobeat", v: "upbeat contemporary afrobeat, 108 BPM, syncopated polyrhythmic percussion, deep bass, bright guitar patterns, warm keyboards, melodic rhythmic vocals" },
 
   // Instrumental e trilhas.
   { category: "Instrumental", label: "Orquestral épico", v: "cinematic orchestral instrumental, 100 BPM, sweeping strings, bold brass, deep timpani, dynamic percussion, dramatic melodic development, no vocals" },
