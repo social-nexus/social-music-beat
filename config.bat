@@ -1,6 +1,7 @@
 @echo off
 REM Caminho da instalacao do ACE-Step (os programas continuam nesta pasta).
 set "ACESTEP_DIR=C:\ACE-Step-1.5"
+if exist "%LOCALAPPDATA%\SocialNexus\acestep-path.bat" call "%LOCALAPPDATA%\SocialNexus\acestep-path.bat"
 
 REM Configuracao compartilhada opcional do Social Nexus.
 REM Se nao existir, cada ferramenta usa seus caminhos locais padrao.
