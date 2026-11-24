@@ -63,9 +63,9 @@ Se algum download falhar, rode o `instalar.bat` de novo: o que já foi baixado n
 
 O Social Music Beat pode usar uma biblioteca central de modelos compartilhada com outros aplicativos Social Nexus, como o Social Sound. Por padrao, nada muda: os modelos continuam nos diretorios locais de cada usuario.
 
-Para configurar outro SSD, feche as ferramentas e execute `configurar_armazenamento.bat`. O assistente sugere `D:\\IA_MODELS`, mas aceita outro caminho. Ele migra os caches/modelos existentes por copia verificada e pergunta se deseja remover as origens somente depois da verificacao. Programas, ambientes Python e runtime llama.cpp permanecem nas pastas de instalacao/dados atuais.
+Para configurar outro SSD, feche as ferramentas e execute `configurar_armazenamento.bat`. O assistente sugere `D:\\IA_MODELS`, mas aceita outro caminho. Os caches de LLM, Hugging Face e PyTorch são copiados e verificados por tamanho e SHA-256; a remoção dessas origens é opcional. Para o ACE-Step, o assistente identifica a pasta real usando o Python da própria instalação, copia e verifica os pesos e cria uma junction NTFS no caminho original `checkpoints`. O backup original do ACE-Step é mantido para que você possa testar uma geração antes de apagá-lo manualmente. Programas, ambientes Python e runtime llama.cpp permanecem nas pastas de instalação/dados atuais.
 
-Com a biblioteca configurada, novos downloads do Qwen/Gemma, Whisper, Demucs e ACE-Step (quando a instalacao ACE-Step reconhecer `ACESTEP_CHECKPOINTS_DIR`) passam a usar a pasta central. Se o disco configurado estiver desconectado, a inicializacao e interrompida com aviso; nao ha fallback silencioso para o disco do Windows.
+Com a biblioteca configurada, novos downloads do Qwen/Gemma, Whisper e Demucs usam a pasta central pelas variáveis de ambiente. O ACE-Step continua usando o caminho `<instalação>\\checkpoints`, mas essa pasta é redirecionada para `ACE-Step` na biblioteca central por uma junction do Windows; assim, não depende de suporte a `ACESTEP_CHECKPOINTS_DIR`. Se o disco configurado estiver desconectado, a inicialização é interrompida com aviso; não há fallback silencioso para o disco do Windows.
 
 Estrutura criada:
 ```
