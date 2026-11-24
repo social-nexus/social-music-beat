@@ -125,8 +125,18 @@ MODEL_CATALOG = {
         "license": "Apache-2.0",
         "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
         "model_url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF",
-        "approx_size_gb": 2.5,
+        "approx_size_gb": 2.5, "requires_license_acceptance": False,
         "description": "Modelo multilíngue de 4B parâmetros, quantização Q4_K_M. Download direto do repositório oficial Qwen."
+    },
+    "gemma3-4b-it-q4km": {
+        "name": "Gemma 3 4B Instruct — Q4_K_M",
+        "family": "Gemma 3", "repo": "ggml-org/gemma-3-4b-it-GGUF",
+        "filename": "gemma-3-4b-it-Q4_K_M.gguf",
+        "license": "Gemma Terms of Use",
+        "license_url": "https://ai.google.dev/gemma/terms",
+        "model_url": "https://huggingface.co/ggml-org/gemma-3-4b-it-GGUF",
+        "approx_size_gb": 2.49, "requires_license_acceptance": True,
+        "description": "Gemma 3 4B Instruct em GGUF Q4_K_M. Requer leitura e aceite dos Gemma Terms of Use antes do download."
     }
 }
 
@@ -402,7 +412,7 @@ def ai_catalog():
                  "compatible": v["system"] == system and v["machine"].lower() == machine}
                 for k, v in RUNTIME_CATALOG.items()]
     models = [{"id": k, **{x: v[x] for x in ("name", "family", "repo", "filename", "license",
-               "license_url", "model_url", "approx_size_gb", "description")},
+               "license_url", "model_url", "approx_size_gb", "description", "requires_license_acceptance")},
                "installed": _model_file(k).is_file()} for k, v in MODEL_CATALOG.items()]
     return {"runtimes": runtimes, "models": models, "installed_models": _installed_models()}
 
@@ -427,6 +437,8 @@ def download_model(payload: dict, request: Request):
     model_id = str(payload.get("model_id", ""))
     if model_id not in MODEL_CATALOG:
         raise HTTPException(400, "Modelo não permitido pelo catálogo.")
+    if MODEL_CATALOG[model_id].get("requires_license_acceptance") and payload.get("accept_license") is not True:
+        raise HTTPException(400, "Leia e aceite os termos de uso do modelo antes de baixar.")
     if _model_file(model_id).is_file():
         return {"installed": True}
     jid = _job("model")
