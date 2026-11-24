@@ -1,3 +1,7 @@
+param(
+    [string]$Root
+)
+
 $ErrorActionPreference = "Stop"
 
 Write-Host ""
@@ -9,18 +13,23 @@ Write-Host "Este assistente move os caches/modelos para uma pasta central."
 Write-Host "Os programas e ambientes Python permanecem onde estao."
 Write-Host ""
 
-$systemDrive = [IO.Path]::GetPathRoot($env:SystemRoot)
-$fixedDrives = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction SilentlyContinue |
-    Where-Object { $_.DeviceID -and $_.FreeSpace -ne $null } |
-    Sort-Object -Property FreeSpace -Descending)
-$preferredDrive = $systemDrive
-$secondaryDrive = $fixedDrives | Where-Object { ($_.DeviceID + '\') -ne $systemDrive -and $_.FreeSpace -gt 15GB } | Select-Object -First 1
-if ($secondaryDrive) {
-    $preferredDrive = $secondaryDrive.DeviceID + '\'
+if ([string]::IsNullOrWhiteSpace($Root)) {
+    $systemDrive = [IO.Path]::GetPathRoot($env:SystemRoot)
+    $fixedDrives = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction SilentlyContinue |
+        Where-Object { $_.DeviceID -and $_.FreeSpace -ne $null } |
+        Sort-Object -Property FreeSpace -Descending)
+    $preferredDrive = $systemDrive
+    $secondaryDrive = $fixedDrives | Where-Object { ($_.DeviceID + '\') -ne $systemDrive -and $_.FreeSpace -gt 15GB } | Select-Object -First 1
+    if ($secondaryDrive) {
+        $preferredDrive = $secondaryDrive.DeviceID + '\'
+    }
+    $defaultRoot = Join-Path $preferredDrive "IA_MODELS"
+    $answer = Read-Host "Pasta central dos modelos [$defaultRoot]"
+    if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $defaultRoot }
+} else {
+    $answer = $Root
+    Write-Host "Usando a biblioteca ja configurada: $answer"
 }
-$defaultRoot = Join-Path $preferredDrive "IA_MODELS"
-$answer = Read-Host "Pasta central dos modelos [$defaultRoot]"
-if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $defaultRoot }
 $root = [IO.Path]::GetFullPath($answer.Trim().Trim('"')).TrimEnd('\')
 
 if ($root -match '["&|<>^%!;]') {
