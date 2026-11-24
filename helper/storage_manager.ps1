@@ -79,6 +79,11 @@ function Move-VerifiedDirectory([string]$Label, [string]$Source, [string]$Destin
         if ($targetInfo.Length -ne $file.Length) {
             throw "Verificacao falhou em ${Label}: tamanho diferente em $relative. Os originais foram preservados."
         }
+        $sourceHash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
+        $targetHash = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+        if ($sourceHash -ne $targetHash) {
+            throw "Verificacao SHA-256 falhou em ${Label}: arquivo diferente em $relative. Os originais foram preservados."
+        }
     }
     [void]$Moved.Add([pscustomobject]@{ Label = $Label; Source = $src; Destination = $dst })
     Write-Host "[$Label] Copia verificada."
