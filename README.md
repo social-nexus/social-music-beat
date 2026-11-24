@@ -160,3 +160,20 @@ Código deste repositório sob licença [MIT](LICENSE). ACE-Step, Demucs, PyTorc
 **Use com responsabilidade:** use apenas letras, vozes e músicas suas ou autorizadas, não imite artistas reais e informe o uso de IA ao publicar. Leia as regras atuais da plataforma e da distribuidora antes de publicar.
 
 Autor: **Pedoibd** · Comunidade: [IA Voz e Vídeo no Discord](https://discord.gg/nEjHQzgz3d)
+
+
+## Provedores de IA por API (opcional)
+
+Além dos modelos locais Gemma e Qwen, o compositor pode usar a chave de API do próprio usuário. A primeira integração oferece OpenAI, Anthropic Claude, Google Gemini, OpenRouter, DeepSeek, Groq e Mistral AI. O OpenRouter permite acessar modelos de diferentes famílias por uma API unificada. Novos adaptadores podem ser adicionados sem alterar os modos locais.
+
+1. Abra **Compositor IA** e escolha o provedor desejado.
+2. Informe o identificador do modelo (a lista apresenta sugestões; os modelos disponíveis e os nomes podem mudar).
+3. Cadastre a chave de API. Ela é armazenada pelo cofre de credenciais do sistema operacional via Python Keyring, não no repositório nem no arquivo de preferências.
+4. Use **Testar conexão** e depois **Usar este provedor**.
+5. Na composição, selecione Música completa, Continuar composição ou Criar somente refrão normalmente.
+
+O modo **Local — Gemma / Qwen** continua disponível sem chave e sem cobrança por requisição. No modo de API, o texto e os dados enviados para a composição são encaminhados ao provedor selecionado; verifique os termos de privacidade, preços, limites e créditos da sua conta. A assinatura de um chatbot não inclui necessariamente créditos de API.
+
+Se o cofre seguro de credenciais não estiver disponível no sistema, o aplicativo não grava a chave em texto simples e mantém o modo local funcional. No Windows, use o Gerenciador de Credenciais do sistema; em macOS/Linux, o backend seguro do Keyring deve estar instalado e desbloqueado.
+
+As chaves são específicas deste usuário e desta instalação. Não as inclua em capturas de tela, logs, issues ou commits.
