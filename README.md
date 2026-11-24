@@ -101,6 +101,12 @@ npm run build
 
 O build já grava o resultado em `helper\web`.
 
+## Compositor de letras com IA local
+
+Está em desenvolvimento uma expansão opcional para criar letras com modelos de linguagem executados no próprio computador. A ferramenta continuará funcionando sem baixar modelos de texto, e a geração musical continuará usando o ACE-Step.
+
+A arquitetura e o plano de implementação estão em [docs/PLANO-IA-LOCAL.md](docs/PLANO-IA-LOCAL.md). Ainda não há modelos de linguagem ou pesos incluídos nesta versão.
+
 ## Projeto relacionado
 
 - [Social Sound](https://github.com/pedroibd/social-sound): narração com clonagem de voz, roteiro, diálogo, legendas e edição de vídeo.
