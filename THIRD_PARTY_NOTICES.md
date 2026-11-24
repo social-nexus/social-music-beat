@@ -19,6 +19,14 @@
 - O modelo é baixado diretamente do Hugging Face. A aplicação consulta o hash LFS e o tamanho do arquivo no repositório antes do download e valida SHA-256 depois de baixar.
 - O usuário deve observar os termos e avisos do repositório original.
 
+## Gemma 3 4B Instruct — GGUF
+
+- Origem do modelo base: Google Gemma 3.
+- Conversão GGUF: https://huggingface.co/ggml-org/gemma-3-4b-it-GGUF
+- Termos aplicáveis: Gemma Terms of Use, https://ai.google.dev/gemma/terms
+- O aplicativo não redistribui os pesos; o arquivo é obtido diretamente do repositório indicado.
+- O usuário precisa confirmar que leu e aceita os termos antes de iniciar o download. Os termos não são substituídos pela licença MIT do llama.cpp.
+
 ## Modelos importados pelo usuário
 
 A aplicação permite importar arquivos GGUF externos. Ela não verifica automaticamente a licença, procedência, segurança, arquitetura ou qualidade do modelo importado. A responsabilidade de confirmar autorização e termos de uso é do usuário.
