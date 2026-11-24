@@ -27,6 +27,13 @@ pip install -r requirements.txt
 if errorlevel 1 goto falha
 
 echo.
+echo Verificando o armazenamento seguro de chaves (Keyring)...
+python -m pip install --upgrade "keyring>=25.5,<26"
+if errorlevel 1 goto falha
+python -c "import keyring; print('Keyring instalado:', keyring.__file__)"
+if errorlevel 1 goto falha
+
+echo.
 echo [3/5] Instalando o Whisper da aba de legendas (modo Preciso)...
 pip install faster-whisper "numpy==1.26.4"
 if errorlevel 1 echo AVISO: nao consegui instalar o Whisper. O modo Rapido das legendas funciona sem ele. Rode este instalar.bat de novo mais tarde.
