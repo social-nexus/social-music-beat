@@ -4,11 +4,14 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+from unittest.mock import AsyncMock
+from starlette.requests import Request
 
 TEMP_DATA = tempfile.mkdtemp(prefix="smb-provider-tests-")
 os.environ["SOCIAL_MUSIC_BEAT_DATA"] = TEMP_DATA
 
 import ai_providers
+import ia_local
 
 
 class ProviderConfigTests(unittest.TestCase):
@@ -42,6 +45,21 @@ class ProviderConfigTests(unittest.TestCase):
         openai = next(item for item in data["providers"] if item["id"] == "openai")
         self.assertTrue(openai["configured"])
         self.assertNotIn("secret", json.dumps(data))
+
+
+
+class CloudLyricsRoutingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_cloud_provider_does_not_require_local_runtime(self):
+        request = Request({"type": "http", "headers": [(b"host", b"localhost:8002")]})
+        payload = {"provider": "openai", "provider_model": "gpt-4.1-mini",
+                   "mode": "full", "theme": "uma canção de amizade",
+                   "genre": "pop", "mood": "alegre"}
+        with mock.patch.object(ia_local, "generate_with_provider",
+                               new=AsyncMock(return_value="TÍTULO: Amizade\\nLETRA:")) as generate:
+            result = await ia_local.generate_lyrics(payload, request)
+        self.assertEqual(result["provider"], "openai")
+        self.assertEqual(result["lyrics"], "TÍTULO: Amizade\\nLETRA:")
+        generate.assert_awaited_once()
 
 
 if __name__ == "__main__":
