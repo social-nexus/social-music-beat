@@ -23,7 +23,7 @@ from pathlib import Path, PurePosixPath
 from urllib.request import Request, urlopen
 
 import httpx
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
 router = APIRouter(prefix="/api/ai", tags=["ia-local"])
 LOCK = threading.RLock()
