@@ -7,7 +7,8 @@
 - Licença do código: MIT.
 - Licença: https://github.com/ggml-org/llama.cpp/blob/b12359/LICENSE
 - Os pacotes binários são baixados diretamente dos releases oficiais do projeto. Cada pacote está fixado por URL, tamanho esperado e SHA-256 no arquivo `helper/ia_local.py`.
-- Os pacotes CUDA podem incluir DLLs de runtime NVIDIA em um arquivo auxiliar oficial separado. Esses componentes não estão cobertos pela licença MIT do llama.cpp; consulte os avisos/licenças aplicáveis da NVIDIA distribuídos com os componentes.
+- Os pacotes CUDA podem incluir DLLs de runtime NVIDIA em um arquivo auxiliar oficial separado. Esses componentes não estão cobertos pela licença MIT do llama.cpp; consulte os avisos/licenças aplicáveis da NVIDIA distribuídos com os componentes e a [CUDA EULA](https://docs.nvidia.com/cuda/eula/index.html).
+- Cópia do texto MIT do llama.cpp: [licenses/LLAMA-CPP-MIT.txt](licenses/LLAMA-CPP-MIT.txt).
 - O runtime não é redistribuído dentro do ZIP fonte nesta fase; o aplicativo baixa o pacote escolhido pelo usuário e valida o hash antes de instalar.
 
 ## Qwen3-4B-GGUF
