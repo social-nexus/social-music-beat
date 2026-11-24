@@ -59,6 +59,23 @@ Se algum download falhar, rode o `instalar.bat` de novo: o que já foi baixado n
 - **Ligar:** duplo clique em `iniciar.bat`. Abrem duas janelas pretas (**não feche**) e uma janela própria do Edge em `http://localhost:8002`. Na primeira vez, o motor demora alguns minutos para ligar; um aviso amarelo aparece no topo até ficar pronto.
 - **Desligar:** duplo clique em `parar.bat`. Fechar só a janela do programa **não** desliga os motores nem libera a placa de vídeo.
 
+## Armazenamento compartilhado de modelos (opcional, Windows)
+
+O Social Music Beat pode usar uma biblioteca central de modelos compartilhada com outros aplicativos Social Nexus, como o Social Sound. Por padrao, nada muda: os modelos continuam nos diretorios locais de cada usuario.
+
+Para configurar outro SSD, feche as ferramentas e execute `configurar_armazenamento.bat`. O assistente sugere `D:\\IA_MODELS`, mas aceita outro caminho. Ele migra os caches/modelos existentes por copia verificada e pergunta se deseja remover as origens somente depois da verificacao. Programas, ambientes Python e runtime llama.cpp permanecem nas pastas de instalacao/dados atuais.
+
+Com a biblioteca configurada, novos downloads do Qwen/Gemma, Whisper, Demucs e ACE-Step (quando a instalacao ACE-Step reconhecer `ACESTEP_CHECKPOINTS_DIR`) passam a usar a pasta central. Se o disco configurado estiver desconectado, a inicializacao e interrompida com aviso; nao ha fallback silencioso para o disco do Windows.
+
+Estrutura criada:
+```
+D:\\IA_MODELS\\
+├── LLM\\
+├── HuggingFace\\
+├── Torch\\
+└── ACE-Step\\
+```
+
 ## Como usar (resumo)
 
 1. **Criar a música:** cole a letra, descreva o estilo (em inglês, tags separadas por vírgula funcionam bem), escolha a voz e clique em **Criar**. Marque as partes da letra com `[Verse 1]`, `[Chorus]`, `[Bridge]`.
