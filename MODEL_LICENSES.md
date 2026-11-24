@@ -17,6 +17,14 @@ Este documento acompanha o catálogo de modelos oferecido pela Social Music Beat
 
 Arquivos GGUF importados não recebem uma licença presumida. Consulte a página original do modelo, seus avisos e restrições antes de usar ou redistribuir.
 
-## Gemma
+## Gemma 3 4B Instruct — Q4_K_M
 
-Não incluído no catálogo automático nesta etapa. O acesso a arquivos Gemma pode exigir que o usuário entre na plataforma de origem e aceite termos específicos. A inclusão futura dependerá de revisão dos termos da versão e do arquivo exatos.
+- Origem GGUF: https://huggingface.co/ggml-org/gemma-3-4b-it-GGUF
+- Arquivo: `gemma-3-4b-it-Q4_K_M.gguf`
+- Licença: Gemma Terms of Use (não é Apache 2.0 nem MIT).
+- Termos oficiais: https://ai.google.dev/gemma/terms
+- Tamanho aproximado: 2,49 GB.
+- O download no aplicativo exige que o usuário marque uma confirmação de leitura e aceite dos termos antes de iniciar.
+- O arquivo é baixado diretamente do repositório GGUF e seu SHA-256 é consultado no Hugging Face e validado após o download.
+
+Os termos Gemma podem incluir condições e restrições adicionais. Leia o documento oficial completo antes de aceitar e usar o modelo.
