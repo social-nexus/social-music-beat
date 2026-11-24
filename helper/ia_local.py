@@ -377,7 +377,7 @@ def ai_catalog():
     return {"runtimes": runtimes, "models": models, "installed_models": _installed_models()}
 
 @router.post("/runtime/install")
-def install_runtime(payload: dict, request):
+def install_runtime(payload: dict, request: Request):
     _guard_local_request(request)
     variant = str(payload.get("variant", ""))
     meta = RUNTIME_CATALOG.get(variant)
@@ -392,7 +392,7 @@ def install_runtime(payload: dict, request):
     return {"job_id": jid}
 
 @router.post("/models/download")
-def download_model(payload: dict, request):
+def download_model(payload: dict, request: Request):
     _guard_local_request(request)
     model_id = str(payload.get("model_id", ""))
     if model_id not in MODEL_CATALOG:
@@ -404,7 +404,7 @@ def download_model(payload: dict, request):
     return {"job_id": jid}
 
 @router.post("/models/import")
-async def import_model(request, file: UploadFile = File(...)):
+async def import_model(request: Request, file: UploadFile = File(...)):
     _guard_local_request(request)
     filename = Path(file.filename or "").name
     if not filename.lower().endswith(".gguf"):
@@ -437,7 +437,7 @@ async def import_model(request, file: UploadFile = File(...)):
             "warning": "A licença do arquivo importado não foi verificada."}
 
 @router.post("/models/activate")
-def activate_model(payload: dict, request):
+def activate_model(payload: dict, request: Request):
     _guard_local_request(request)
     model_id = str(payload.get("model_id", ""))
     variant = str(payload.get("variant", ""))
@@ -451,7 +451,7 @@ def activate_model(payload: dict, request):
         raise HTTPException(400, str(exc))
 
 @router.post("/runtime/stop")
-def stop_runtime(request):
+def stop_runtime(request: Request):
     _guard_local_request(request)
     _stop_runtime()
     return {"ok": True}
@@ -463,7 +463,7 @@ def ai_job(jid: str):
     return JOBS[jid]
 
 @router.delete("/models/{model_id}")
-def delete_model(model_id: str, request):
+def delete_model(model_id: str, request: Request):
     _guard_local_request(request)
     if model_id == ACTIVE_MODEL:
         _stop_runtime()
@@ -478,7 +478,7 @@ def delete_model(model_id: str, request):
     return {"ok": True}
 
 @router.post("/generate-lyrics")
-async def generate_lyrics(payload: dict, request):
+async def generate_lyrics(payload: dict, request: Request):
     _guard_local_request(request)
     if not PROCESS or PROCESS.poll() is not None or not ACTIVE_MODEL:
         raise HTTPException(503, "Ative um modelo local antes de gerar a letra.")
