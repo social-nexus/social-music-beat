@@ -21,7 +21,7 @@ import time
 import uuid
 import zipfile
 from pathlib import Path, PurePosixPath
-from urllib.request import Request, urlopen
+from urllib.request import Request as URLRequest, urlopen
 
 import httpx
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
@@ -173,7 +173,7 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 def _download(url: str, dest: Path, expected_size: int | None, jid: str):
-    req = Request(url, headers={"User-Agent": "SocialMusicBeat/1.0"})
+    req = URLRequest(url, headers={"User-Agent": "SocialMusicBeat/1.0"})
     tmp = dest.with_suffix(dest.suffix + ".part")
     total = 0
     with urlopen(req, timeout=45) as response, tmp.open("wb") as out:
@@ -297,7 +297,7 @@ def _normalize_sha256(value: str) -> str:
 
 def _hf_file_digest(repo: str, filename: str) -> tuple[str, int]:
     url = f"https://huggingface.co/api/models/{repo}/tree/main?recursive=false"
-    req = Request(url, headers={"User-Agent": "SocialMusicBeat/1.0"})
+    req = URLRequest(url, headers={"User-Agent": "SocialMusicBeat/1.0"})
     with urlopen(req, timeout=30) as response:
         files = json.loads(response.read().decode("utf-8"))
     item = next((x for x in files if x.get("path") == filename), None)
