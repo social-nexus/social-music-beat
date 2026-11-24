@@ -2,16 +2,34 @@
 chcp 65001 >nul
 set HF_HUB_DISABLE_SYMLINKS_WARNING=1
 call "%~dp0config.bat"
-if defined SOCIAL_NEXUS_MODELS_DIR if not exist "%SOCIAL_NEXUS_MODELS_DIR%" (
-  echo A biblioteca compartilhada de modelos nao esta disponivel: %SOCIAL_NEXUS_MODELS_DIR%
-  echo Conecte o disco configurado ou execute configurar_armazenamento.bat para escolher outro local.
-  pause
-  exit /b 1
-)
 echo ==================================================
 echo  Social Music Beat - instalacao completa
 echo ==================================================
-if not exist "%ACESTEP_DIR%\start_api_server.bat" goto sem_acestep
+
+echo.
+echo [0/5] Verificando/instalando o ACE-Step 1.5...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0helper\install_acestep.ps1"
+if errorlevel 2 goto cancelado_acestep
+if errorlevel 1 goto falha_acestep
+call "%~dp0config.bat"
+
+if not defined SOCIAL_NEXUS_MODELS_DIR goto configurar_armazenamento
+if not exist "%SOCIAL_NEXUS_MODELS_DIR%" goto configurar_armazenamento
+goto armazenamento_ok
+
+:configurar_armazenamento
+echo.
+echo Vamos configurar onde os modelos de IA serao armazenados.
+echo O assistente prefere um segundo SSD quando disponivel; se houver apenas um, usara o disco do Windows.
+call "%~dp0configurar_armazenamento.bat"
+if errorlevel 1 goto falha_armazenamento
+call "%~dp0config.bat"
+if not defined SOCIAL_NEXUS_MODELS_DIR goto falha_armazenamento
+if not exist "%SOCIAL_NEXUS_MODELS_DIR%" goto falha_armazenamento
+
+:armazenamento_ok
+echo.
+echo ACE-Step e armazenamento preparados.
 
 echo.
 echo [1/5] Criando o ambiente do separador de voz (Python 3.11)...
@@ -70,10 +88,21 @@ echo Instalacao concluida! Agora use o iniciar.bat
 pause
 exit /b 0
 
-:sem_acestep
+:cancelado_acestep
 echo.
-echo NAO ENCONTREI o ACE-Step em: %ACESTEP_DIR%
-echo Extraia o pacote do ACE-Step nessa pasta ou edite o arquivo config.bat com o caminho certo. Depois rode este instalar.bat de novo.
+echo A instalacao do ACE-Step foi cancelada. Nenhuma pasta existente foi removida.
+pause
+exit /b 1
+
+:falha_acestep
+echo.
+echo Nao foi possivel preparar o ACE-Step. Confira a mensagem acima e tente novamente.
+pause
+exit /b 1
+
+:falha_armazenamento
+echo.
+echo Nao foi possivel configurar o armazenamento dos modelos.
 pause
 exit /b 1
 
