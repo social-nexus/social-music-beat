@@ -32,7 +32,7 @@ python -c "from faster_whisper import WhisperModel; WhisperModel('base', device=
 if errorlevel 1 echo AVISO: o modelo Whisper sera baixado no primeiro uso do modo Preciso.
 
 echo.
-echo [5/5] Baixando os modelos de musica do ACE-Step (varios GB, pode demorar)...
+echo [5/5] Verificando/baixando somente o modelo principal do ACE-Step...
 cd /d "%ACESTEP_DIR%"
 set ACESTEP_PROJECT_ROOT=%ACESTEP_DIR%
 
@@ -47,9 +47,9 @@ if exist "%ACESTEP_DIR%\python_embeded\python.exe" (
     goto falha
 )
 
+REM O comando sem --model baixa apenas o pacote principal (Turbo + componentes compartilhados).
+REM Se ele ja estiver instalado, o ACE-Step detecta e nao baixa novamente.
 "%ACESTEP_PYTHON%" -c "import sys,runpy; sys.path.insert(0, r'%ACESTEP_DIR%'); sys.argv=['d']; runpy.run_module('acestep.model_downloader', run_name='__main__')"
-if errorlevel 1 goto falha_modelos
-"%ACESTEP_PYTHON%" -c "import sys,runpy; sys.path.insert(0, r'%ACESTEP_DIR%'); sys.argv=['d','--model','acestep-v15-base']; runpy.run_module('acestep.model_downloader', run_name='__main__')"
 if errorlevel 1 goto falha_modelos
 
 echo.
@@ -72,7 +72,7 @@ exit /b 1
 
 :falha_modelos
 echo.
-echo ERRO ao baixar os modelos do ACE-Step. Confira a mensagem acima e rode instalar.bat novamente.
+echo ERRO ao verificar/baixar o modelo principal do ACE-Step. Confira a mensagem acima e rode instalar.bat novamente.
 pause
 exit /b 1
 
