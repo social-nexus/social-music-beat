@@ -357,6 +357,109 @@ function LegendaModal({ track, tracks, onClose }) {
 }
 
 
+// Analisa uma amostra curta no próprio navegador. O áudio bruto não é enviado à IA.
+async function analyzeMelodyReference(file) {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) throw new Error("Este navegador não oferece análise de áudio compatível.");
+  const context = new AudioCtx();
+  try {
+    const buffer = await context.decodeAudioData(await file.arrayBuffer());
+    const rate = buffer.sampleRate;
+    const seconds = Math.min(buffer.duration, 30);
+    const length = Math.floor(seconds * rate);
+    const channels = Math.min(buffer.numberOfChannels, 2);
+    const mono = new Float32Array(length);
+    for (let ch = 0; ch < channels; ch++) {
+      const data = buffer.getChannelData(ch);
+      for (let i = 0; i < length; i++) mono[i] += (data[i] || 0) / channels;
+    }
+
+    // Envelope de energia em janelas de 20 ms: útil para estimar pulsação, não é um metrônomo.
+    const windowSize = Math.max(1, Math.floor(rate * 0.02));
+    const envelope = [];
+    for (let i = 0; i + windowSize <= mono.length; i += windowSize) {
+      let sum = 0;
+      for (let j = 0; j < windowSize; j++) sum += mono[i + j] * mono[i + j];
+      envelope.push(Math.sqrt(sum / windowSize));
+    }
+    const onset = envelope.map((v, i) => Math.max(0, v - (envelope[i - 1] || 0)));
+    const envRate = 50;
+    let bestTempo = null, bestScore = 0;
+    for (let lag = 17; lag <= 50; lag++) {
+      let score = 0, normA = 0, normB = 0;
+      for (let i = lag; i < onset.length; i++) {
+        score += onset[i] * onset[i - lag];
+        normA += onset[i] * onset[i];
+        normB += onset[i - lag] * onset[i - lag];
+      }
+      const normalized = score / (Math.sqrt(normA * normB) + 1e-9);
+      if (normalized > bestScore) { bestScore = normalized; bestTempo = Math.round(60 * envRate / lag); }
+    }
+
+    // Estimativa grosseira de contorno de altura; funciona melhor com voz cantarolada ou instrumento solo.
+    const decimation = Math.max(1, Math.floor(rate / 11025));
+    const pitchRate = rate / decimation;
+    const frameSize = 4096;
+    const hop = Math.floor(pitchRate * 0.45);
+    const pitches = [];
+    for (let start = 0; start + frameSize * decimation < length; start += hop * decimation) {
+      const frame = new Float32Array(frameSize);
+      let mean = 0;
+      for (let j = 0; j < frameSize; j++) {
+        frame[j] = mono[start + j * decimation] || 0;
+        mean += frame[j];
+      }
+      mean /= frameSize;
+      let energy = 0;
+      for (let j = 0; j < frameSize; j++) { frame[j] -= mean; energy += frame[j] * frame[j]; }
+      if (energy / frameSize < 0.000015) continue;
+      const minLag = Math.max(2, Math.floor(pitchRate / 700));
+      const maxLag = Math.min(Math.floor(pitchRate / 70), Math.floor(frameSize / 2));
+      let bestLag = 0, best = 0;
+      for (let lag = minLag; lag <= maxLag; lag++) {
+        let corr = 0, a = 0, b = 0;
+        for (let j = 0; j < frameSize - lag; j++) {
+          const x = frame[j], y = frame[j + lag];
+          corr += x * y; a += x * x; b += y * y;
+        }
+        const normalized = corr / (Math.sqrt(a * b) + 1e-9);
+        if (normalized > best) { best = normalized; bestLag = lag; }
+      }
+      if (bestLag && best > 0.28) pitches.push(69 + 12 * Math.log2((pitchRate / bestLag) / 440));
+    }
+    const median = (values) => {
+      const sorted = [...values].sort((a, b) => a - b);
+      return sorted.length ? sorted[Math.floor(sorted.length / 2)] : null;
+    };
+    let contour = "não foi possível estimar com confiança";
+    let range = "";
+    if (pitches.length >= 4) {
+      const center = median(pitches);
+      const steps = pitches.map((p) => p - center);
+      const groups = steps.map((v) => v < -2 ? "grave" : v > 2 ? "agudo" : "médio");
+      const compact = [];
+      for (const group of groups) if (compact[compact.length - 1] !== group) compact.push(group);
+      contour = compact.slice(0, 12).join(" → ");
+      range = `variação aproximada de ${Math.round(Math.max(...pitches) - Math.min(...pitches))} semitons`;
+    }
+    const avg = envelope.reduce((a, b) => a + b, 0) / Math.max(1, envelope.length);
+    const variance = envelope.reduce((a, b) => a + (b - avg) ** 2, 0) / Math.max(1, envelope.length);
+    const dynamics = Math.sqrt(variance) > avg * 0.55 ? "dinâmica variada, com mudanças de intensidade" : "dinâmica relativamente constante";
+    const tempoText = bestTempo && bestScore > 0.12 ? `pulso estimado em torno de ${bestTempo} BPM (estimativa automática)` : "pulso não identificado com confiança";
+    const summary = [
+      `Duração analisada: ${seconds.toFixed(1)} segundos.`,
+      tempoText + ".",
+      `Dinâmica: ${dynamics}.`,
+      `Contorno de altura aproximado: ${contour}.`,
+      range ? `Tessitura estimada: ${range}.` : "",
+      "Use apenas como referência de andamento, fraseado e movimento melódico; não reproduza notas, melodia, arranjo ou letra da gravação."
+    ].filter(Boolean).join(" ");
+    return { summary, seconds, tempo: bestTempo && bestScore > 0.12 ? bestTempo : null, contour };
+  } finally {
+    await context.close().catch(() => {});
+  }
+}
+
 function CompositorPanel({ onUseLyrics }) {
   const [catalog, setCatalog] = useState({ runtimes: [], models: [], installed_models: [] });
   const [status, setStatus] = useState({});
@@ -366,6 +469,15 @@ function CompositorPanel({ onUseLyrics }) {
   const [gpuLayers, setGpuLayers] = useState(0);
   const [compositionMode, setCompositionMode] = useState("full");
   const [sourceLyrics, setSourceLyrics] = useState("");
+  const [melodyFile, setMelodyFile] = useState(null);
+  const [melodyAnalysis, setMelodyAnalysis] = useState(null);
+  const [melodyBusy, setMelodyBusy] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const melodyInputRef = useRef(null);
+  const recorderRef = useRef(null);
+  const streamRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+
   const [theme, setTheme] = useState("");
   const [genre, setGenre] = useState("MPB");
   const [mood, setMood] = useState("emocionante e acolhedor");
@@ -428,12 +540,63 @@ function CompositorPanel({ onUseLyrics }) {
     finally { setBusy(false); }
   };
 
+  const loadMelodyReference = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith("audio/")) { setError("Escolha um arquivo de áudio."); return; }
+    if (file.size > 25 * 1024 * 1024) { setError("O arquivo deve ter no máximo 25 MB."); return; }
+    setMelodyBusy(true); setError(""); setMessage("Analisando a referência musical no navegador…");
+    try {
+      const analysis = await analyzeMelodyReference(file);
+      setMelodyFile(file);
+      setMelodyAnalysis(analysis);
+      setMessage("Referência analisada. Somente o resumo musical será enviado ao modelo local.");
+    } catch (e) {
+      setMelodyFile(null); setMelodyAnalysis(null);
+      setError("Não consegui analisar este áudio. Tente WAV, MP3 ou M4A em outro navegador. " + e.message);
+    } finally { setMelodyBusy(false); }
+  };
+
+  const startMelodyRecording = async () => {
+    try {
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error("Gravação não suportada neste navegador.");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      recordedChunksRef.current = [];
+      const recorder = new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => { if (event.data?.size) recordedChunksRef.current.push(event.data); };
+      recorder.onstop = () => {
+        const type = recorder.mimeType || "audio/webm";
+        const file = new File(recordedChunksRef.current, "melodia-gravada.webm", { type });
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setRecording(false);
+        if (file.size) loadMelodyReference(file);
+      };
+      recorder.start();
+      setRecording(true); setError(""); setMessage("Gravando… canteolar ou toque uma ideia musical e depois pressione Parar.");
+    } catch (e) {
+      if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null; setRecording(false);
+      setError(e.message || "Não foi possível acessar o microfone.");
+    }
+  };
+
+  const stopMelodyRecording = () => {
+    if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
+  };
+
+  const clearMelodyReference = () => {
+    setMelodyFile(null); setMelodyAnalysis(null);
+    if (melodyInputRef.current) melodyInputRef.current.value = "";
+  };
+
   const generate = async () => {
     if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
     if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
     setBusy(true); setError(""); setMessage("Compondo a letra localmente…"); setResult("");
     try {
-      const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language });
+      const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "" });
       setResult(r.lyrics);
       const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
       setMessage((labels[compositionMode] || "Composição concluída") + " com " + r.model + ".");
@@ -541,6 +704,28 @@ function CompositorPanel({ onUseLyrics }) {
           <textarea rows={9} className={inputCls} value={sourceLyrics} onChange={(e)=>setSourceLyrics(e.target.value)} placeholder={"Cole aqui sua letra. Você pode incluir marcações como [Verse 1] e [Bridge]."}/>
           <p className="mt-1 text-[11px] text-zinc-500">{compositionMode==="continue"?"A IA deve preservar seus versos e completar as partes que faltam, sem reescrever sua identidade.":"A IA analisará o tema, a mensagem e o sentimento da letra para criar apenas o refrão."}</p>
         </div>}
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+          <div>
+            <p className="text-sm font-bold text-white">Melodia de referência (opcional)</p>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-400">Grave cantarolando ou importe um trecho de até 30 segundos. A ferramenta estima pulso, dinâmica e contorno melódico para orientar o fraseado da letra.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={melodyBusy || recording} onClick={() => melodyInputRef.current?.click()} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-40">Importar áudio</button>
+            {!recording ? (
+              <button type="button" disabled={melodyBusy} onClick={startMelodyRecording} className="inline-flex items-center gap-2 rounded-lg border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-200 disabled:opacity-40"><Mic size={14}/> Gravar melodia</button>
+            ) : (
+              <button type="button" onClick={stopMelodyRecording} className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200"><Pause size={14}/> Parar gravação</button>
+            )}
+            {melodyFile && <button type="button" onClick={clearMelodyReference} className="rounded-lg border border-white/15 px-3 py-2 text-xs text-zinc-300">Remover referência</button>}
+            <input ref={melodyInputRef} type="file" accept="audio/*" className="hidden" onChange={(e)=>loadMelodyReference(e.target.files?.[0])}/>
+          </div>
+          {melodyBusy && <div className="flex items-center gap-2 text-xs text-zinc-300"><Loader2 size={14} className="animate-spin"/> Analisando áudio localmente…</div>}
+          {melodyAnalysis && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+            <p className="text-xs font-semibold text-emerald-200">Referência pronta: {melodyFile?.name || "gravação"}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">{melodyAnalysis.summary}</p>
+          </div>}
+          <p className="text-[11px] text-zinc-500">Privacidade: o arquivo de áudio não é enviado ao servidor nem ao modelo. A análise acontece no navegador e somente um resumo textual é enviado à IA local. Estimativas de altura são aproximadas, especialmente em gravações com acordes ou vários instrumentos.</p>
+        </div>
         <div><label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="full"?"Tema ou história":"Orientação adicional (opcional)"}</label>
           <textarea rows={2} className={inputCls} value={theme} onChange={(e)=>setTheme(e.target.value)} placeholder={compositionMode==="full"?"Ex.: um pai ensinando o filho a pescar e lembrando da própria infância":"Ex.: deixe o refrão mais emocionante, simples e fácil de memorizar"}/>
         </div>
