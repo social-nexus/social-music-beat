@@ -379,7 +379,7 @@ def transcrever_texto(caminho: str, modelo: str, idioma: str) -> str:
         engine = _whisper[modelo]
     segmentos, _ = engine.transcribe(
         caminho, language=idioma, task="transcribe", beam_size=5,
-        vad_filter=True, condition_on_previous_text=False, temperature=0,
+        vad_filter=False, condition_on_previous_text=False, temperature=0,
         word_timestamps=False,
     )
     partes = [s.text.strip() for s in segmentos if s.text and s.text.strip()]
