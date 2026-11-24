@@ -14,7 +14,7 @@ $fixedDrives = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorA
     Where-Object { $_.DeviceID -and $_.FreeSpace -ne $null } |
     Sort-Object -Property FreeSpace -Descending)
 $preferredDrive = $systemDrive
-$secondaryDrive = $fixedDrives | Where-Object { ($_.DeviceID + '\') -ne $systemDrive } | Select-Object -First 1
+$secondaryDrive = $fixedDrives | Where-Object { ($_.DeviceID + '\') -ne $systemDrive -and $_.FreeSpace -gt 15GB } | Select-Object -First 1
 if ($secondaryDrive) {
     $preferredDrive = $secondaryDrive.DeviceID + '\'
 } elseif ($fixedDrives.Count -gt 0) {
