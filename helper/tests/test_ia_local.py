@@ -23,6 +23,13 @@ class RuntimeCatalogTests(unittest.TestCase):
                     self.assertEqual(len(extra["sha256"]), 64)
                     self.assertGreater(extra["size"], 1_000_000)
 
+    def test_sha256_normalization_accepts_prefixed_and_plain_values(self):
+        digest = "a" * 64
+        self.assertEqual(ia_local._normalize_sha256(digest), digest)
+        self.assertEqual(ia_local._normalize_sha256("sha256:" + digest), digest)
+        with self.assertRaises(ValueError):
+            ia_local._normalize_sha256("not-a-sha")
+
     def test_archive_path_rejects_parent_traversal(self):
         root = Path(TEMP_DATA) / "extract"
         with self.assertRaises(ValueError):
