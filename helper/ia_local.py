@@ -539,7 +539,9 @@ async def generate_lyrics(payload: dict, request: Request):
     if mode not in ("full", "continue", "chorus"):
         raise HTTPException(400, "Modo de composição inválido.")
     theme = str(payload.get("theme", "")).strip()[:1500]
-    source_lyrics = str(payload.get("source_lyrics", "")).strip()[:12000]
+    source_lyrics = str(payload.get("source_lyrics", "")).strip()
+    if len(source_lyrics) > 6000:
+        raise HTTPException(400, "A composição enviada é muito longa. Limite: 6.000 caracteres para manter espaço para a continuação.")
     genre = str(payload.get("genre", "")).strip()[:300]
     mood = str(payload.get("mood", "")).strip()[:300]
     voice = str(payload.get("voice", "indiferente"))[:80]
