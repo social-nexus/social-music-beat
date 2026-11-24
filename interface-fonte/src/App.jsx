@@ -492,6 +492,9 @@ function CompositorPanel({ onUseLyrics }) {
   const [melodyRole, setMelodyRole] = useState("missing");
   const [melodyWords, setMelodyWords] = useState("");
   const [melodyBusy, setMelodyBusy] = useState(false);
+  const [transcriptionBusy, setTranscriptionBusy] = useState(false);
+  const [transcriptionModel, setTranscriptionModel] = useState("small");
+  const [transcriptionMessage, setTranscriptionMessage] = useState("");
   const [recording, setRecording] = useState(false);
   const melodyInputRef = useRef(null);
   const recorderRef = useRef(null);
@@ -619,6 +622,36 @@ function CompositorPanel({ onUseLyrics }) {
 
   const stopMelodyRecording = () => {
     if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
+  };
+
+  const transcribeMelodyReference = async () => {
+    if (!melodyFile) { setError("Grave ou importe uma referência de áudio primeiro."); return; }
+    setTranscriptionBusy(true); setTranscriptionMessage("Preparando o áudio para o Whisper…"); setError("");
+    try {
+      const { blob } = await toWavBlob(melodyFile, 30);
+      const fd = new FormData();
+      fd.append("audio", blob, "referencia.wav");
+      fd.append("modelo", transcriptionModel);
+      const whisperLanguage = language.startsWith("inglês") ? "en" : language.startsWith("espanhol") ? "es" : "pt";
+      fd.append("idioma", whisperLanguage);
+      const started = await http("/api/legenda/transcrever", { method: "POST", body: fd });
+      if (!started.job) throw new Error("O Whisper não iniciou a transcrição.");
+      for (;;) {
+        await sleep(1200);
+        const job = await http("/api/legenda/transcrever/" + started.job);
+        setTranscriptionMessage(job.msg || "Ouvindo sua gravação…");
+        if (job.status === "erro") throw new Error(job.msg || "Não foi possível transcrever o áudio.");
+        if (job.status === "pronto") {
+          if (!job.transcript?.trim()) throw new Error("O Whisper não identificou palavras. Se você apenas cantarolou, pode deixar o campo de palavras vazio.");
+          setMelodyWords(job.transcript.trim());
+          setTranscriptionMessage("Letra reconhecida. Revise o texto antes de compor.");
+          return;
+        }
+      }
+    } catch (e) {
+      setError("Não consegui transcrever a gravação: " + String(e.message || e).slice(0, 260));
+      setTranscriptionMessage("");
+    } finally { setTranscriptionBusy(false); }
   };
 
   const clearMelodyReference = () => {
@@ -751,8 +784,20 @@ function CompositorPanel({ onUseLyrics }) {
             </select>
           </label>
           <label className="block text-xs font-semibold text-zinc-300">Palavras que cantei (opcional)
-            <textarea rows={2} className={inputCls + " mt-1"} value={melodyWords} onChange={(e) => setMelodyWords(e.target.value)} placeholder="Escreva as palavras, mesmo que estejam incompletas. Se foi só cantarolado, deixe vazio."/>
+            <textarea rows={3} className={inputCls + " mt-1"} value={melodyWords} onChange={(e) => setMelodyWords(e.target.value)} placeholder="A letra reconhecida aparecerá aqui. Você também pode corrigir ou escrever manualmente."/>
           </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-[11px] text-zinc-400">Modelo Whisper
+              <select className={inputCls + " mt-1"} value={transcriptionModel} onChange={(e) => setTranscriptionModel(e.target.value)} disabled={transcriptionBusy}>
+                <option value="base">Base — mais leve</option>
+                <option value="small">Small — maior precisão</option>
+              </select>
+            </label>
+            <button type="button" disabled={!melodyFile || melodyBusy || transcriptionBusy || recording} onClick={transcribeMelodyReference} className="self-end rounded-lg bg-pink-500/15 border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-100 disabled:opacity-40">
+              {transcriptionBusy ? <><Loader2 size={14} className="inline animate-spin mr-1"/> Transcrevendo…</> : "Transcrever letra do áudio"}
+            </button>
+          </div>
+          {transcriptionMessage && <p className="text-[11px] text-sky-200">{transcriptionMessage}</p>}
           <div className="flex flex-wrap gap-2">
             <button type="button" disabled={melodyBusy || recording} onClick={() => melodyInputRef.current?.click()} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-40">Importar áudio</button>
             {!recording ? (
@@ -768,7 +813,7 @@ function CompositorPanel({ onUseLyrics }) {
             <p className="text-xs font-semibold text-emerald-200">Referência pronta: {melodyFile?.name || "gravação"}</p>
             <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">{melodyAnalysis.summary}</p>
           </div>}
-          <p className="text-[11px] text-zinc-500">Privacidade: o arquivo de áudio não é enviado ao servidor nem ao modelo. A análise acontece no navegador e somente um resumo textual é enviado à IA local. Estimativas de altura são aproximadas, especialmente em gravações com acordes ou vários instrumentos.</p>
+          <p className="text-[11px] text-zinc-500">Privacidade: a análise melódica continua no navegador. Se você solicitar a transcrição, o áudio será processado somente pelo Whisper instalado neste computador (CPU), sem serviço externo, e será apagado após o processamento. O Whisper pode errar palavras cantadas ou não reconhecer sílabas inventadas; revise a letra. A transcrição não cria legendas nem timestamps.</p>
         </div>
         <div><label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="full"?"Tema ou história":"Orientação adicional (opcional)"}</label>
           <textarea rows={2} className={inputCls} value={theme} onChange={(e)=>setTheme(e.target.value)} placeholder={compositionMode==="full"?"Ex.: um pai ensinando o filho a pescar e lembrando da própria infância":"Ex.: deixe o refrão mais emocionante, simples e fácil de memorizar"}/>
