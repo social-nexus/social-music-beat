@@ -771,7 +771,22 @@ export default function App() {
             <p className="text-zinc-500">Mantenha abertas as duas janelas pretas enquanto usa. Para fechar tudo, feche as janelas pretas.</p>
           </div>
         ) : tab === "compositor" ? (
-          <CompositorPanel onUseLyrics={(lyrics) => { setForm((f) => ({ ...f, lyrics, instrumentalOnly: false })); setTab("criar"); }} />
+          <CompositorPanel onUseLyrics={(output) => {
+            const title = output.match(/^TÍTULO:\s*(.+)$/im)?.[1]?.trim() || "";
+            const style = output.match(/^ESTILO:\s*(.+)$/im)?.[1]?.trim() || "";
+            const blocks = output.split(/\nLETRA:\s*\n?/i);
+            const lyrics = blocks[1]?.split(/\nESTILO INSTRUMENTAL\s*:/i)[0]?.trim() || output;
+            const duration = Number(output.match(/Duração em segundos:\s*(\d+)/i)?.[1] || 0);
+            setForm((f) => ({
+              ...f,
+              lyrics,
+              title: title || f.title,
+              style: style || f.style,
+              duration: duration >= 30 && duration <= 240 ? duration : f.duration,
+              instrumentalOnly: false
+            }));
+            setTab("criar");
+          }} />
         ) : (
           <div className="grid gap-6 p-4 lg:p-6 lg:grid-cols-[430px_1fr]">
             {/* ---------------- formulário ---------------- */}
