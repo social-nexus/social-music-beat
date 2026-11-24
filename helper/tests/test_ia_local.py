@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 TEMP_DATA = tempfile.mkdtemp(prefix="smb-ai-tests-")
@@ -58,7 +59,7 @@ class RuntimeCatalogTests(unittest.TestCase):
 
     def test_shared_models_directory_override_is_respected(self):
         shared = Path(TEMP_DATA) / "shared" / "LLM"
-        with unittest.mock.patch.dict(os.environ, {"SOCIAL_MUSIC_BEAT_MODELS_DIR": str(shared)}):
+        with mock.patch.dict(os.environ, {"SOCIAL_MUSIC_BEAT_MODELS_DIR": str(shared)}):
             self.assertEqual(ia_local.models_dir(), shared)
 
     def test_default_models_directory_remains_inside_user_data(self):
