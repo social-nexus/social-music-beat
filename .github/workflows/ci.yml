@@ -6,6 +6,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   python:
     runs-on: ubuntu-latest
@@ -35,3 +38,13 @@ jobs:
         run: npm install
       - name: Build frontend
         run: npm run build
+      - name: Commit compiled interface on development branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/ia-local-compositor' && github.actor != 'github-actions[bot]'
+        run: |
+          git -C .. config user.name "github-actions[bot]"
+          git -C .. config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C .. add helper/web
+          if ! git -C .. diff --cached --quiet; then
+            git -C .. commit -m "Build compiled Social Music Beat interface"
+            git -C .. push
+          fi
