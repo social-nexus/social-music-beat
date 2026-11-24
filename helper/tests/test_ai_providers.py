@@ -32,14 +32,12 @@ class ProviderConfigTests(unittest.TestCase):
             ai_providers._validate_provider("unknown-provider")
 
     def test_key_storage_uses_operating_system_keyring(self):
-        with mock.patch.object(ai_providers, "_keyring_ready", return_value=True), \\
-             mock.patch.object(ai_providers.keyring, "set_password") as save:
+        with mock.patch.object(ai_providers, "_keyring_ready", return_value=True), mock.patch.object(ai_providers.keyring, "set_password") as save:
             ai_providers._set_key("openai", "test-secret-key-value")
             save.assert_called_once_with("SocialMusicBeat", "openai", "test-secret-key-value")
 
     def test_public_config_only_exposes_whether_key_exists(self):
-        with mock.patch.object(ai_providers, "_get_key", side_effect=lambda provider: "secret" if provider == "openai" else None), \\
-             mock.patch.object(ai_providers, "_keyring_ready", return_value=True):
+        with mock.patch.object(ai_providers, "_get_key", side_effect=lambda provider: "secret" if provider == "openai" else None), mock.patch.object(ai_providers, "_keyring_ready", return_value=True):
             data = ai_providers.public_config()
         openai = next(item for item in data["providers"] if item["id"] == "openai")
         self.assertTrue(openai["configured"])
