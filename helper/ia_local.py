@@ -315,7 +315,7 @@ def _start_runtime(model_id: str, variant: str, gpu_layers: int = 0):
     binary = _runtime_binary(variant)
     log = (LOG_DIR / "llama-server.log").open("ab")
     args = [str(binary), "--host", "127.0.0.1", "--port", str(PORT),
-            "--model", str(model_path), "--ctx-size", "4096",
+            "--model", str(model_path), "--ctx-size", "4096", "--jinja",
             "--n-gpu-layers", str(max(0, min(int(gpu_layers), 200))),
             "--parallel", "1"]
     try:
@@ -471,7 +471,7 @@ async def generate_lyrics(payload: dict):
         raise HTTPException(400, "Informe o tema ou a história da música.")
     if language not in ("português do Brasil", "inglês", "espanhol"):
         raise HTTPException(400, "Idioma inválido.")
-    system = ("Você é um compositor e letrista profissional. Crie letras originais, naturais e cantáveis. "
+    system = ("Você é um compositor e letrista profissional. Crie letras originais, naturais e cantáveis. /no_think "
               "Não imite artistas ou músicas existentes. Responda em português do Brasil quando solicitado. "
               "Use tags de estrutura em inglês, cada uma sozinha na linha: [Verse 1], [Chorus], [Verse 2], "
               "[Bridge], [Outro]. Não inclua explicações fora do formato pedido.")
