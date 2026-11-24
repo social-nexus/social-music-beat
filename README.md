@@ -122,7 +122,7 @@ O build já grava o resultado em `helper\web`.
 
 ## Compositor de letras com IA local
 
-A branch de desenvolvimento inclui um compositor opcional com modelos de linguagem executados localmente. O runtime llama.cpp é baixado de releases oficiais fixados por versão e SHA-256; o catálogo inicial oferece Qwen3-4B GGUF Q4_K_M (Apache 2.0) e Gemma 3 4B Instruct Q4_K_M (Gemma Terms of Use, com aceite explícito no aplicativo). Também é possível importar arquivos GGUF que o usuário já possua.
+A branch de desenvolvimento inclui um compositor opcional com modelos de linguagem executados localmente. O runtime llama.cpp é baixado de releases oficiais fixados por versão e SHA-256; não é necessário instalar Ollama ou outro gerenciador externo; o catálogo inicial oferece Qwen3-4B GGUF Q4_K_M (Apache 2.0) e Gemma 3 4B Instruct Q4_K_M (Gemma Terms of Use, com aceite explícito no aplicativo). Também é possível importar arquivos GGUF que o usuário já possua.
 
 A ferramenta continua funcionando sem baixar o runtime ou modelos de texto, e a geração musical continua usando o ACE-Step. O motor local escuta somente em 127.0.0.1.
 
