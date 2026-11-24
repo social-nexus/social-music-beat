@@ -65,7 +65,10 @@ RUNTIME_CATALOG = {
         "system": "Windows", "machine": "AMD64", "backend": "cuda",
         "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12359/llama-b12359-bin-win-cuda-12.4-x64.zip",
         "sha256": "e9c0abf442e8339c06728366c1ad2c711332f9939c0c00603fb75d85fd44c914",
-        "size": 318976332, "archive": "zip", "binary": "llama-server.exe"
+        "size": 318976332, "archive": "zip", "binary": "llama-server.exe",
+        "extras": [{"url": "https://github.com/ggml-org/llama.cpp/releases/download/b12359/cudart-llama-bin-win-cuda-12.4-x64.zip",
+                    "sha256": "8c79a9b226de4b3cacfd1f83d24f962d0773be79e1f7b75c6af4ded7e32ae1d6",
+                    "size": 391443627, "archive": "zip"}]
     },
     "win-vulkan-x64": {
         "label": "Windows x64 — Vulkan",
@@ -86,7 +89,10 @@ RUNTIME_CATALOG = {
         "system": "Linux", "machine": "x86_64", "backend": "cuda",
         "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12359/llama-b12359-bin-ubuntu-cuda-12.8-x64.tar.gz",
         "sha256": "50c937bec5bbd9f74c99138034f7403283ee21f1943f2429d7b1e4c079eafc11",
-        "size": 199223370, "archive": "tar.gz", "binary": "llama-server"
+        "size": 199223370, "archive": "tar.gz", "binary": "llama-server",
+        "extras": [{"url": "https://github.com/ggml-org/llama.cpp/releases/download/b12359/cudart-llama-b12359-bin-ubuntu-cuda-12.8-x64.tar.gz",
+                    "sha256": "75a12d227f44a391608992329241765343bd143ee9445b90dc62e154ee726e5d",
+                    "size": 594371571, "archive": "tar.gz"}]
     },
     "linux-vulkan-x64": {
         "label": "Linux x64 — Vulkan",
@@ -240,14 +246,18 @@ def _install_runtime_worker(jid: str, variant: str):
         _update_job(jid, status="downloading", progress=0, message="Baixando runtime oficial llama.cpp…")
         with tempfile.TemporaryDirectory(prefix="smb-llama-") as td:
             temp = Path(td)
-            archive = temp / ("runtime.zip" if meta["archive"] == "zip" else "runtime.tar.gz")
-            _download(meta["url"], archive, meta["size"], jid)
-            _update_job(jid, status="verifying", progress=99, message="Verificando SHA-256…")
-            actual = _sha256(archive)
-            if actual.lower() != meta["sha256"].lower():
-                raise ValueError("A verificação SHA-256 do runtime falhou. O pacote foi descartado.")
             extracted = temp / "extracted"
-            _extract_archive(archive, extracted, meta["archive"])
+            extracted.mkdir()
+            packages = [meta, *meta.get("extras", [])]
+            for index, package in enumerate(packages, start=1):
+                archive = temp / (f"runtime-{index}.zip" if package["archive"] == "zip" else f"runtime-{index}.tar.gz")
+                _update_job(jid, status="downloading", message=f"Baixando pacote {index} de {len(packages)} do runtime…")
+                _download(package["url"], archive, package["size"], jid)
+                _update_job(jid, status="verifying", progress=99, message=f"Verificando SHA-256 do pacote {index}…")
+                actual = _sha256(archive)
+                if actual.lower() != package["sha256"].lower():
+                    raise ValueError(f"A verificação SHA-256 do pacote {index} falhou. O pacote foi descartado.")
+                _extract_archive(archive, extracted, package["archive"])
             binary = next(iter(extracted.rglob(meta["binary"])), None)
             if binary is None:
                 raise ValueError("O pacote não contém llama-server.")
@@ -388,7 +398,7 @@ def ai_status():
 def ai_catalog():
     system, machine = platform.system(), platform.machine().lower()
     runtimes = [{"id": k, "label": v["label"], "backend": v["backend"],
-                 "size_bytes": v["size"], "installed": _runtime_binary(k) is not None,
+                 "size_bytes": v["size"] + sum(x["size"] for x in v.get("extras", [])), "installed": _runtime_binary(k) is not None,
                  "compatible": v["system"] == system and v["machine"].lower() == machine}
                 for k, v in RUNTIME_CATALOG.items()]
     models = [{"id": k, **{x: v[x] for x in ("name", "family", "repo", "filename", "license",
