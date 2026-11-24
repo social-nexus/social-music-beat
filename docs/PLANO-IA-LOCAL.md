@@ -54,7 +54,21 @@ As rotas de escrita devem validar caminhos e IDs contra o catálogo; nunca aceit
 - Criar/atualizar `THIRD_PARTY_NOTICES.md` e `MODEL_LICENSES.md` quando forem definidos os binários e modelos concretos.
 - A inclusão de qualquer modelo no catálogo depende de revisão da licença daquela versão e do arquivo específico.
 
-## Etapas de implementação
+## Estado da implementação (branch de desenvolvimento)
+
+- [x] Branch isolada `feature/ia-local-compositor`.
+- [x] Módulo FastAPI independente em `helper/ia_local.py`.
+- [x] Runtime llama.cpp fixado no release `b12359`, com SHA-256 por pacote.
+- [x] Download e extração com validação de hash, limites de tamanho e proteção contra path traversal.
+- [x] Catálogo inicial Qwen3-4B GGUF Q4_K_M, com verificação de hash LFS consultado no Hugging Face.
+- [x] Importação manual de arquivos GGUF.
+- [x] Inicialização local em `127.0.0.1:8010`, desligamento e encerramento no fim do processo.
+- [x] Endpoint de composição e primeira interface React.
+- [x] Testes unitários básicos e workflow CI para compilação Python e build da interface.
+- [ ] Teste real de download, ativação e geração no Windows.
+- [ ] Testes em Linux/macOS e com aceleração de GPU.
+- [ ] Catálogo de Gemma e outros modelos após revisão das licenças e requisitos de acesso.
+- [ ] Progresso/cancelamento/retomada de downloads e gestão avançada de modelos.
 
 ### Fase 1 — Base segura
 - Criar branch de desenvolvimento.
