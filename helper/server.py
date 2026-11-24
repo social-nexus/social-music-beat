@@ -29,6 +29,10 @@ app.include_router(legenda_router)
 from ia_local import router as ai_router  # noqa: E402
 
 app.include_router(ai_router)
+
+from ai_providers import router as providers_router  # noqa: E402
+
+app.include_router(providers_router)
 _lib_lock = threading.Lock()
 
 
