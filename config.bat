@@ -13,9 +13,5 @@ if defined SOCIAL_NEXUS_MODELS_DIR (
   set "HF_HUB_CACHE=%SOCIAL_NEXUS_MODELS_DIR%\HuggingFace\hub"
   set "HUGGINGFACE_HUB_CACHE=%SOCIAL_NEXUS_MODELS_DIR%\HuggingFace\hub"
   set "TORCH_HOME=%SOCIAL_NEXUS_MODELS_DIR%\Torch"
-  REM So ativa o caminho externo do ACE-Step se a instalacao realmente suportar a variavel.
-  if exist "%ACESTEP_DIR%\acestep\model_downloader.py" (
-    findstr /C:"ACESTEP_CHECKPOINTS_DIR" "%ACESTEP_DIR%\acestep\model_downloader.py" >nul
-    if not errorlevel 1 set "ACESTEP_CHECKPOINTS_DIR=%SOCIAL_NEXUS_MODELS_DIR%\ACE-Step"
-  )
+  REM ACE-Step usa a pasta checkpoints original, redirecionada pelo configurador via junction NTFS.
 )
