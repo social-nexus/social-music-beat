@@ -5,11 +5,13 @@ O servidor do llama.cpp escuta somente em 127.0.0.1.
 """
 from __future__ import annotations
 
+import atexit
 import hashlib
 import json
 import os
 import platform
 import shutil
+import socket
 import subprocess
 import tarfile
 import tempfile
@@ -121,6 +123,14 @@ MODEL_CATALOG = {
         "description": "Modelo multilíngue de 4B parâmetros, quantização Q4_K_M. Download direto do repositório oficial Qwen."
     }
 }
+
+def _guard_local_request(request):
+    host = (request.headers.get("host") or "").lower()
+    if host and host not in ("localhost:8002", "127.0.0.1:8002"):
+        raise HTTPException(403, "Acesso permitido somente pela interface local.")
+    origin = request.headers.get("origin")
+    if origin and origin not in ("http://localhost:8002", "http://127.0.0.1:8002"):
+        raise HTTPException(403, "Origem não permitida para a API local.")
 
 def _job(kind: str) -> str:
     jid = uuid.uuid4().hex[:12]
@@ -312,6 +322,10 @@ def _start_runtime(model_id: str, variant: str, gpu_layers: int = 0):
     if not model_path.is_file() or model_path.suffix.lower() != ".gguf":
         raise ValueError("Arquivo GGUF inválido.")
     _stop_runtime()
+    time.sleep(0.25)
+    with socket.socket() as probe:
+        if probe.connect_ex(("127.0.0.1", PORT)) == 0:
+            raise RuntimeError(f"A porta local {PORT} já está sendo usada por outro programa.")
     binary = _runtime_binary(variant)
     log = (LOG_DIR / "llama-server.log").open("ab")
     args = [str(binary), "--host", "127.0.0.1", "--port", str(PORT),
@@ -363,7 +377,8 @@ def ai_catalog():
     return {"runtimes": runtimes, "models": models, "installed_models": _installed_models()}
 
 @router.post("/runtime/install")
-def install_runtime(payload: dict):
+def install_runtime(payload: dict, request):
+    _guard_local_request(request)
     variant = str(payload.get("variant", ""))
     meta = RUNTIME_CATALOG.get(variant)
     if not meta:
@@ -377,7 +392,8 @@ def install_runtime(payload: dict):
     return {"job_id": jid}
 
 @router.post("/models/download")
-def download_model(payload: dict):
+def download_model(payload: dict, request):
+    _guard_local_request(request)
     model_id = str(payload.get("model_id", ""))
     if model_id not in MODEL_CATALOG:
         raise HTTPException(400, "Modelo não permitido pelo catálogo.")
@@ -388,7 +404,8 @@ def download_model(payload: dict):
     return {"job_id": jid}
 
 @router.post("/models/import")
-async def import_model(file: UploadFile = File(...)):
+async def import_model(request, file: UploadFile = File(...)):
+    _guard_local_request(request)
     filename = Path(file.filename or "").name
     if not filename.lower().endswith(".gguf"):
         raise HTTPException(400, "Selecione um arquivo .gguf.")
@@ -420,7 +437,8 @@ async def import_model(file: UploadFile = File(...)):
             "warning": "A licença do arquivo importado não foi verificada."}
 
 @router.post("/models/activate")
-def activate_model(payload: dict):
+def activate_model(payload: dict, request):
+    _guard_local_request(request)
     model_id = str(payload.get("model_id", ""))
     variant = str(payload.get("variant", ""))
     try:
@@ -433,7 +451,8 @@ def activate_model(payload: dict):
         raise HTTPException(400, str(exc))
 
 @router.post("/runtime/stop")
-def stop_runtime():
+def stop_runtime(request):
+    _guard_local_request(request)
     _stop_runtime()
     return {"ok": True}
 
@@ -444,7 +463,8 @@ def ai_job(jid: str):
     return JOBS[jid]
 
 @router.delete("/models/{model_id}")
-def delete_model(model_id: str):
+def delete_model(model_id: str, request):
+    _guard_local_request(request)
     if model_id == ACTIVE_MODEL:
         _stop_runtime()
     if model_id in MODEL_CATALOG:
@@ -458,14 +478,18 @@ def delete_model(model_id: str):
     return {"ok": True}
 
 @router.post("/generate-lyrics")
-async def generate_lyrics(payload: dict):
+async def generate_lyrics(payload: dict, request):
+    _guard_local_request(request)
     if not PROCESS or PROCESS.poll() is not None or not ACTIVE_MODEL:
         raise HTTPException(503, "Ative um modelo local antes de gerar a letra.")
     theme = str(payload.get("theme", "")).strip()[:1500]
     genre = str(payload.get("genre", "")).strip()[:300]
     mood = str(payload.get("mood", "")).strip()[:300]
     voice = str(payload.get("voice", "indiferente"))[:80]
-    duration = max(30, min(int(payload.get("duration", 120)), 300))
+    try:
+        duration = max(30, min(int(payload.get("duration", 120)), 300))
+    except (TypeError, ValueError):
+        raise HTTPException(400, "Duração inválida.")
     language = str(payload.get("language", "português do Brasil"))
     if not theme:
         raise HTTPException(400, "Informe o tema ou a história da música.")
@@ -496,3 +520,6 @@ async def generate_lyrics(payload: dict):
         return {"lyrics": text, "model": ACTIVE_MODEL}
     except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
         raise HTTPException(502, f"Falha ao gerar letra com o modelo local: {str(exc)[:250]}")
+
+
+atexit.register(_stop_runtime)
