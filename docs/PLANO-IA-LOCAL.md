@@ -60,7 +60,7 @@ As rotas de escrita devem validar caminhos e IDs contra o catálogo; nunca aceit
 - [x] Módulo FastAPI independente em `helper/ia_local.py`.
 - [x] Runtime llama.cpp fixado no release `b12359`, com SHA-256 por pacote.
 - [x] Download e extração com validação de hash, limites de tamanho e proteção contra path traversal.
-- [x] Catálogo inicial Qwen3-4B GGUF Q4_K_M, com verificação de hash LFS consultado no Hugging Face.
+- [x] Catálogo inicial Qwen3-4B GGUF Q4_K_M e Gemma 3 4B Instruct Q4_K_M, com verificação de hash LFS e aceite explícito dos termos Gemma.
 - [x] Importação manual de arquivos GGUF.
 - [x] Inicialização local em `127.0.0.1:8010`, desligamento e encerramento no fim do processo.
 - [x] Endpoint de composição e primeira interface React.
