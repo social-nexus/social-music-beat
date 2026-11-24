@@ -79,7 +79,7 @@ O arquivo [Musica-Prompt-Mestre.txt](Musica-Prompt-Mestre.txt) tem um prompt pro
 2. Abra a aba **Compositor IA**.
 3. Escolha o runtime compatível. Para começar, use **CPU**; os pacotes CUDA/Vulkan/Metal são opcionais.
 4. Clique em **Baixar e instalar motor**. O pacote é obtido do release oficial do llama.cpp e validado por SHA-256.
-5. Selecione **Qwen3 4B Q4_K_M** e clique em **Baixar modelo** (aproximadamente 2,5 GB).
+5. Selecione **Qwen3 4B Q4_K_M** ou **Gemma 3 4B Instruct Q4_K_M**. O Gemma exige que você leia e aceite os termos antes do download. Cada modelo ocupa aproximadamente 2,5 GB.
 6. Clique em **Ativar modelo**. Depois preencha tema, gênero e clima e gere a letra.
 7. Revise o texto e clique em **Usar esta letra na criação musical** para transferi-lo ao formulário do ACE-Step.
 
@@ -122,7 +122,7 @@ O build já grava o resultado em `helper\web`.
 
 ## Compositor de letras com IA local
 
-A branch de desenvolvimento inclui um compositor opcional com modelos de linguagem executados localmente. O runtime llama.cpp é baixado de releases oficiais fixados por versão e SHA-256; o primeiro modelo do catálogo é Qwen3-4B GGUF Q4_K_M. Também é possível importar arquivos GGUF que o usuário já possua.
+A branch de desenvolvimento inclui um compositor opcional com modelos de linguagem executados localmente. O runtime llama.cpp é baixado de releases oficiais fixados por versão e SHA-256; o catálogo inicial oferece Qwen3-4B GGUF Q4_K_M (Apache 2.0) e Gemma 3 4B Instruct Q4_K_M (Gemma Terms of Use, com aceite explícito no aplicativo). Também é possível importar arquivos GGUF que o usuário já possua.
 
 A ferramenta continua funcionando sem baixar o runtime ou modelos de texto, e a geração musical continua usando o ACE-Step. O motor local escuta somente em 127.0.0.1.
 
