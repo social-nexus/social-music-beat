@@ -66,6 +66,11 @@ else
 fi
 
 echo
+echo "[3.1/6] Verificando o armazenamento seguro de chaves (Keyring)..."
+pip install --upgrade "keyring>=25.5,<26" || { echo "Nao consegui instalar o Keyring."; exit 1; }
+python -c "import keyring; print('Keyring instalado:', keyring.__file__)" || { echo "O Keyring nao pode ser importado neste ambiente."; exit 1; }
+
+echo
 echo "[4/6] Instalando o Whisper da aba de legendas (modo Preciso)..."
 pip install faster-whisper "numpy==1.26.4" ||
   echo "AVISO: nao consegui instalar o Whisper. O modo Rapido das legendas funciona sem ele. Rode este instalar-linux.sh de novo mais tarde."
