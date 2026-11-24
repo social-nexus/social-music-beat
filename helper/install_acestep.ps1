@@ -70,6 +70,7 @@ if (Test-AceStep $installPath) {
         $sevenZip = Join-Path $tempRoot "7zr.exe"
         New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
 
+        $installSucceeded = $false
         try {
             Write-Host ""
             Write-Host "Baixando o pacote portatil oficial do ACE-Step 1.5..."
@@ -119,8 +120,13 @@ if (Test-AceStep $installPath) {
             }
             Write-Host ""
             Write-Host "ACE-Step instalado e verificado em: $installPath"
+            $installSucceeded = $true
         } finally {
-            Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
+            if ($installSucceeded) {
+                Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
+            } else {
+                Write-Warning "A instalacao nao terminou. Os arquivos temporarios foram preservados para evitar perda de dados: $tempRoot"
+            }
         }
     }
 }
