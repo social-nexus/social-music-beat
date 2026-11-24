@@ -362,6 +362,7 @@ function CompositorPanel({ onUseLyrics }) {
   const [status, setStatus] = useState({});
   const [runtime, setRuntime] = useState("");
   const [model, setModel] = useState("qwen3-4b-q4km");
+  const [gemmaAccepted, setGemmaAccepted] = useState(false);
   const [gpuLayers, setGpuLayers] = useState(0);
   const [theme, setTheme] = useState("");
   const [genre, setGenre] = useState("MPB");
@@ -408,7 +409,7 @@ function CompositorPanel({ onUseLyrics }) {
   const downloadModel = async () => {
     setBusy(true); setError(""); setMessage("Preparando o download do modelo…");
     try {
-      const r = await jsonPost("/api/ai/models/download", { model_id: model });
+      const r = await jsonPost("/api/ai/models/download", { model_id: model, accept_license: gemmaAccepted });
       if (r.job_id) await waitJob(r.job_id, "Modelo instalado e verificado.");
       await refresh();
     } catch (e) { setError(e.message); }
@@ -502,8 +503,14 @@ function CompositorPanel({ onUseLyrics }) {
           <p>{selectedModel.description}</p>
           <p className="mt-2">Licença: <b className="text-zinc-200">{selectedModel.license}</b> · <a className="underline" href={selectedModel.license_url} target="_blank" rel="noreferrer">ver licença</a> · <a className="underline" href={selectedModel.model_url} target="_blank" rel="noreferrer">origem oficial</a></p>
         </div>}
+        {selectedModel?.requires_license_acceptance && (
+          <label className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-100">
+            <input type="checkbox" checked={gemmaAccepted} onChange={(e) => setGemmaAccepted(e.target.checked)} className="mt-0.5" />
+            <span>Li e aceito os <a className="underline font-bold" href={selectedModel.license_url} target="_blank" rel="noreferrer">Gemma Terms of Use</a>. Entendo que o Gemma possui condições próprias de uso.</span>
+          </label>
+        )}
         <div className="flex flex-wrap gap-2">
-          <button disabled={busy || installedSelected || !selectedModel} onClick={downloadModel} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold disabled:opacity-40">{installedSelected ? "Modelo instalado" : "Baixar modelo"}</button>
+          <button disabled={busy || installedSelected || !selectedModel || (selectedModel.requires_license_acceptance && !gemmaAccepted)} onClick={downloadModel} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold disabled:opacity-40">{installedSelected ? "Modelo instalado" : "Baixar modelo"}</button>
           <label className="cursor-pointer rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold hover:bg-white/5">
             Importar GGUF
             <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
