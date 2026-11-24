@@ -18,6 +18,10 @@ class RuntimeCatalogTests(unittest.TestCase):
                 self.assertEqual(len(item["sha256"]), 64)
                 self.assertEqual(item["size"], int(item["size"]))
                 self.assertGreater(item["size"], 1_000_000)
+                for extra in item.get("extras", []):
+                    self.assertTrue(extra["url"].startswith("https://github.com/ggml-org/llama.cpp/"))
+                    self.assertEqual(len(extra["sha256"]), 64)
+                    self.assertGreater(extra["size"], 1_000_000)
 
     def test_archive_path_rejects_parent_traversal(self):
         root = Path(TEMP_DATA) / "extract"
