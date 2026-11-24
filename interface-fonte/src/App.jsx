@@ -481,6 +481,11 @@ async function analyzeMelodyReference(file) {
 function CompositorPanel({ onUseLyrics }) {
   const [catalog, setCatalog] = useState({ runtimes: [], models: [], installed_models: [] });
   const [status, setStatus] = useState({});
+  const [providerConfig, setProviderConfig] = useState({ providers: [], secure_storage_available: false });
+  const [provider, setProvider] = useState("local");
+  const [providerModel, setProviderModel] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [providerBusy, setProviderBusy] = useState(false);
   const [runtime, setRuntime] = useState("");
   const [model, setModel] = useState("qwen3-4b-q4km");
   const [gemmaAccepted, setGemmaAccepted] = useState(false);
@@ -523,9 +528,12 @@ function CompositorPanel({ onUseLyrics }) {
   }, []);
 
   const refresh = useCallback(async () => {
-    const [c, s] = await Promise.all([http("/api/ai/catalog"), http("/api/ai/status")]);
+    const [c, s, p] = await Promise.all([http("/api/ai/catalog"), http("/api/ai/status"), http("/api/ai/providers/config")]);
     setCatalog(c);
     setStatus(s);
+    setProviderConfig(p);
+    setProvider((old) => old === "local" ? p.selected_provider : old);
+    setProviderModel((old) => old || p.selected_model || p.providers.find((x) => x.id === p.selected_provider)?.models?.[0] || "");
     const compatible = c.runtimes.filter((r) => r.compatible);
     setRuntime((old) => old && compatible.some((r) => r.id === old) ? old : (compatible.find((r) => r.installed)?.id || compatible.find((r) => r.backend === "cpu")?.id || compatible[0]?.id || ""));
     if (!model && c.models.length) setModel(c.models[0].id);
@@ -541,6 +549,39 @@ function CompositorPanel({ onUseLyrics }) {
       if (j.status === "error") throw new Error(j.message || "A operação falhou.");
       await sleep(1200);
     }
+  };
+
+  const saveProviderKey = async () => {
+    if (!provider || provider === "local" || !apiKey.trim()) { setError("Escolha um provedor e informe a chave de API."); return; }
+    setProviderBusy(true); setError(""); setMessage("Salvando a chave no cofre seguro do sistema…");
+    try {
+      await jsonPost("/api/ai/providers/key", { provider, api_key: apiKey.trim() });
+      setApiKey(""); await refresh(); setMessage("Chave salva no cofre de credenciais do sistema.");
+    } catch (e) { setError(e.message); }
+    finally { setProviderBusy(false); }
+  };
+  const saveProviderChoice = async () => {
+    setProviderBusy(true); setError("");
+    try {
+      await http("/api/ai/providers/config", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, model: providerModel }) });
+      await refresh(); setMessage(provider === "local" ? "IA local selecionada." : "Provedor e modelo selecionados.");
+    } catch (e) { setError(e.message); }
+    finally { setProviderBusy(false); }
+  };
+  const testProvider = async () => {
+    setProviderBusy(true); setError(""); setMessage("Testando conexão com o provedor…");
+    try {
+      const r = await jsonPost("/api/ai/providers/test", { provider, model: providerModel });
+      setMessage("Conexão funcionando: " + r.message);
+    } catch (e) { setError(e.message); }
+    finally { setProviderBusy(false); }
+  };
+  const removeProviderKey = async () => {
+    if (!window.confirm("Remover a chave salva deste provedor?")) return;
+    setProviderBusy(true); setError("");
+    try { await http("/api/ai/providers/key/" + provider, { method: "DELETE" }); await refresh(); setMessage("Chave removida do cofre de credenciais."); }
+    catch (e) { setError(e.message); }
+    finally { setProviderBusy(false); }
   };
 
   const installRuntime = async () => {
@@ -662,9 +703,9 @@ function CompositorPanel({ onUseLyrics }) {
   const generate = async () => {
     if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
     if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
-    setBusy(true); setError(""); setMessage("Compondo a letra localmente…"); setResult("");
+    setBusy(true); setError(""); setMessage(provider === "local" ? "Compondo a letra localmente…" : "Enviando solicitação ao provedor escolhido…"); setResult("");
     try {
-      const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
+      const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
       setResult(r.lyrics);
       const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
       setMessage((labels[compositionMode] || "Composição concluída") + " com " + r.model + ".");
@@ -693,8 +734,8 @@ function CompositorPanel({ onUseLyrics }) {
   return (
     <div className="mx-auto max-w-5xl space-y-5 p-4 lg:p-6">
       <div>
-        <h1 className="text-2xl font-black">Compositor de letras com IA local</h1>
-        <p className="mt-1 text-sm text-zinc-400">Crie letras no seu computador. Nenhum texto precisa ser enviado para serviços externos.</p>
+        <h1 className="text-2xl font-black">Compositor de letras com IA</h1>
+        <p className="mt-1 text-sm text-zinc-400">Use Gemma/Qwen no computador ou conecte sua própria API. Ao escolher um provedor externo, os dados da composição serão enviados a esse serviço.</p>
       </div>
 
       {(error || message) && (
@@ -704,7 +745,37 @@ function CompositorPanel({ onUseLyrics }) {
       )}
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
-        <h2 className="font-bold">1. Motor de IA</h2>
+        <div><h2 className="font-bold">1. Escolha como a IA vai funcionar</h2><p className="mt-1 text-xs text-zinc-400">A opção local é gratuita. APIs externas usam sua própria conta e podem gerar cobranças pelo provedor.</p></div>
+        <label className="block text-xs font-semibold text-zinc-300">Modo de IA
+          <select className={inputCls + " mt-1"} value={provider} onChange={(e) => { setProvider(e.target.value); const p = providerConfig.providers.find((x) => x.id === e.target.value); setProviderModel(p?.models?.[0] || ""); }}>
+            <option value="local">Local — Gemma / Qwen</option>
+            {providerConfig.providers.map((p) => <option key={p.id} value={p.id}>{p.name} {p.configured ? "— chave cadastrada" : "— configurar chave"}</option>)}
+          </select>
+        </label>
+        {provider !== "local" && <>
+          <label className="block text-xs font-semibold text-zinc-300">Modelo (ID do provedor)
+            <input className={inputCls + " mt-1"} value={providerModel} onChange={(e) => setProviderModel(e.target.value)} list="provider-model-options" placeholder="Informe o identificador do modelo"/>
+            <datalist id="provider-model-options">{(providerConfig.providers.find((p) => p.id === provider)?.models || []).map((m) => <option key={m} value={m}/>)}</datalist>
+          </label>
+          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
+            <p className="text-xs text-zinc-300">{providerConfig.providers.find((p) => p.id === provider)?.configured ? "Uma chave já está cadastrada para este provedor." : "Cadastre sua chave de API para habilitar este provedor."}</p>
+            <input type="password" autoComplete="new-password" className={inputCls} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Cole sua chave de API aqui"/>
+            <div className="flex flex-wrap gap-2">
+              <button disabled={providerBusy || !apiKey.trim() || !providerConfig.secure_storage_available} onClick={saveProviderKey} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-black disabled:opacity-40">Salvar chave com segurança</button>
+              <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured} onClick={removeProviderKey} className="rounded-lg border border-white/15 px-3 py-2 text-xs">Remover chave</button>
+            </div>
+            {!providerConfig.secure_storage_available && <p className="text-xs text-amber-200">O cofre seguro de credenciais do sistema não está disponível. A chave não será salva em arquivo de texto.</p>}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button disabled={providerBusy || !providerModel} onClick={saveProviderChoice} className="rounded-lg bg-pink-500 px-3 py-2 text-xs font-bold text-white">Usar este provedor</button>
+            <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured || !providerModel} onClick={testProvider} className="rounded-lg border border-white/15 px-3 py-2 text-xs">Testar conexão</button>
+          </div>
+          <p className="text-[11px] text-zinc-500">A chave é guardada no cofre de credenciais do Windows/macOS/Linux, não no código, no GitHub ou no arquivo de configurações. Confira limites, créditos e preços com o provedor.</p>
+        </>}
+      </section>
+
+      <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
+        <h2 className="font-bold">2. Motor de IA local (opcional)</h2>
         {compatibleRuntimes.length ? (
           <>
             <label className="block text-xs font-semibold text-zinc-300">Pacote compatível com este computador</label>
@@ -729,7 +800,7 @@ function CompositorPanel({ onUseLyrics }) {
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
-        <h2 className="font-bold">2. Modelo de linguagem</h2>
+        <h2 className="font-bold">3. Modelo local (Gemma / Qwen)</h2>
         <label className="block text-xs font-semibold text-zinc-300">Modelo do catálogo</label>
         <select className={inputCls} value={model} onChange={(e) => setModel(e.target.value)}>
           {catalog.models.map((m) => <option key={m.id} value={m.id}>{m.name} {m.installed ? "— instalado" : "— aprox. " + m.approx_size_gb + " GB"}</option>)}
@@ -758,7 +829,7 @@ function CompositorPanel({ onUseLyrics }) {
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
-        <div><h2 className="font-bold">3. Assistente de composição</h2><p className="mt-1 text-xs text-zinc-400">Escolha o que deseja fazer. A IA trabalha localmente com o modelo ativado.</p></div>
+        <div><h2 className="font-bold">4. Assistente de composição</h2><p className="mt-1 text-xs text-zinc-400">Escolha o que deseja fazer. A composição será processada pelo modo de IA selecionado acima.</p></div>
         <div className="grid gap-2 sm:grid-cols-3">
           {[{id:"full",title:"Música completa",desc:"Começar uma letra do zero."},{id:"continue",title:"Continuar composição",desc:"Preservar sua letra e desenvolver o restante."},{id:"chorus",title:"Criar somente refrão",desc:"Escrever um refrão para sua composição."}].map((item)=>(
             <button key={item.id} type="button" onClick={()=>{setCompositionMode(item.id);setResult("");setError("");}}
@@ -825,7 +896,7 @@ function CompositorPanel({ onUseLyrics }) {
           <label className="text-xs font-semibold text-zinc-300">Idioma<select className={inputCls+" mt-1"} value={language} onChange={(e)=>setLanguage(e.target.value)}><option>português do Brasil</option><option>inglês</option><option>espanhol</option></select></label>
           {compositionMode!=="chorus"&&<label className="text-xs font-semibold text-zinc-300">Duração aproximada<select className={inputCls+" mt-1"} value={duration} onChange={(e)=>setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>}
         </div>
-        <button disabled={busy||!status.runtime_running||!status.active_model||(compositionMode==="full"?!theme.trim():!sourceLyrics.trim())} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
+        <button disabled={busy||(provider==="local"&&(!status.runtime_running||!status.active_model))||(provider!=="local"&&(!providerModel||!providerConfig.providers.find((p)=>p.id===provider)?.configured))||(compositionMode==="full"?!theme.trim():!sourceLyrics.trim())} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
           {busy?<Loader2 size={18} className="animate-spin"/>:<Sparkles size={18}/>}
           {compositionMode==="full"?"Criar música completa":compositionMode==="continue"?"Continuar minha composição":"Criar somente o refrão"}
         </button>
