@@ -1,5 +1,11 @@
 @echo off
 call "%~dp0config.bat"
+if defined SOCIAL_NEXUS_MODELS_DIR if not exist "%SOCIAL_NEXUS_MODELS_DIR%" (
+  echo A biblioteca compartilhada de modelos nao esta disponivel: %SOCIAL_NEXUS_MODELS_DIR%
+  echo Conecte o disco configurado ou execute configurar_armazenamento.bat para escolher outro local.
+  pause
+  exit /b 1
+)
 if not exist "%ACESTEP_DIR%\start_api_server.bat" (
   echo Nao encontrei o ACE-Step em %ACESTEP_DIR%. Veja o config.bat.
   pause
