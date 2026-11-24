@@ -73,6 +73,22 @@ Se algum download falhar, rode o `instalar.bat` de novo: o que já foi baixado n
 
 O arquivo [Musica-Prompt-Mestre.txt](Musica-Prompt-Mestre.txt) tem um prompt pronto para pedir a um assistente de IA uma letra em português já no formato que o programa espera (título, estilo, configurações e letra com as marcações). Preencha os campos entre colchetes e cole no assistente de sua preferência.
 
+### Como usar o compositor local (em desenvolvimento)
+
+1. Instale e inicie o Social Music Beat normalmente.
+2. Abra a aba **Compositor IA**.
+3. Escolha o runtime compatível. Para começar, use **CPU**; os pacotes CUDA/Vulkan/Metal são opcionais.
+4. Clique em **Baixar e instalar motor**. O pacote é obtido do release oficial do llama.cpp e validado por SHA-256.
+5. Selecione **Qwen3 4B Q4_K_M** e clique em **Baixar modelo** (aproximadamente 2,5 GB).
+6. Clique em **Ativar modelo**. Depois preencha tema, gênero e clima e gere a letra.
+7. Revise o texto e clique em **Usar esta letra na criação musical** para transferi-lo ao formulário do ACE-Step.
+
+Também é possível importar um arquivo GGUF já existente. A licença de modelos importados precisa ser conferida pelo próprio usuário.
+
+O runtime e os modelos são opcionais e ficam na pasta de dados do usuário, fora do repositório. A IA local usa a porta 8010 em `127.0.0.1`; o ACE-Step continua na porta 8001 e o servidor da interface na 8002.
+
+**Atenção:** esta primeira versão ainda precisa de teste de execução real em Windows, Linux e macOS. O pacote CUDA depende de drivers NVIDIA compatíveis e pode consumir muita VRAM; comece com poucas camadas na GPU ou use CPU. O compositor não é necessário para usar as funções musicais já existentes.
+
 ## Estrutura do projeto
 
 ```
