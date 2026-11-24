@@ -17,8 +17,6 @@ $preferredDrive = $systemDrive
 $secondaryDrive = $fixedDrives | Where-Object { ($_.DeviceID + '\') -ne $systemDrive -and $_.FreeSpace -gt 15GB } | Select-Object -First 1
 if ($secondaryDrive) {
     $preferredDrive = $secondaryDrive.DeviceID + '\'
-} elseif ($fixedDrives.Count -gt 0) {
-    $preferredDrive = $fixedDrives[0].DeviceID + '\'
 }
 $defaultRoot = Join-Path $preferredDrive "IA_MODELS"
 $answer = Read-Host "Pasta central dos modelos [$defaultRoot]"
