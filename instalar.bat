@@ -14,7 +14,7 @@ if errorlevel 1 goto falha_acestep
 call "%~dp0config.bat"
 
 if not defined SOCIAL_NEXUS_MODELS_DIR goto configurar_armazenamento
-if not exist "%SOCIAL_NEXUS_MODELS_DIR%" goto configurar_armazenamento
+if not exist "%SOCIAL_NEXUS_MODELS_DIR%" goto armazenamento_indisponivel
 goto armazenamento_ok
 
 :configurar_armazenamento
@@ -28,6 +28,11 @@ if not defined SOCIAL_NEXUS_MODELS_DIR goto falha_armazenamento
 if not exist "%SOCIAL_NEXUS_MODELS_DIR%" goto falha_armazenamento
 
 :armazenamento_ok
+echo.
+echo Verificando e reparando o redirecionamento dos modelos do ACE-Step...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0helper\storage_manager.ps1" -Root "%SOCIAL_NEXUS_MODELS_DIR%"
+if errorlevel 1 goto falha_armazenamento
+call "%~dp0config.bat"
 echo.
 echo ACE-Step e armazenamento preparados.
 
@@ -87,6 +92,13 @@ echo.
 echo Instalacao concluida! Agora use o iniciar.bat
 pause
 exit /b 0
+
+:armazenamento_indisponivel
+echo.
+echo A biblioteca de modelos configurada nao esta acessivel: %SOCIAL_NEXUS_MODELS_DIR%
+echo Reconecte o disco ou execute configurar_armazenamento.bat manualmente para escolher outro local.
+pause
+exit /b 1
 
 :cancelado_acestep
 echo.
