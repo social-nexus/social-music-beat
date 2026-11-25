@@ -4,7 +4,7 @@
 >
 > Usar IA para gerar uma música **não garante, por si só, direitos autorais, exclusividade ou permissão para uso comercial**. Antes de publicar, confira a licença do modelo/serviço, os direitos sobre letras, melodias, vozes, samples e gravações utilizados e as regras atuais do YouTube, distribuidoras e demais plataformas. Evite imitar artistas ou usar material de terceiros sem autorização.
 >
-> 📘 **Leia o guia completo:** [CUIDADO, LEIA ANTES DE CRIAR (PDF)](CUIDADO-LEIA-ANTES-DE-CRIAR.pdf). O material é informativo e não substitui orientação jurídica.
+> 📘 **Leia o guia completo:** [CUIDADO, LEIA ANTES DE CRIAR (guia completo)](CUIDADO-LEIA-ANTES-DE-CRIAR.md). O material é informativo e não substitui orientação jurídica.
 
 Ferramenta **local** para Windows, Linux e macOS que:
 
