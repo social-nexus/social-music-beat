@@ -149,12 +149,19 @@ MODEL_CATALOG = {
 }
 
 def _guard_local_request(request):
+    allowed_hosts = {"localhost:8002", "127.0.0.1:8002"}
+    allowed_origins = {"http://localhost:8002", "http://127.0.0.1:8002"}
     host = (request.headers.get("host") or "").lower()
-    if host and host not in ("localhost:8002", "127.0.0.1:8002"):
+    if host not in allowed_hosts:
         raise HTTPException(403, "Acesso permitido somente pela interface local.")
     origin = request.headers.get("origin")
-    if origin and origin not in ("http://localhost:8002", "http://127.0.0.1:8002"):
+    if origin is not None and origin not in allowed_origins:
         raise HTTPException(403, "Origem não permitida para a API local.")
+    if request.method.upper() in {"POST", "PUT", "PATCH", "DELETE"} and origin not in allowed_origins:
+        raise HTTPException(403, "A origem da requisição local não pôde ser confirmada.")
+    fetch_site = (request.headers.get("sec-fetch-site") or "").lower()
+    if fetch_site and fetch_site not in {"same-origin", "none"}:
+        raise HTTPException(403, "Requisição de outra origem não permitida.")
 
 def _job(kind: str) -> str:
     jid = uuid.uuid4().hex[:12]
