@@ -19,6 +19,23 @@ class ProviderConfigTests(unittest.TestCase):
         ai_providers.CONFIG_PATH = Path(TEMP_DATA) / "ai-provider-config.json"
         ai_providers.CONFIG_PATH.unlink(missing_ok=True)
 
+    def test_provider_guard_requires_same_origin_for_state_changes(self):
+        def request(headers):
+            return Request({"type": "http", "method": "POST", "headers": headers})
+
+        with self.assertRaises(ai_providers.HTTPException):
+            ai_providers._guard(request([(b"host", b"localhost:8002")]))
+        with self.assertRaises(ai_providers.HTTPException):
+            ai_providers._guard(request([
+                (b"host", b"localhost:8002"),
+                (b"origin", b"https://attacker.example"),
+            ]))
+        ai_providers._guard(request([
+            (b"host", b"localhost:8002"),
+            (b"origin", b"http://localhost:8002"),
+            (b"sec-fetch-site", b"same-origin"),
+        ]))
+
     def test_provider_catalog_includes_major_and_aggregator_services(self):
         for provider in ("openai", "anthropic", "gemini", "openrouter", "deepseek", "groq", "mistral"):
             self.assertIn(provider, ai_providers.PROVIDERS)
@@ -50,7 +67,7 @@ class ProviderConfigTests(unittest.TestCase):
 
 class CloudLyricsRoutingTests(unittest.IsolatedAsyncioTestCase):
     async def test_cloud_provider_does_not_require_local_runtime(self):
-        request = Request({"type": "http", "headers": [(b"host", b"localhost:8002")]})
+        request = Request({"type": "http", "method": "POST", "headers": [(b"host", b"localhost:8002"), (b"origin", b"http://localhost:8002")]})
         payload = {"provider": "openai", "provider_model": "gpt-4.1-mini",
                    "mode": "full", "theme": "uma canção de amizade",
                    "genre": "pop", "mood": "alegre"}
