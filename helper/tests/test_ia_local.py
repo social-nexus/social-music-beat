@@ -11,6 +11,31 @@ import ia_local
 
 
 class RuntimeCatalogTests(unittest.TestCase):
+    def test_local_request_guard_requires_exact_host_and_same_origin_for_mutations(self):
+        from starlette.requests import Request
+
+        def request(headers):
+            return Request({"type": "http", "method": "POST", "headers": headers})
+
+        with self.assertRaises(ia_local.HTTPException):
+            ia_local._guard_local_request(request([(b"host", b"localhost:8002")]))
+        with self.assertRaises(ia_local.HTTPException):
+            ia_local._guard_local_request(request([
+                (b"host", b"localhost:8002"),
+                (b"origin", b"https://attacker.example"),
+            ]))
+        with self.assertRaises(ia_local.HTTPException):
+            ia_local._guard_local_request(request([
+                (b"host", b"localhost:8002"),
+                (b"origin", b"http://localhost:8002"),
+                (b"sec-fetch-site", b"cross-site"),
+            ]))
+        ia_local._guard_local_request(request([
+            (b"host", b"localhost:8002"),
+            (b"origin", b"http://localhost:8002"),
+            (b"sec-fetch-site", b"same-origin"),
+        ]))
+
     def test_runtime_assets_are_pinned_and_https(self):
         self.assertTrue(ia_local.RUNTIME_CATALOG)
         for variant, item in ia_local.RUNTIME_CATALOG.items():
