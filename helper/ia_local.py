@@ -187,24 +187,39 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 def _download(url: str, dest: Path, expected_size: int | None, jid: str):
+    if not isinstance(expected_size, int) or expected_size <= 0:
+        raise ValueError("O download não possui tamanho esperado válido.")
     req = URLRequest(url, headers={"User-Agent": "SocialMusicBeat/1.0"})
     tmp = dest.with_suffix(dest.suffix + ".part")
+    tmp.unlink(missing_ok=True)
     total = 0
-    with urlopen(req, timeout=45) as response, tmp.open("wb") as out:
-        length = int(response.headers.get("Content-Length") or expected_size or 0)
-        while True:
-            chunk = response.read(1024 * 1024)
-            if not chunk:
-                break
-            out.write(chunk)
-            total += len(chunk)
-            pct = int(total * 100 / length) if length else 0
-            _update_job(jid, status="downloading", progress=min(pct, 99),
-                        message=f"Baixando: {pct}% ({total / (1024**2):.0f} MB)")
-    if expected_size and total != expected_size:
+    try:
+        with urlopen(req, timeout=45) as response, tmp.open("wb") as out:
+            header_length = response.headers.get("Content-Length")
+            if header_length:
+                try:
+                    advertised = int(header_length)
+                except ValueError:
+                    raise ValueError("O servidor informou Content-Length inválido.")
+                if advertised != expected_size:
+                    raise ValueError(f"Tamanho informado pelo servidor divergente: {advertised} bytes (esperado {expected_size}).")
+            while True:
+                chunk = response.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > expected_size:
+                    raise ValueError(f"Download excedeu o tamanho esperado de {expected_size} bytes; interrompido.")
+                out.write(chunk)
+                pct = int(total * 100 / expected_size)
+                _update_job(jid, status="downloading", progress=min(pct, 99),
+                            message=f"Baixando: {pct}% ({total / (1024**2):.0f} MB)")
+        if total != expected_size:
+            raise ValueError(f"Tamanho inesperado: {total} bytes (esperado {expected_size}).")
+        tmp.replace(dest)
+    except Exception:
         tmp.unlink(missing_ok=True)
-        raise ValueError(f"Tamanho inesperado: {total} bytes (esperado {expected_size}).")
-    tmp.replace(dest)
+        raise
 
 def _safe_member_path(root: Path, member_name: str) -> Path:
     pure = PurePosixPath(member_name.replace("\\", "/"))
