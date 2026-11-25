@@ -8,19 +8,79 @@ const TURBO = "acestep-v15-turbo"; // criar músicas (rápido, melhor qualidade)
 const BASE_MODEL = "acestep-v15-base"; // criar a banda para a sua voz (tarefa "complete")
 
 const STYLES = [
-  { label: "Pop", v: "pop, upbeat, catchy" },
-  { label: "Sertanejo", v: "sertanejo, brazilian country, acoustic guitar, viola" },
-  { label: "Rock", v: "rock, electric guitars, driving drums" },
-  { label: "MPB", v: "MPB, brazilian acoustic, nylon guitar, soft percussion" },
-  { label: "Gospel", v: "gospel, worship, piano, uplifting" },
-  { label: "Funk", v: "funk carioca, heavy bass, brazilian funk beat" },
-  { label: "Samba / Pagode", v: "samba, pagode, cavaquinho, percussion" },
-  { label: "Forró", v: "forró, accordion, zabumba, triangle" },
-  { label: "Eletrônica", v: "electronic dance, synth, four-on-the-floor" },
-  { label: "Lo-fi", v: "lo-fi hip hop, chill, mellow" },
-  { label: "Balada", v: "ballad, piano, strings, emotional" },
-  { label: "Reggae", v: "reggae, offbeat guitar, relaxed" },
+  // Infantil: energia, balanço e instrumentação explícitos para evitar pop lento genérico.
+  { category: "Infantil", label: "Pop infantil dançante", v: "upbeat Brazilian children's dance pop, 132 BPM, bouncy bass, lively drums, bright keyboards, handclaps, playful percussion, joyful theatrical vocals, catchy sing-along chorus" },
+  { category: "Infantil", label: "Festa infantil", v: "high-energy children's party music, 138 BPM, punchy dance beat, bouncing bass, bright brass and synth accents, claps, group shouts, playful call-and-response vocals" },
+  { category: "Infantil", label: "Marchinha divertida", v: "cheerful Brazilian children's march, 120 BPM, bouncy marching snare, brass section, tuba-like bass, tambourine, playful group vocals, humorous parade atmosphere" },
+  { category: "Infantil", label: "Cantiga moderna", v: "modern Brazilian nursery rhyme, 112 BPM, light bouncing rhythm, ukulele, acoustic guitar, glockenspiel, hand percussion, warm playful vocals, simple memorable melody" },
+  { category: "Infantil", label: "Desenho animado", v: "playful cartoon soundtrack, 130 BPM, quirky pizzicato strings, bassoon, xylophone, bouncy drums, comic musical accents, expressive character vocals" },
+  { category: "Infantil", label: "Pop rock infantil", v: "upbeat children's pop rock, 126 BPM, bright electric guitars, energetic live drums, melodic bass, handclaps, joyful youthful vocals, big catchy chorus" },
+  { category: "Infantil", label: "Ukulele alegre", v: "cheerful acoustic children's folk pop, 116 BPM, strummed ukulele, acoustic bass, shaker, tambourine, finger snaps, sweet playful vocals, sunny sing-along melody" },
+  { category: "Infantil", label: "Ska infantil", v: "bouncy children's ska pop, 140 BPM, upbeat offbeat guitar skanks, walking bass, lively drums, playful brass stabs, energetic cheerful vocals" },
+
+  // Pop e rock.
+  { category: "Pop e Rock", label: "Pop dançante", v: "upbeat contemporary dance pop, 122 BPM, four-on-the-floor kick, punchy snare, groovy bass, bright synthesizers, rhythmic guitars, energetic confident vocals, explosive catchy chorus" },
+  { category: "Pop e Rock", label: "Pop rock animado", v: "energetic pop rock, 124 BPM, driving live drums, crunchy electric rhythm guitars, melodic bass guitar, bright hooks, expressive adult lead vocals, powerful sing-along chorus" },
+  { category: "Pop e Rock", label: "Pop acústico", v: "upbeat acoustic pop, 108 BPM, strummed steel-string guitar, organic percussion, warm bass, piano accents, lively natural vocals, uplifting melodic chorus" },
+  { category: "Pop e Rock", label: "Rock clássico", v: "classic upbeat rock and roll, 128 BPM, electric guitar riffs, live drum kit, walking electric bass, piano accents, energetic raw lead vocals, strong backbeat" },
+  { category: "Pop e Rock", label: "Indie pop", v: "bright indie pop, 116 BPM, jangly guitars, melodic bass, crisp drums, shimmering keyboards, layered harmonies, buoyant modern groove" },
+  { category: "Pop e Rock", label: "Punk pop", v: "fast melodic pop punk, 164 BPM, distorted power-chord guitars, fast live drums, driving bass, youthful energetic vocals, anthemic shout-along chorus" },
+  { category: "Pop e Rock", label: "Hard rock", v: "energetic hard rock, 132 BPM, heavy distorted guitar riffs, powerful acoustic drums, thick bass guitar, strong gritty vocals, dramatic guitar breaks" },
+
+  // Ritmos brasileiros.
+  { category: "Brasil", label: "Samba", v: "joyful Brazilian samba, 102 BPM, syncopated surdo, pandeiro, tamborim, cavaquinho, agogo bell, lively bass, swinging expressive vocals" },
+  { category: "Brasil", label: "Pagode", v: "upbeat Brazilian pagode, 100 BPM, tantan, pandeiro, repique de mao, cavaquinho, banjo, warm bass, rhythmic group backing vocals, relaxed swinging groove" },
+  { category: "Brasil", label: "Samba-enredo", v: "high-energy Brazilian samba-enredo, 146 BPM, powerful bateria percussion, surdo, caixa, tamborim, cuica, brass accents, massed joyful chorus, carnival parade drive" },
+  { category: "Brasil", label: "Forró pé de serra", v: "lively traditional Brazilian forro, 132 BPM, accordion lead, zabumba groove, triangle pulse, acoustic bass, playful dance rhythm, warm regional vocals" },
+  { category: "Brasil", label: "Forró eletrônico", v: "upbeat modern Brazilian forro, 138 BPM, accordion hooks, electronic drums, strong bass, synth textures, bright rhythmic guitar, energetic romantic vocals" },
+  { category: "Brasil", label: "Piseiro", v: "energetic Brazilian piseiro, 150 BPM, punchy electronic kick, syncopated bass, bright keyboard riffs, claps, repetitive dance groove, catchy direct vocals" },
+  { category: "Brasil", label: "Sertanejo universitário", v: "upbeat Brazilian sertanejo universitario, 126 BPM, driving acoustic guitar strums, sertanejo rhythm guitar, punchy drums, bass, bright accordion touches, energetic duo vocals" },
+  { category: "Brasil", label: "Sertanejo raiz", v: "traditional Brazilian sertanejo raiz, 96 BPM, viola caipira, acoustic guitar, accordion, organic percussion, warm storytelling vocals, countryside feel" },
+  { category: "Brasil", label: "Axé", v: "high-energy Brazilian axe music, 138 BPM, swinging bloco percussion, surdo, timbau, electric guitar, bass, brass accents, exuberant vocals, carnival dance groove" },
+  { category: "Brasil", label: "MPB animada", v: "upbeat Brazilian MPB, 112 BPM, nylon-string guitar, piano, melodic bass, Brazilian percussion, tasteful strings, expressive sophisticated vocals, flowing groove" },
+  { category: "Brasil", label: "Bossa nova", v: "Brazilian bossa nova, 92 BPM, soft syncopated nylon guitar, brushed drums, upright bass, gentle piano, intimate understated vocals, relaxed elegant sway" },
+  { category: "Brasil", label: "Funk carioca", v: "upbeat Brazilian funk carioca, 130 BPM, hard tamborzao beat, deep sub bass, syncopated percussion, sharp synth stabs, rhythmic vocal delivery, high-energy baile groove" },
+
+  // Urbano e grooves.
+  { category: "Urbano", label: "Hip-hop", v: "groovy hip hop, 92 BPM, punchy boom bap drums, deep bass, sampled soul keys, rhythmic rap vocals, confident laid-back flow" },
+  { category: "Urbano", label: "Trap", v: "modern melodic trap, 140 BPM half-time feel, deep 808 bass, crisp hi-hat rolls, punchy kick and snare, atmospheric synths, melodic rap vocals" },
+  { category: "Urbano", label: "R&B", v: "smooth contemporary R&B, 88 BPM, deep rounded bass, laid-back syncopated drums, electric piano, warm synth pads, soulful expressive vocals, rich harmonies" },
+  { category: "Urbano", label: "Soul", v: "uplifting classic soul, 110 BPM, live drums, warm bass, Hammond organ, rhythmic guitar, brass section, powerful soulful vocals, rich backing harmonies" },
+  { category: "Urbano", label: "Reggae", v: "positive roots reggae, 76 BPM, relaxed one-drop drums, deep melodic bass, offbeat skank guitar, organ bubbles, warm laid-back vocals" },
+  { category: "Urbano", label: "Ska", v: "upbeat ska, 148 BPM, fast offbeat guitar and piano, walking bass, lively drums, bright brass section, energetic vocals, danceable bounce" },
+
+  // Romântico e emocional (com variação real de andamento).
+  { category: "Romântico", label: "Balada pop", v: "emotional pop ballad, 76 BPM, expressive piano, warm strings, gentle drums building into a powerful chorus, intimate adult lead vocals" },
+  { category: "Romântico", label: "Balada rock", v: "dramatic rock ballad, 78 BPM, piano intro, sustained electric guitars, live drums building gradually, melodic bass, emotional powerful vocals, soaring chorus" },
+  { category: "Romântico", label: "Romântico acústico", v: "intimate acoustic love song, 84 BPM, fingerpicked acoustic guitar, soft piano, subtle strings, warm bass, tender close-miked vocals" },
+  { category: "Romântico", label: "Bolero", v: "classic Latin bolero, 72 BPM, nylon guitar, soft strings, gentle Latin percussion, warm bass, expressive romantic crooning vocals" },
+  { category: "Romântico", label: "Bachata", v: "romantic Dominican bachata, 126 BPM, bright requinto guitar, syncopated bachata rhythm guitar, bongos, guira, melodic bass, expressive vocals" },
+
+  // Dança e festa.
+  { category: "Dança", label: "Disco", v: "joyful disco dance music, 120 BPM, four-on-the-floor drums, funky octave bass, rhythmic strings, wah guitar, bright brass, joyful vocals, uplifting dancefloor energy" },
+  { category: "Dança", label: "Funk / groove", v: "upbeat funk groove, 108 BPM, syncopated electric bass, tight live drums, wah guitar, clavinet, brass stabs, soulful rhythmic vocals" },
+  { category: "Dança", label: "House", v: "uplifting house music, 124 BPM, steady four-on-the-floor kick, deep pulsing bass, bright piano chords, crisp claps, uplifting synths, energetic dance groove" },
+  { category: "Dança", label: "EDM festival", v: "energetic festival EDM, 128 BPM, powerful electronic kick, sidechain synth bass, bright supersaw leads, risers, big melodic drop, euphoric vocals" },
+  { category: "Dança", label: "Salsa", v: "energetic salsa, 184 BPM, piano montuno, congas, timbales, cowbell, tumbao bass, bright brass section, lively call-and-response vocals" },
+  { category: "Dança", label: "Cumbia", v: "joyful Latin cumbia, 96 BPM, syncopated percussion, guiro, congas, melodic bass, bright accordion or keyboard hooks, festive vocals" },
+  { category: "Dança", label: "Merengue", v: "fast joyful merengue, 128 BPM, tambora, guira, lively bass, bright accordion and brass, energetic dance vocals" },
+
+  // Internacional e tradicional.
+  { category: "Internacional", label: "Country", v: "upbeat modern country, 116 BPM, acoustic guitar, banjo, fiddle, pedal steel accents, steady drums, warm bass, lively storytelling vocals" },
+  { category: "Internacional", label: "Blues", v: "upbeat blues shuffle, 112 BPM, electric blues guitar, walking bass, shuffle drums, piano fills, expressive gritty vocals" },
+  { category: "Internacional", label: "Jazz swing", v: "joyful swing jazz, 150 BPM, walking upright bass, swinging brushed drums, piano, saxophone, trumpet, playful melodic vocals" },
+  { category: "Internacional", label: "Flamenco pop", v: "energetic flamenco pop, 118 BPM, Spanish nylon guitar, palmas handclaps, cajon, melodic bass, passionate vocals, rhythmic guitar flourishes" },
+  { category: "Internacional", label: "Afrobeat", v: "upbeat contemporary afrobeat, 108 BPM, syncopated polyrhythmic percussion, deep bass, bright guitar patterns, warm keyboards, melodic rhythmic vocals" },
+
+  // Instrumental e trilhas.
+  { category: "Instrumental", label: "Orquestral épico", v: "cinematic orchestral instrumental, 100 BPM, sweeping strings, bold brass, deep timpani, dynamic percussion, dramatic melodic development, no vocals" },
+  { category: "Instrumental", label: "Piano emocional", v: "emotional solo piano instrumental, 72 BPM, expressive piano melody, delicate dynamics, intimate cinematic atmosphere, no vocals" },
+  { category: "Instrumental", label: "Lo-fi chill", v: "laid-back lo-fi hip hop instrumental, 82 BPM, dusty drums, mellow electric piano, warm bass, vinyl texture, relaxed groove, no vocals" },
+  { category: "Instrumental", label: "Synthwave", v: "retro synthwave instrumental, 105 BPM, analog synthesizers, pulsing arpeggios, gated drums, deep synth bass, nostalgic cinematic atmosphere, no vocals" },
+  { category: "Instrumental", label: "Trilha de aventura", v: "playful adventure soundtrack, 124 BPM, orchestral pizzicato strings, bright woodwinds, rhythmic percussion, brass flourishes, uplifting energetic theme, no vocals" },
 ];
+
+const STYLE_CATEGORIES = ["Infantil", "Pop e Rock", "Brasil", "Urbano", "Romântico", "Dança", "Internacional", "Instrumental"];
 
 const KEYS = ["", "C Major", "G Major", "D Major", "A Major", "E Major", "F Major", "A minor", "E minor", "D minor", "B minor", "F# minor", "C minor"];
 
@@ -356,6 +416,559 @@ function LegendaModal({ track, tracks, onClose }) {
   );
 }
 
+
+// Analisa uma amostra curta no próprio navegador. O áudio bruto não é enviado à IA.
+async function analyzeMelodyReference(file) {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) throw new Error("Este navegador não oferece análise de áudio compatível.");
+  const context = new AudioCtx();
+  try {
+    const buffer = await context.decodeAudioData(await file.arrayBuffer());
+    const rate = buffer.sampleRate;
+    const seconds = Math.min(buffer.duration, 30);
+    const length = Math.floor(seconds * rate);
+    const channels = Math.min(buffer.numberOfChannels, 2);
+    const mono = new Float32Array(length);
+    for (let ch = 0; ch < channels; ch++) {
+      const data = buffer.getChannelData(ch);
+      for (let i = 0; i < length; i++) mono[i] += (data[i] || 0) / channels;
+    }
+
+    // Envelope de energia em janelas de 20 ms: útil para estimar pulsação, não é um metrônomo.
+    const windowSize = Math.max(1, Math.floor(rate * 0.02));
+    const envelope = [];
+    for (let i = 0; i + windowSize <= mono.length; i += windowSize) {
+      let sum = 0;
+      for (let j = 0; j < windowSize; j++) sum += mono[i + j] * mono[i + j];
+      envelope.push(Math.sqrt(sum / windowSize));
+    }
+    const onset = envelope.map((v, i) => Math.max(0, v - (envelope[i - 1] || 0)));
+    const envRate = 50;
+    let bestTempo = null, bestScore = 0;
+    for (let lag = 17; lag <= 50; lag++) {
+      let score = 0, normA = 0, normB = 0;
+      for (let i = lag; i < onset.length; i++) {
+        score += onset[i] * onset[i - lag];
+        normA += onset[i] * onset[i];
+        normB += onset[i - lag] * onset[i - lag];
+      }
+      const normalized = score / (Math.sqrt(normA * normB) + 1e-9);
+      if (normalized > bestScore) { bestScore = normalized; bestTempo = Math.round(60 * envRate / lag); }
+    }
+
+    // Estimativa grosseira de contorno de altura; funciona melhor com voz cantarolada ou instrumento solo.
+    const decimation = Math.max(1, Math.floor(rate / 11025));
+    const pitchRate = rate / decimation;
+    const frameSize = 4096;
+    const hop = Math.floor(pitchRate * 0.45);
+    const pitches = [];
+    for (let start = 0; start + frameSize * decimation < length; start += hop * decimation) {
+      const frame = new Float32Array(frameSize);
+      let mean = 0;
+      for (let j = 0; j < frameSize; j++) {
+        frame[j] = mono[start + j * decimation] || 0;
+        mean += frame[j];
+      }
+      mean /= frameSize;
+      let energy = 0;
+      for (let j = 0; j < frameSize; j++) { frame[j] -= mean; energy += frame[j] * frame[j]; }
+      if (energy / frameSize < 0.000015) continue;
+      const minLag = Math.max(2, Math.floor(pitchRate / 700));
+      const maxLag = Math.min(Math.floor(pitchRate / 70), Math.floor(frameSize / 2));
+      let bestLag = 0, best = 0;
+      for (let lag = minLag; lag <= maxLag; lag++) {
+        let corr = 0, a = 0, b = 0;
+        for (let j = 0; j < frameSize - lag; j++) {
+          const x = frame[j], y = frame[j + lag];
+          corr += x * y; a += x * x; b += y * y;
+        }
+        const normalized = corr / (Math.sqrt(a * b) + 1e-9);
+        if (normalized > best) { best = normalized; bestLag = lag; }
+      }
+      if (bestLag && best > 0.28) pitches.push(69 + 12 * Math.log2((pitchRate / bestLag) / 440));
+    }
+    const median = (values) => {
+      const sorted = [...values].sort((a, b) => a - b);
+      return sorted.length ? sorted[Math.floor(sorted.length / 2)] : null;
+    };
+    let contour = "não foi possível estimar com confiança";
+    let range = "";
+    if (pitches.length >= 4) {
+      const center = median(pitches);
+      const steps = pitches.map((p) => p - center);
+      const groups = steps.map((v) => v < -2 ? "grave" : v > 2 ? "agudo" : "médio");
+      const compact = [];
+      for (const group of groups) if (compact[compact.length - 1] !== group) compact.push(group);
+      contour = compact.slice(0, 12).join(" → ");
+      range = `variação aproximada de ${Math.round(Math.max(...pitches) - Math.min(...pitches))} semitons`;
+    }
+    const avg = envelope.reduce((a, b) => a + b, 0) / Math.max(1, envelope.length);
+    const variance = envelope.reduce((a, b) => a + (b - avg) ** 2, 0) / Math.max(1, envelope.length);
+    const dynamics = Math.sqrt(variance) > avg * 0.55 ? "dinâmica variada, com mudanças de intensidade" : "dinâmica relativamente constante";
+    // Segmentação aproximada por energia: identifica blocos cantados e pausas entre frases.
+    const activeThreshold = Math.max(0.006, avg * 0.32);
+    const active = envelope.map((v) => v > activeThreshold);
+    const phraseDurations = [];
+    let phraseStart = -1, lastActive = -1;
+    for (let i = 0; i < active.length; i++) {
+      if (active[i]) { if (phraseStart < 0) phraseStart = i; lastActive = i; }
+      else if (phraseStart >= 0 && i - lastActive >= 18) {
+        const d = (lastActive - phraseStart + 1) * 0.02;
+        if (d >= 0.18) phraseDurations.push(d);
+        phraseStart = -1; lastActive = -1;
+      }
+    }
+    if (phraseStart >= 0) { const d = (lastActive - phraseStart + 1) * 0.02; if (d >= 0.18) phraseDurations.push(d); }
+    const phraseText = phraseDurations.length
+      ? "frases vocais aproximadas: " + phraseDurations.length + ", duração média " + (phraseDurations.reduce((a,b)=>a+b,0)/phraseDurations.length).toFixed(1) + " s, pausas detectadas: " + Math.max(0, phraseDurations.length - 1)
+      : "não foi possível separar frases e pausas com confiança";
+    const tempoText = bestTempo && bestScore > 0.12 ? `pulso estimado em torno de ${bestTempo} BPM (estimativa automática)` : "pulso não identificado com confiança";
+    const summary = [
+      `Duração analisada: ${seconds.toFixed(1)} segundos.`,
+      tempoText + ".",
+      phraseText + ".",
+      `Dinâmica: ${dynamics}.`,
+      `Contorno de altura aproximado: ${contour}.`,
+      range ? `Tessitura estimada: ${range}.` : "",
+      "Todas as medidas são aproximadas; use como orientação de fraseado, não como transcrição exata de notas."
+    ].filter(Boolean).join(" ");
+    return { summary, seconds, tempo: bestTempo && bestScore > 0.12 ? bestTempo : null, contour };
+  } finally {
+    await context.close().catch(() => {});
+  }
+}
+
+function CompositorPanel({ onUseLyrics }) {
+  const [catalog, setCatalog] = useState({ runtimes: [], models: [], installed_models: [] });
+  const [status, setStatus] = useState({});
+  const [providerConfig, setProviderConfig] = useState({ providers: [], secure_storage_available: false });
+  const [provider, setProvider] = useState("local");
+  const [providerModel, setProviderModel] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [providerBusy, setProviderBusy] = useState(false);
+  const [runtime, setRuntime] = useState("");
+  const [model, setModel] = useState("qwen3-4b-q4km");
+  const [gemmaAccepted, setGemmaAccepted] = useState(false);
+  const [gpuLayers, setGpuLayers] = useState(0);
+  const [compositionMode, setCompositionMode] = useState("full");
+  const [sourceLyrics, setSourceLyrics] = useState("");
+  const [melodyFile, setMelodyFile] = useState(null);
+  const [melodyAnalysis, setMelodyAnalysis] = useState(null);
+  const [melodyRole, setMelodyRole] = useState("missing");
+  const [melodyWords, setMelodyWords] = useState("");
+  const [melodyBusy, setMelodyBusy] = useState(false);
+  const [transcriptionBusy, setTranscriptionBusy] = useState(false);
+  const [transcriptionModel, setTranscriptionModel] = useState("small");
+  const [transcriptionMessage, setTranscriptionMessage] = useState("");
+  const [recording, setRecording] = useState(false);
+  const melodyInputRef = useRef(null);
+  const recorderRef = useRef(null);
+  const streamRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
+
+  const [theme, setTheme] = useState("");
+  const [genre, setGenre] = useState("MPB");
+  const [mood, setMood] = useState("emocionante e acolhedor");
+  const [voice, setVoice] = useState("indiferente");
+  const [duration, setDuration] = useState(120);
+  const [language, setLanguage] = useState("português do Brasil");
+  const [result, setResult] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => () => {
+    if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.onstop = null;
+      recorderRef.current.stop();
+    }
+    if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
+  }, []);
+
+  const refresh = useCallback(async () => {
+    const [c, s, p] = await Promise.all([http("/api/ai/catalog"), http("/api/ai/status"), http("/api/ai/providers/config")]);
+    setCatalog(c);
+    setStatus(s);
+    setProviderConfig(p);
+    setProvider((old) => old === "local" ? p.selected_provider : old);
+    setProviderModel((old) => old || p.selected_model || p.providers.find((x) => x.id === p.selected_provider)?.models?.[0] || "");
+    const compatible = c.runtimes.filter((r) => r.compatible);
+    setRuntime((old) => old && compatible.some((r) => r.id === old) ? old : (compatible.find((r) => r.installed)?.id || compatible.find((r) => r.backend === "cpu")?.id || compatible[0]?.id || ""));
+    if (!model && c.models.length) setModel(c.models[0].id);
+  }, [model]);
+
+  useEffect(() => { refresh().catch((e) => setError(e.message)); }, [refresh]);
+
+  const waitJob = async (id, doneMessage) => {
+    for (;;) {
+      const j = await http("/api/ai/jobs/" + id);
+      setMessage(j.message || "Processando…");
+      if (j.status === "done") { setMessage(doneMessage); return; }
+      if (j.status === "error") throw new Error(j.message || "A operação falhou.");
+      await sleep(1200);
+    }
+  };
+
+  const saveProviderKey = async () => {
+    if (!provider || provider === "local" || !apiKey.trim()) { setError("Escolha um provedor e informe a chave de API."); return; }
+    setProviderBusy(true); setError(""); setMessage("Salvando a chave no cofre seguro do sistema…");
+    try {
+      await jsonPost("/api/ai/providers/key", { provider, api_key: apiKey.trim() });
+      setApiKey(""); await refresh(); setMessage("Chave salva no cofre de credenciais do sistema.");
+    } catch (e) { setError(e.message); }
+    finally { setProviderBusy(false); }
+  };
+  const saveProviderChoice = async () => {
+    setProviderBusy(true); setError("");
+    try {
+      await http("/api/ai/providers/config", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, model: providerModel }) });
+      await refresh(); setMessage(provider === "local" ? "IA local selecionada." : "Provedor e modelo selecionados.");
+    } catch (e) { setError(e.message); }
+    finally { setProviderBusy(false); }
+  };
+  const testProvider = async () => {
+    setProviderBusy(true); setError(""); setMessage("Testando conexão com o provedor…");
+    try {
+      const r = await jsonPost("/api/ai/providers/test", { provider, model: providerModel });
+      setMessage("Conexão funcionando: " + r.message);
+    } catch (e) { setError(e.message); }
+    finally { setProviderBusy(false); }
+  };
+  const removeProviderKey = async () => {
+    if (!window.confirm("Remover a chave salva deste provedor?")) return;
+    setProviderBusy(true); setError("");
+    try { await http("/api/ai/providers/key/" + provider, { method: "DELETE" }); await refresh(); setMessage("Chave removida do cofre de credenciais."); }
+    catch (e) { setError(e.message); }
+    finally { setProviderBusy(false); }
+  };
+
+  const installRuntime = async () => {
+    setBusy(true); setError(""); setMessage("Preparando o motor local…");
+    try {
+      const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
+      if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
+      await refresh();
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const downloadModel = async () => {
+    setBusy(true); setError(""); setMessage("Preparando o download do modelo…");
+    try {
+      const r = await jsonPost("/api/ai/models/download", { model_id: model, accept_license: gemmaAccepted });
+      if (r.job_id) await waitJob(r.job_id, "Modelo instalado e verificado.");
+      await refresh();
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const activate = async () => {
+    setBusy(true); setError(""); setMessage("Carregando o modelo na memória…");
+    try {
+      await jsonPost("/api/ai/models/activate", { model_id: model, variant: runtime, gpu_layers: Number(gpuLayers) });
+      await refresh();
+      setMessage("Modelo ativo. Você já pode compor.");
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const loadMelodyReference = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith("audio/")) { setError("Escolha um arquivo de áudio."); return; }
+    if (file.size > 25 * 1024 * 1024) { setError("O arquivo deve ter no máximo 25 MB."); return; }
+    setMelodyBusy(true); setError(""); setMessage("Analisando a referência musical no navegador…");
+    try {
+      const analysis = await analyzeMelodyReference(file);
+      setMelodyFile(file);
+      setMelodyAnalysis(analysis);
+      setMessage("Referência analisada. Somente o resumo musical será enviado ao modelo local.");
+    } catch (e) {
+      setMelodyFile(null); setMelodyAnalysis(null);
+      setError("Não consegui analisar este áudio. Tente WAV, MP3 ou M4A em outro navegador. " + e.message);
+    } finally { setMelodyBusy(false); }
+  };
+
+  const startMelodyRecording = async () => {
+    try {
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error("Gravação não suportada neste navegador.");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      recordedChunksRef.current = [];
+      const recorder = new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => { if (event.data?.size) recordedChunksRef.current.push(event.data); };
+      recorder.onstop = () => {
+        const type = recorder.mimeType || "audio/webm";
+        const file = new File(recordedChunksRef.current, "melodia-gravada.webm", { type });
+        if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setRecording(false);
+        if (file.size) loadMelodyReference(file);
+      };
+      recorder.start();
+      recordingTimerRef.current = window.setTimeout(() => {
+        if (recorderRef.current && recorderRef.current.state === "recording") recorderRef.current.stop();
+      }, 30000);
+      setRecording(true); setError(""); setMessage("Gravando… cante a ideia musical e depois pressione Parar.");
+    } catch (e) {
+      if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null; setRecording(false);
+      setError(e.message || "Não foi possível acessar o microfone.");
+    }
+  };
+
+  const stopMelodyRecording = () => {
+    if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
+  };
+
+  const transcribeMelodyReference = async () => {
+    if (!melodyFile) { setError("Grave ou importe uma referência de áudio primeiro."); return; }
+    setTranscriptionBusy(true); setTranscriptionMessage("Preparando o áudio para o Whisper…"); setError("");
+    try {
+      const { blob } = await toWavBlob(melodyFile, 30);
+      const fd = new FormData();
+      fd.append("audio", blob, "referencia.wav");
+      fd.append("modelo", transcriptionModel);
+      const whisperLanguage = language.startsWith("inglês") ? "en" : language.startsWith("espanhol") ? "es" : "pt";
+      fd.append("idioma", whisperLanguage);
+      const started = await http("/api/legenda/transcrever", { method: "POST", body: fd });
+      if (!started.job) throw new Error("O Whisper não iniciou a transcrição.");
+      for (;;) {
+        await sleep(1200);
+        const job = await http("/api/legenda/transcrever/" + started.job);
+        setTranscriptionMessage(job.msg || "Ouvindo sua gravação…");
+        if (job.status === "erro") throw new Error(job.msg || "Não foi possível transcrever o áudio.");
+        if (job.status === "pronto") {
+          if (!job.transcript?.trim()) throw new Error("O Whisper não identificou palavras. Se você apenas cantarolou, pode deixar o campo de palavras vazio.");
+          setMelodyWords(job.transcript.trim());
+          setTranscriptionMessage("Letra reconhecida. Revise o texto antes de compor.");
+          return;
+        }
+      }
+    } catch (e) {
+      setError("Não consegui transcrever a gravação: " + String(e.message || e).slice(0, 260));
+      setTranscriptionMessage("");
+    } finally { setTranscriptionBusy(false); }
+  };
+
+  const clearMelodyReference = () => {
+    setMelodyFile(null); setMelodyAnalysis(null);
+    if (melodyInputRef.current) melodyInputRef.current.value = "";
+  };
+
+  const generate = async () => {
+    if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
+    if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
+    setBusy(true); setError(""); setMessage(provider === "local" ? "Compondo a letra localmente…" : "Enviando solicitação ao provedor escolhido…"); setResult("");
+    try {
+      const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
+      setResult(r.lyrics);
+      const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
+      setMessage((labels[compositionMode] || "Composição concluída") + " com " + r.model + ".");
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const importModel = async (file) => {
+    if (!file) return;
+    setBusy(true); setError(""); setMessage("Importando arquivo GGUF…");
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      await http("/api/ai/models/import", { method: "POST", body: fd });
+      await refresh();
+      setMessage("Modelo importado. Confirme a licença e selecione-o para ativar.");
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const compatibleRuntimes = catalog.runtimes.filter((r) => r.compatible);
+  const selectedRuntime = catalog.runtimes.find((r) => r.id === runtime);
+  const selectedModel = catalog.models.find((m) => m.id === model);
+  const installedSelected = catalog.installed_models.some((m) => m.id === model);
+  const runtimeInstalled = !!selectedRuntime?.installed;
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-5 p-4 lg:p-6">
+      <div>
+        <h1 className="text-2xl font-black">Compositor de letras com IA</h1>
+        <p className="mt-1 text-sm text-zinc-400">Use Gemma/Qwen no computador ou conecte sua própria API. Ao escolher um provedor externo, os dados da composição serão enviados a esse serviço.</p>
+      </div>
+
+      {(error || message) && (
+        <div className={error ? "rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200" : "rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-sm text-sky-200"}>
+          {error || message}
+        </div>
+      )}
+
+      <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
+        <div><h2 className="font-bold">1. Escolha como a IA vai funcionar</h2><p className="mt-1 text-xs text-zinc-400">A opção local é gratuita. APIs externas usam sua própria conta e podem gerar cobranças pelo provedor.</p></div>
+        <label className="block text-xs font-semibold text-zinc-300">Modo de IA
+          <select className={inputCls + " mt-1"} value={provider} onChange={(e) => { setProvider(e.target.value); const p = providerConfig.providers.find((x) => x.id === e.target.value); setProviderModel(p?.models?.[0] || ""); }}>
+            <option value="local">Local — Gemma / Qwen</option>
+            {providerConfig.providers.map((p) => <option key={p.id} value={p.id}>{p.name} {p.configured ? "— chave cadastrada" : "— configurar chave"}</option>)}
+          </select>
+        </label>
+        {provider !== "local" && <>
+          <label className="block text-xs font-semibold text-zinc-300">Modelo (ID do provedor)
+            <input className={inputCls + " mt-1"} value={providerModel} onChange={(e) => setProviderModel(e.target.value)} list="provider-model-options" placeholder="Informe o identificador do modelo"/>
+            <datalist id="provider-model-options">{(providerConfig.providers.find((p) => p.id === provider)?.models || []).map((m) => <option key={m} value={m}/>)}</datalist>
+          </label>
+          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
+            <p className="text-xs text-zinc-300">{providerConfig.providers.find((p) => p.id === provider)?.configured ? "Uma chave já está cadastrada para este provedor." : "Cadastre sua chave de API para habilitar este provedor."}</p>
+            <input type="password" autoComplete="new-password" className={inputCls} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Cole sua chave de API aqui"/>
+            <div className="flex flex-wrap gap-2">
+              <button disabled={providerBusy || !apiKey.trim() || !providerConfig.secure_storage_available} onClick={saveProviderKey} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-black disabled:opacity-40">Salvar chave com segurança</button>
+              <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured} onClick={removeProviderKey} className="rounded-lg border border-white/15 px-3 py-2 text-xs">Remover chave</button>
+            </div>
+            {!providerConfig.secure_storage_available && <p className="text-xs text-amber-200">O cofre seguro de credenciais do sistema não está disponível. A chave não será salva em arquivo de texto.</p>}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button disabled={providerBusy || !providerModel} onClick={saveProviderChoice} className="rounded-lg bg-pink-500 px-3 py-2 text-xs font-bold text-white">Usar este provedor</button>
+            <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured || !providerModel} onClick={testProvider} className="rounded-lg border border-white/15 px-3 py-2 text-xs">Testar conexão</button>
+          </div>
+          <p className="text-[11px] text-zinc-500">A chave é guardada no cofre de credenciais do Windows/macOS/Linux, não no código, no GitHub ou no arquivo de configurações. Confira limites, créditos e preços com o provedor.</p>
+        </>}
+      </section>
+
+      <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
+        <h2 className="font-bold">2. Motor de IA local (opcional)</h2>
+        {compatibleRuntimes.length ? (
+          <>
+            <label className="block text-xs font-semibold text-zinc-300">Pacote compatível com este computador</label>
+            <select className={inputCls} value={runtime} onChange={(e) => setRuntime(e.target.value)}>
+              {compatibleRuntimes.map((r) => <option key={r.id} value={r.id}>{r.label} {r.installed ? "— instalado" : "— " + (r.size_bytes / 1024 / 1024).toFixed(0) + " MB"}</option>)}
+            </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <button disabled={busy || !runtime || runtimeInstalled} onClick={installRuntime} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black disabled:opacity-40">
+                {runtimeInstalled ? "Motor instalado" : "Baixar e instalar motor"}
+              </button>
+              {runtimeInstalled && <span className="text-xs text-emerald-300">SHA-256 verificado</span>}
+            </div>
+            {selectedRuntime?.backend !== "cpu" && (
+              <label className="block max-w-xs text-xs text-zinc-300">
+                Camadas na GPU (0 = CPU)
+                <input type="number" min="0" max="200" value={gpuLayers} onChange={(e) => setGpuLayers(e.target.value)} className={inputCls + " mt-1"} />
+              </label>
+            )}
+            <p className="text-xs text-zinc-500">O pacote CPU é o caminho mais compatível. CUDA/Vulkan/Metal dependem dos drivers e do hardware. A aceleração pode exigir ajustes de memória.</p>
+          </>
+        ) : <p className="text-sm text-amber-200">Não encontrei um pacote pronto para este sistema/arquitetura. A ferramenta continua funcionando sem o compositor.</p>}
+      </section>
+
+      <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
+        <h2 className="font-bold">3. Modelo local (Gemma / Qwen)</h2>
+        <label className="block text-xs font-semibold text-zinc-300">Modelo do catálogo</label>
+        <select className={inputCls} value={model} onChange={(e) => setModel(e.target.value)}>
+          {catalog.models.map((m) => <option key={m.id} value={m.id}>{m.name} {m.installed ? "— instalado" : "— aprox. " + m.approx_size_gb + " GB"}</option>)}
+          {catalog.installed_models.filter((m) => !catalog.models.some((c) => c.id === m.id)).map((m) => <option key={m.id} value={m.id}>{m.name} — importado</option>)}
+        </select>
+        {selectedModel && <div className="rounded-xl bg-white/[0.03] p-3 text-xs text-zinc-400">
+          <p>{selectedModel.description}</p>
+          <p className="mt-2">Licença: <b className="text-zinc-200">{selectedModel.license}</b> · <a className="underline" href={selectedModel.license_url} target="_blank" rel="noreferrer">ver licença</a> · <a className="underline" href={selectedModel.model_url} target="_blank" rel="noreferrer">origem oficial</a></p>
+        </div>}
+        {selectedModel?.requires_license_acceptance && (
+          <label className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-100">
+            <input type="checkbox" checked={gemmaAccepted} onChange={(e) => setGemmaAccepted(e.target.checked)} className="mt-0.5" />
+            <span>Li e aceito os <a className="underline font-bold" href={selectedModel.license_url} target="_blank" rel="noreferrer">Gemma Terms of Use</a>. Entendo que o Gemma possui condições próprias de uso.</span>
+          </label>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <button disabled={busy || installedSelected || !selectedModel || (selectedModel.requires_license_acceptance && !gemmaAccepted)} onClick={downloadModel} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold disabled:opacity-40">{installedSelected ? "Modelo instalado" : "Baixar modelo"}</button>
+          <label className="cursor-pointer rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold hover:bg-white/5">
+            Importar GGUF
+            <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
+          </label>
+          <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">Ativar modelo</button>
+          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">Desligar IA</button>}
+        </div>
+        <p className="text-xs text-zinc-500">Você também pode importar outros GGUF. A licença de arquivos importados não é verificada automaticamente.</p>
+      </section>
+
+      <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
+        <div><h2 className="font-bold">4. Assistente de composição</h2><p className="mt-1 text-xs text-zinc-400">Escolha o que deseja fazer. A composição será processada pelo modo de IA selecionado acima.</p></div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {[{id:"full",title:"Música completa",desc:"Começar uma letra do zero."},{id:"continue",title:"Continuar composição",desc:"Preservar sua letra e desenvolver o restante."},{id:"chorus",title:"Criar somente refrão",desc:"Escrever um refrão para sua composição."}].map((item)=>(
+            <button key={item.id} type="button" onClick={()=>{setCompositionMode(item.id);setResult("");setError("");}}
+              className={`rounded-xl border p-3 text-left transition ${compositionMode===item.id?"border-pink-500 bg-pink-500/10":"border-white/10 bg-white/[0.02] hover:bg-white/[0.05]"}`}>
+              <span className="block text-sm font-bold text-white">{item.title}</span><span className="mt-1 block text-[11px] leading-relaxed text-zinc-400">{item.desc}</span>
+            </button>
+          ))}
+        </div>
+        {compositionMode!=="full"&&<div>
+          <label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="continue"?"Sua composição (a IA manterá o que você já escreveu)":"Sua composição (base para criar o refrão)"}</label>
+          <textarea rows={9} className={inputCls} value={sourceLyrics} onChange={(e)=>setSourceLyrics(e.target.value)} placeholder={"Cole aqui sua letra. Você pode incluir marcações como [Verse 1] e [Bridge]."}/>
+          <p className="mt-1 text-[11px] text-zinc-500">{compositionMode==="continue"?"A IA deve preservar seus versos e completar as partes que faltam, sem reescrever sua identidade.":"A IA analisará o tema, a mensagem e o sentimento da letra para criar apenas o refrão."}</p>
+        </div>}
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+          <div>
+            <p className="text-sm font-bold text-white">Minha voz como referência (opcional)</p>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-400">Cante sua ideia, mesmo com palavras incompletas, sílabas inventadas ou apenas cantarolando. A ferramenta estima fraseado e movimento melódico para ajudar a encaixar a letra.</p>
+          </div>
+          <label className="block text-xs font-semibold text-zinc-300">O trecho gravado representa:
+            <select className={inputCls + " mt-1"} value={melodyRole} onChange={(e) => setMelodyRole(e.target.value)}>
+              <option value="missing">A melodia da parte que ainda falta criar</option>
+              <option value="existing">Uma parte da letra que já escrevi/cantei</option>
+            </select>
+          </label>
+          <label className="block text-xs font-semibold text-zinc-300">Palavras que cantei (opcional)
+            <textarea rows={3} className={inputCls + " mt-1"} value={melodyWords} onChange={(e) => setMelodyWords(e.target.value)} placeholder="A letra reconhecida aparecerá aqui. Você também pode corrigir ou escrever manualmente."/>
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-[11px] text-zinc-400">Modelo Whisper
+              <select className={inputCls + " mt-1"} value={transcriptionModel} onChange={(e) => setTranscriptionModel(e.target.value)} disabled={transcriptionBusy}>
+                <option value="base">Base — mais leve</option>
+                <option value="small">Small — maior precisão</option>
+              </select>
+            </label>
+            <button type="button" disabled={!melodyFile || melodyBusy || transcriptionBusy || recording} onClick={transcribeMelodyReference} className="self-end rounded-lg bg-pink-500/15 border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-100 disabled:opacity-40">
+              {transcriptionBusy ? <><Loader2 size={14} className="inline animate-spin mr-1"/> Transcrevendo…</> : "Transcrever letra do áudio"}
+            </button>
+          </div>
+          {transcriptionMessage && <p className="text-[11px] text-sky-200">{transcriptionMessage}</p>}
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={melodyBusy || recording} onClick={() => melodyInputRef.current?.click()} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-40">Importar áudio</button>
+            {!recording ? (
+              <button type="button" disabled={melodyBusy} onClick={startMelodyRecording} className="inline-flex items-center gap-2 rounded-lg border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-200 disabled:opacity-40"><Mic size={14}/> Gravar melodia</button>
+            ) : (
+              <button type="button" onClick={stopMelodyRecording} className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200"><Pause size={14}/> Parar gravação</button>
+            )}
+            {melodyFile && <button type="button" onClick={clearMelodyReference} className="rounded-lg border border-white/15 px-3 py-2 text-xs text-zinc-300">Remover referência</button>}
+            <input ref={melodyInputRef} type="file" accept="audio/*" className="hidden" onChange={(e)=>loadMelodyReference(e.target.files?.[0])}/>
+          </div>
+          {melodyBusy && <div className="flex items-center gap-2 text-xs text-zinc-300"><Loader2 size={14} className="animate-spin"/> Analisando áudio localmente…</div>}
+          {melodyAnalysis && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+            <p className="text-xs font-semibold text-emerald-200">Referência pronta: {melodyFile?.name || "gravação"}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">{melodyAnalysis.summary}</p>
+          </div>}
+          <p className="text-[11px] text-zinc-500">Privacidade: a análise melódica continua no navegador. Se você solicitar a transcrição, o áudio será processado somente pelo Whisper instalado neste computador (CPU), sem serviço externo, e será apagado após o processamento. O Whisper pode errar palavras cantadas ou não reconhecer sílabas inventadas; revise a letra. A transcrição não cria legendas nem timestamps.</p>
+        </div>
+        <div><label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="full"?"Tema ou história":"Orientação adicional (opcional)"}</label>
+          <textarea rows={2} className={inputCls} value={theme} onChange={(e)=>setTheme(e.target.value)} placeholder={compositionMode==="full"?"Ex.: um pai ensinando o filho a pescar e lembrando da própria infância":"Ex.: deixe o refrão mais emocionante, simples e fácil de memorizar"}/>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-zinc-300">Gênero musical<input className={inputCls+" mt-1"} value={genre} onChange={(e)=>setGenre(e.target.value)}/></label>
+          <label className="text-xs font-semibold text-zinc-300">Clima / sentimento<input className={inputCls+" mt-1"} value={mood} onChange={(e)=>setMood(e.target.value)}/></label>
+          <label className="text-xs font-semibold text-zinc-300">Voz<select className={inputCls+" mt-1"} value={voice} onChange={(e)=>setVoice(e.target.value)}><option>indiferente</option><option>masculina</option><option>feminina</option><option>dueto</option></select></label>
+          <label className="text-xs font-semibold text-zinc-300">Idioma<select className={inputCls+" mt-1"} value={language} onChange={(e)=>setLanguage(e.target.value)}><option>português do Brasil</option><option>inglês</option><option>espanhol</option></select></label>
+          {compositionMode!=="chorus"&&<label className="text-xs font-semibold text-zinc-300">Duração aproximada<select className={inputCls+" mt-1"} value={duration} onChange={(e)=>setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>}
+        </div>
+        <button disabled={busy||(provider==="local"&&(!status.runtime_running||!status.active_model))||(provider!=="local"&&(!providerModel||!providerConfig.providers.find((p)=>p.id===provider)?.configured))||(compositionMode==="full"?!theme.trim():!sourceLyrics.trim())} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
+          {busy?<Loader2 size={18} className="animate-spin"/>:<Sparkles size={18}/>}
+          {compositionMode==="full"?"Criar música completa":compositionMode==="continue"?"Continuar minha composição":"Criar somente o refrão"}
+        </button>
+        {result&&<div className="space-y-3"><label className="block text-xs font-semibold text-zinc-300">{compositionMode==="chorus"?"Refrão gerado — você pode editar":"Resultado — você pode editar antes de usar"}</label>
+          <textarea rows={18} className={inputCls} value={result} onChange={(e)=>setResult(e.target.value)}/>
+          <button onClick={()=>onUseLyrics(result)} className="w-full rounded-xl bg-white px-4 py-3 font-black text-black">Usar esta letra na criação musical</button>
+        </div>}
+      </section>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ aplicativo
 export default function App() {
   const [tab, setTab] = useState("criar");
@@ -373,6 +986,7 @@ export default function App() {
     duration: 120, versions: 1, bpm: "", key: "", lang: "pt",
   });
   const [showAdv, setShowAdv] = useState(false);
+  const [styleCategory, setStyleCategory] = useState("Infantil");
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   useEffect(() => {
@@ -549,6 +1163,7 @@ export default function App() {
         </div>
         {[
           { id: "criar", label: "Criar", icon: <Sparkles size={16} /> },
+          { id: "compositor", label: "Compositor IA", icon: <Music size={16} /> },
           { id: "ajuda", label: "Como usar", icon: <HelpCircle size={16} /> },
         ].map((n) => (
           <button
@@ -585,6 +1200,23 @@ export default function App() {
             <p><b className="text-white">4. Ajustar a banda.</b> Clique em “Cantar por cima”, envie a sua gravação e escolha os instrumentos. O programa cria uma banda nova que acompanha o seu jeito de cantar.</p>
             <p className="text-zinc-500">Mantenha abertas as duas janelas pretas enquanto usa. Para fechar tudo, feche as janelas pretas.</p>
           </div>
+        ) : tab === "compositor" ? (
+          <CompositorPanel onUseLyrics={(output) => {
+            const title = output.match(/^TÍTULO:\s*(.+)$/im)?.[1]?.trim() || "";
+            const style = output.match(/^ESTILO:\s*(.+)$/im)?.[1]?.trim() || "";
+            const blocks = output.split(/\nLETRA:\s*\n?/i);
+            const lyrics = blocks[1]?.split(/\nESTILO INSTRUMENTAL\s*:/i)[0]?.trim() || output;
+            const duration = Number(output.match(/Duração em segundos:\s*(\d+)/i)?.[1] || 0);
+            setForm((f) => ({
+              ...f,
+              lyrics,
+              title: title || f.title,
+              style: style || f.style,
+              duration: duration >= 30 && duration <= 240 ? duration : f.duration,
+              instrumentalOnly: false
+            }));
+            setTab("criar");
+          }} />
         ) : (
           <div className="grid gap-6 p-4 lg:p-6 lg:grid-cols-[430px_1fr]">
             {/* ---------------- formulário ---------------- */}
@@ -621,16 +1253,31 @@ export default function App() {
                   value={form.style}
                   onChange={(e) => set("style", e.target.value)}
                 />
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {STYLES.map((s) => (
-                    <button
-                      key={s.label}
-                      onClick={() => set("style", form.style.trim() ? `${form.style.trim().replace(/,$/, "")}, ${s.v}` : s.v)}
-                      className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-zinc-300 hover:border-pink-500/60 hover:text-white"
-                    >
-                      + {s.label}
-                    </button>
-                  ))}
+                <div className="mt-2">
+                  <p className="mb-2 text-[11px] text-zinc-400">Escolha uma categoria para ver ritmos diferentes. Os estilos já descrevem andamento, instrumentos e energia — não apenas o sentimento.</p>
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {STYLE_CATEGORIES.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setStyleCategory(category)}
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${styleCategory === category ? "border-pink-500 bg-pink-500/15 text-pink-200" : "border-white/10 text-zinc-400 hover:border-white/30 hover:text-white"}`}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {STYLES.filter((s) => s.category === styleCategory).map((s) => (
+                      <button
+                        key={s.label}
+                        title={s.v}
+                        onClick={() => set("style", form.style.trim() ? `${form.style.trim().replace(/,$/, "")}, ${s.v}` : s.v)}
+                        className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-zinc-300 hover:border-pink-500/60 hover:text-white"
+                      >
+                        + {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

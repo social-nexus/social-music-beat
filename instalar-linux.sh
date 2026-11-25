@@ -24,17 +24,17 @@ if ! command -v uv >/dev/null 2>&1; then
   if perguntar "Instalar o uv agora (script oficial da Astral)?"; then
     curl -LsSf https://astral.sh/uv/install.sh | sh || { echo "Nao consegui instalar o uv."; exit 1; }
   else
-    echo "Sem o uv nao da para continuar. Instale e rode este instalar.sh de novo."; exit 1
+    echo "Sem o uv nao da para continuar. Instale e rode este instalar-linux.sh de novo."; exit 1
   fi
 fi
-command -v uv >/dev/null 2>&1 || { echo "uv instalado, mas nao esta no PATH. Abra um novo terminal e rode este instalar.sh de novo."; exit 1; }
+command -v uv >/dev/null 2>&1 || { echo "uv instalado, mas nao esta no PATH. Abra um novo terminal e rode este instalar-linux.sh de novo."; exit 1; }
 
 if [ ! -f "$ACESTEP_DIR/pyproject.toml" ]; then
   echo "NAO ENCONTREI o ACE-Step em: $ACESTEP_DIR"
   if command -v git >/dev/null 2>&1 && perguntar "Baixar o ACE-Step 1.5 do GitHub para essa pasta agora?"; then
     git clone https://github.com/ACE-Step/ACE-Step-1.5.git "$ACESTEP_DIR" || { echo "O download falhou."; exit 1; }
   else
-    echo "Clone https://github.com/ACE-Step/ACE-Step-1.5 nessa pasta (ou edite o config.sh com o caminho certo) e rode este instalar.sh de novo."
+    echo "Clone https://github.com/ACE-Step/ACE-Step-1.5 nessa pasta (ou edite o config.sh com o caminho certo) e rode este instalar-linux.sh de novo."
     exit 1
   fi
 fi
@@ -66,9 +66,14 @@ else
 fi
 
 echo
+echo "[3.1/6] Verificando o armazenamento seguro de chaves (Keyring)..."
+pip install --upgrade "keyring>=25.5,<26" || { echo "Nao consegui instalar o Keyring."; exit 1; }
+python -c "import keyring; print('Keyring instalado:', keyring.__file__)" || { echo "O Keyring nao pode ser importado neste ambiente."; exit 1; }
+
+echo
 echo "[4/6] Instalando o Whisper da aba de legendas (modo Preciso)..."
 pip install faster-whisper "numpy==1.26.4" ||
-  echo "AVISO: nao consegui instalar o Whisper. O modo Rapido das legendas funciona sem ele. Rode este instalar.sh de novo mais tarde."
+  echo "AVISO: nao consegui instalar o Whisper. O modo Rapido das legendas funciona sem ele. Rode este instalar-linux.sh de novo mais tarde."
 
 echo
 echo "[5/6] Baixando os modelos de voz: separador de voz e Whisper base (cerca de 150 MB)..."
@@ -83,7 +88,7 @@ export ACESTEP_PROJECT_ROOT="$ACESTEP_DIR"
 uv run python -m acestep.model_downloader ||
   echo "AVISO: o download dos modelos principais nao terminou. O ACE-Step tenta baixar o que falta na primeira vez que for usado."
 uv run python -m acestep.model_downloader --model acestep-v15-base ||
-  echo "AVISO: o download do modelo base nao terminou. Rode este instalar.sh de novo."
+  echo "AVISO: o download do modelo base nao terminou. Rode este instalar-linux.sh de novo."
 
 echo
-echo "Pronto! Agora use o iniciar.sh (ou iniciar.command no Mac)."
+echo "Pronto! Agora use o iniciar-linux.sh (ou iniciar.command no Mac)."

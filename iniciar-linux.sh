@@ -6,7 +6,7 @@ AQUI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$AQUI/logs"
 
 if [ ! -x "$AQUI/helper/.venv/bin/python" ]; then
-  echo "O Social Music Beat ainda nao foi instalado. Rode o instalar.sh primeiro."
+  echo "O Social Music Beat ainda nao foi instalado. Rode o instalar-linux.sh primeiro."
   exit 1
 fi
 if [ ! -f "$ACESTEP_DIR/pyproject.toml" ]; then
@@ -43,7 +43,7 @@ fi
 if esperar_porta 8002 60; then
   abrir_janela "http://localhost:8002"
   echo "Pronto. Na primeira vez o motor de musica demora alguns minutos para ligar."
-  echo "Logs: $AQUI/logs   |   Para encerrar tudo: parar.sh"
+  echo "Logs: $AQUI/logs   |   Para encerrar tudo: parar-linux.sh"
 else
   echo "O servidor nao respondeu a tempo. Veja o erro em: $AQUI/logs/servidor.log"
   exit 1

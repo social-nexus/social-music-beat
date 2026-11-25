@@ -5,7 +5,36 @@ call "%~dp0config.bat"
 echo ==================================================
 echo  Social Music Beat - instalacao completa
 echo ==================================================
-if not exist "%ACESTEP_DIR%\start_api_server.bat" goto sem_acestep
+
+echo.
+echo [0/5] Verificando/instalando o ACE-Step 1.5...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0helper\install_acestep.ps1"
+if errorlevel 2 goto cancelado_acestep
+if errorlevel 1 goto falha_acestep
+call "%~dp0config.bat"
+
+if not defined SOCIAL_NEXUS_MODELS_DIR goto configurar_armazenamento
+if not exist "%SOCIAL_NEXUS_MODELS_DIR%" goto armazenamento_indisponivel
+goto armazenamento_ok
+
+:configurar_armazenamento
+echo.
+echo Vamos configurar onde os modelos de IA serao armazenados.
+echo O assistente prefere um segundo SSD quando disponivel; se houver apenas um, usara o disco do Windows.
+call "%~dp0configurar_armazenamento.bat"
+if errorlevel 1 goto falha_armazenamento
+call "%~dp0config.bat"
+if not defined SOCIAL_NEXUS_MODELS_DIR goto falha_armazenamento
+if not exist "%SOCIAL_NEXUS_MODELS_DIR%" goto falha_armazenamento
+
+:armazenamento_ok
+echo.
+echo Verificando e reparando o redirecionamento dos modelos do ACE-Step...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0helper\storage_manager.ps1" -Root "%SOCIAL_NEXUS_MODELS_DIR%"
+if errorlevel 1 goto falha_armazenamento
+call "%~dp0config.bat"
+echo.
+echo ACE-Step e armazenamento preparados.
 
 echo.
 echo [1/5] Criando o ambiente do separador de voz (Python 3.11)...
@@ -21,6 +50,13 @@ pip install -r requirements.txt
 if errorlevel 1 goto falha
 
 echo.
+echo Verificando o armazenamento seguro de chaves (Keyring)...
+python -m pip install --upgrade "keyring>=25.5,<26"
+if errorlevel 1 goto falha
+python -c "import keyring; print('Keyring instalado:', keyring.__file__)"
+if errorlevel 1 goto falha
+
+echo.
 echo [3/5] Instalando o Whisper da aba de legendas (modo Preciso)...
 pip install faster-whisper "numpy==1.26.4"
 if errorlevel 1 echo AVISO: nao consegui instalar o Whisper. O modo Rapido das legendas funciona sem ele. Rode este instalar.bat de novo mais tarde.
@@ -32,27 +68,65 @@ python -c "from faster_whisper import WhisperModel; WhisperModel('base', device=
 if errorlevel 1 echo AVISO: o modelo Whisper sera baixado no primeiro uso do modo Preciso.
 
 echo.
-echo [5/5] Baixando os modelos de musica do ACE-Step (varios GB, pode demorar)...
+echo [5/5] Verificando/baixando somente o modelo principal do ACE-Step...
 cd /d "%ACESTEP_DIR%"
 set ACESTEP_PROJECT_ROOT=%ACESTEP_DIR%
-"%ACESTEP_DIR%\python_embedded\python.exe" -c "import sys,runpy; sys.path.insert(0, r'%ACESTEP_DIR%'); sys.argv=['d']; runpy.run_module('acestep.model_downloader', run_name='__main__')"
-"%ACESTEP_DIR%\python_embedded\python.exe" -c "import sys,runpy; sys.path.insert(0, r'%ACESTEP_DIR%'); sys.argv=['d','--model','acestep-v15-base']; runpy.run_module('acestep.model_downloader', run_name='__main__')"
+
+REM Os pacotes portateis do ACE-Step podem usar python_embeded (um d).
+if exist "%ACESTEP_DIR%\python_embeded\python.exe" (
+    set "ACESTEP_PYTHON=%ACESTEP_DIR%\python_embeded\python.exe"
+) else if exist "%ACESTEP_DIR%\python_embedded\python.exe" (
+    set "ACESTEP_PYTHON=%ACESTEP_DIR%\python_embedded\python.exe"
+) else (
+    echo ERRO: nao encontrei o Python portatil do ACE-Step.
+    echo Procure python_embeded\python.exe dentro de: %ACESTEP_DIR%
+    goto falha
+)
+
+REM O comando sem --model baixa apenas o pacote principal (Turbo + componentes compartilhados).
+REM Se ele ja estiver instalado, o ACE-Step detecta e nao baixa novamente.
+"%ACESTEP_PYTHON%" -c "import sys,runpy; sys.path.insert(0, r'%ACESTEP_DIR%'); sys.argv=['d']; runpy.run_module('acestep.model_downloader', run_name='__main__')"
+if errorlevel 1 goto falha_modelos
 
 echo.
-echo Pronto! Agora use o iniciar.bat
+echo Instalacao concluida! Agora use o iniciar.bat
 pause
 exit /b 0
 
-:sem_acestep
+:armazenamento_indisponivel
 echo.
-echo NAO ENCONTREI o ACE-Step em: %ACESTEP_DIR%
-echo Extraia o pacote do ACE-Step nessa pasta ou edite o arquivo config.bat com o caminho certo. Depois rode este instalar.bat de novo.
+echo A biblioteca de modelos configurada nao esta acessivel: %SOCIAL_NEXUS_MODELS_DIR%
+echo Reconecte o disco ou execute configurar_armazenamento.bat manualmente para escolher outro local.
+pause
+exit /b 1
+
+:cancelado_acestep
+echo.
+echo A instalacao do ACE-Step foi cancelada. Nenhuma pasta existente foi removida.
+pause
+exit /b 1
+
+:falha_acestep
+echo.
+echo Nao foi possivel preparar o ACE-Step. Confira a mensagem acima e tente novamente.
+pause
+exit /b 1
+
+:falha_armazenamento
+echo.
+echo Nao foi possivel configurar o armazenamento dos modelos.
 pause
 exit /b 1
 
 :sem_python
 echo.
 echo Python 3.11 nao encontrado. Instale em python.org e marque "Add python.exe to PATH". Depois rode este instalar.bat de novo.
+pause
+exit /b 1
+
+:falha_modelos
+echo.
+echo ERRO ao verificar/baixar o modelo principal do ACE-Step. Confira a mensagem acima e rode instalar.bat novamente.
 pause
 exit /b 1
 

@@ -369,6 +369,70 @@ def ouvir_palavras(caminho: str, modelo: str):
     return [(w.word, w.start, w.end) for s in segs for w in (s.words or [])]
 
 
+def transcrever_texto(caminho: str, modelo: str, idioma: str) -> str:
+    """Reconhece somente o texto cantado/falado; não gera timestamps nem legendas."""
+    from faster_whisper import WhisperModel
+
+    with _whisper_lock:
+        if modelo not in _whisper:
+            _whisper[modelo] = WhisperModel(modelo, device="cpu", compute_type="int8")
+        engine = _whisper[modelo]
+    segmentos, _ = engine.transcribe(
+        caminho, language=idioma, task="transcribe", beam_size=5,
+        vad_filter=False, condition_on_previous_text=False, temperature=0,
+        word_timestamps=False,
+    )
+    partes = [s.text.strip() for s in segmentos if s.text and s.text.strip()]
+    return " ".join(partes).strip()
+
+
+def _trabalho_transcricao(jid: str, caminho: str, modelo: str, idioma: str):
+    job = JOBS[jid]
+    try:
+        if not whisper_instalado():
+            raise ValueError("O Whisper não está instalado. Rode instalar.bat novamente.")
+        job["msg"] = f"Carregando Whisper {modelo} no processador…"
+        texto = transcrever_texto(caminho, modelo, idioma)
+        if not texto:
+            raise ValueError("Não identifiquei palavras. Se você apenas cantarolou, deixe o campo de palavras vazio.")
+        job.update(status="pronto", transcript=texto, msg="Transcrição concluída.")
+    except Exception as e:  # noqa: BLE001
+        job.update(status="erro", msg=f"{type(e).__name__}: {e}"[:400])
+    finally:
+        try:
+            Path(caminho).unlink()
+        except OSError:
+            pass
+
+
+@router.post("/api/legenda/transcrever")
+async def rota_transcrever(audio: UploadFile = File(...), modelo: str = Form("base"),
+                           idioma: str = Form("pt")):
+    if modelo not in ("base", "small"):
+        raise HTTPException(400, "Modelo Whisper inválido.")
+    if idioma not in ("pt", "en", "es"):
+        raise HTTPException(400, "Idioma inválido.")
+    if not whisper_instalado():
+        raise HTTPException(503, "O Whisper não está instalado. Rode instalar.bat novamente.")
+    conteudo = await audio.read(25 * 1024 * 1024 + 1)
+    if not conteudo or len(conteudo) > 25 * 1024 * 1024:
+        raise HTTPException(400, "O áudio está vazio ou ultrapassa 25 MB.")
+    TMP.mkdir(exist_ok=True)
+    caminho = TMP / f"transcricao_{uuid.uuid4().hex}.wav"
+    caminho.write_bytes(conteudo)
+    jid = uuid.uuid4().hex[:8]
+    JOBS[jid] = {"status": "rodando", "msg": "Áudio recebido. Preparando o Whisper…", "t": time.time()}
+    threading.Thread(target=_trabalho_transcricao, args=(jid, str(caminho), modelo, idioma), daemon=True).start()
+    return {"job": jid}
+
+
+@router.get("/api/legenda/transcrever/{jid}")
+def rota_status_transcricao(jid: str):
+    if jid not in JOBS:
+        raise HTTPException(404, "Transcrição não encontrada.")
+    return JOBS[jid]
+
+
 def _trabalho(jid, caminho, roteiro, modo, max_chars, modelo, apagar=True):
     job = JOBS[jid]
     try:
