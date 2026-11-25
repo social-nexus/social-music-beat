@@ -2,7 +2,7 @@
 
 As versões e datas abaixo descrevem a evolução do projeto. Consulte também o README, os avisos de terceiros e as licenças dos modelos antes de instalar ou usar componentes opcionais.
 
-## [2.1.0] — Preparação para publicação
+## [3.0.0] — Grande atualização: compositor com IA e novos fluxos de instalação
 
 ### Novidades
 - Compositor opcional de letras com IA local usando llama.cpp e modelos GGUF Qwen3 e Gemma 3.
