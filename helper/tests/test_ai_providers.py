@@ -60,11 +60,11 @@ class ProviderConfigTests(unittest.TestCase):
             self.assertFalse(ai_providers._keyring_ready())
 
     def test_keyring_accepts_secure_windows_backend(self):
-        class FakeWindowsVault:
+        class WinVaultKeyring:
             priority = 1
-        FakeWindowsVault.__module__ = "keyring.backends.Windows"
+        WinVaultKeyring.__module__ = "keyring.backends.Windows"
         with mock.patch.object(ai_providers.platform, "system", return_value="Windows"), \
-             mock.patch.object(ai_providers.keyring, "get_keyring", return_value=FakeWindowsVault()):
+             mock.patch.object(ai_providers.keyring, "get_keyring", return_value=WinVaultKeyring()):
             self.assertTrue(ai_providers._keyring_ready())
 
     def test_key_storage_uses_operating_system_keyring(self):
