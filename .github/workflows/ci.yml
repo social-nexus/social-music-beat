@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: social-music-beat-ci-${{ github.ref }}
@@ -73,13 +73,33 @@ jobs:
         run: npm install
       - name: Build frontend
         run: npm run build
-      - name: Commit compiled interface on development branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/ia-local-compositor' && github.actor != 'github-actions[bot]'
+      - name: Upload compiled interface artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-interface
+          path: helper/web/
+          if-no-files-found: error
+
+  publish-frontend:
+    name: Publish compiled interface (development branch only)
+    needs: frontend
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feature/ia-local-compositor' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download compiled interface
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-interface
+          path: helper/web
+      - name: Commit compiled interface
         run: |
-          git -C .. config user.name "github-actions[bot]"
-          git -C .. config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C .. add helper/web
-          if ! git -C .. diff --cached --quiet; then
-            git -C .. commit -m "Build compiled Social Music Beat interface"
-            git -C .. push
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add helper/web
+          if ! git diff --cached --quiet; then
+            git commit -m "Build compiled Social Music Beat interface"
+            git push
           fi
