@@ -51,6 +51,22 @@ class ProviderConfigTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ai_providers._validate_provider("unknown-provider")
 
+    def test_keyring_rejects_unknown_backend(self):
+        class FakeFileBackend:
+            priority = 1
+        FakeFileBackend.__module__ = "keyring.backends.file"
+        with mock.patch.object(ai_providers.platform, "system", return_value="Windows"), \
+             mock.patch.object(ai_providers.keyring, "get_keyring", return_value=FakeFileBackend()):
+            self.assertFalse(ai_providers._keyring_ready())
+
+    def test_keyring_accepts_secure_windows_backend(self):
+        class FakeWindowsVault:
+            priority = 1
+        FakeWindowsVault.__module__ = "keyring.backends.Windows"
+        with mock.patch.object(ai_providers.platform, "system", return_value="Windows"), \
+             mock.patch.object(ai_providers.keyring, "get_keyring", return_value=FakeWindowsVault()):
+            self.assertTrue(ai_providers._keyring_ready())
+
     def test_key_storage_uses_operating_system_keyring(self):
         with mock.patch.object(ai_providers, "_keyring_ready", return_value=True), mock.patch.object(ai_providers.keyring, "set_password") as save:
             ai_providers._set_key("openai", "test-secret-key-value")
