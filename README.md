@@ -9,7 +9,7 @@ Ferramenta **local** para Windows, Linux e macOS que:
 
 Tudo roda no seu computador. A internet só é usada na instalação, para baixar os modelos.
 
-> Projeto criado com ajuda de inteligência artificial (Claude, da Anthropic) e testado só em parte.
+> Projeto desenvolvido com apoio de inteligência artificial e testado pelo mantenedor em instalações reais no Windows. Linux e macOS contam com verificações automatizadas de código, mas ainda precisam de validação prática em computadores dessas plataformas.
 > Oferecido "como está", sem garantia. Veja [AVISOS.md](AVISOS.md).
 > O passo a passo completo, com mais detalhes, está no [MANUAL DE USO.pdf](MANUAL%20DE%20USO.pdf).
 
@@ -22,7 +22,7 @@ Tudo roda no seu computador. A internet só é usada na instalação, para baixa
 - **Windows:** o instalador baixa e extrai automaticamente o pacote portátil oficial do ACE-Step 1.5 quando ele ainda não está instalado. **Linux/macOS:** `git` e o [uv](https://docs.astral.sh/uv/) (o instalador baixa o ACE-Step e oferece instalar o uv).
 - O ACE-Step **não** faz parte deste repositório.
 
-> Os scripts de Linux e macOS são novos e foram verificados só quanto à lógica de ligar e desligar os servidores. A instalação completa neles ainda não foi testada em máquinas reais.
+> Os scripts e testes automatizados de Linux e macOS ajudam a verificar a compatibilidade do código, mas a instalação completa e a geração real de áudio ainda não foram validadas pelo mantenedor em computadores dessas plataformas.
 
 ## Instalação no Windows (só uma vez)
 
