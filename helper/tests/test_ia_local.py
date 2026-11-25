@@ -59,7 +59,7 @@ class RuntimeCatalogTests(unittest.TestCase):
     def test_download_stops_when_over_expected_size_and_cleans_partial(self):
         import io
         class FakeResponse:
-            headers = {"Content-Length": "4"}
+            headers = {"Content-Length": "3"}
             def __init__(self): self.stream = io.BytesIO(b"ABCD")
             def __enter__(self): return self
             def __exit__(self, *args): return False
