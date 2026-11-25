@@ -86,9 +86,28 @@ def _write_config(data: dict) -> None:
 def _keyring_ready() -> bool:
     if keyring is None:
         return False
+    secure_backend_modules = {
+        "Windows": {"keyring.backends.Windows", "keyring.backends.win32"},
+        "Darwin": {"keyring.backends.macOS"},
+        "Linux": {"keyring.backends.SecretService", "keyring.backends.kwallet"},
+    }
+    secure_backend_classes = {
+        "Windows": {"WinVaultKeyring", "Win32CryptoKeyring"},
+        "Darwin": {"Keyring"},
+        "Linux": {"Keyring", "KWallet"},
+    }
+    system = platform.system()
     try:
         backend = keyring.get_keyring()
-        return bool(backend) and not backend.__class__.__module__.startswith("keyring.backends.fail")
+        cls = backend.__class__
+        module, name = cls.__module__, cls.__name__
+        priority = float(getattr(backend, "priority", 0))
+        return (
+            system in secure_backend_modules
+            and module in secure_backend_modules[system]
+            and name in secure_backend_classes[system]
+            and priority > 0
+        )
     except Exception:
         return False
 
