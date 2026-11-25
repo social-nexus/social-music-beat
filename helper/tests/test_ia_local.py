@@ -137,7 +137,16 @@ if __name__ == "__main__":
 
 class LocalRequestSecurityMiddlewareTests(unittest.IsolatedAsyncioTestCase):
     async def _run(self, headers, chunks, limit=8):
-        import server
+        import sys
+        import types
+        if "server" not in sys.modules:
+            from fastapi import APIRouter
+            fake_legenda = types.ModuleType("legenda")
+            fake_legenda.router = APIRouter()
+            with mock.patch.dict(sys.modules, {"legenda": fake_legenda}):
+                import server
+        else:
+            import server
         messages = [{"type": "http.request", "body": chunk, "more_body": i < len(chunks)-1}
                     for i, chunk in enumerate(chunks)]
         async def receive():
