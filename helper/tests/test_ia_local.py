@@ -56,6 +56,41 @@ class RuntimeCatalogTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ia_local._normalize_sha256("not-a-sha")
 
+    def test_download_stops_when_over_expected_size_and_cleans_partial(self):
+        import io
+        class FakeResponse:
+            headers = {"Content-Length": "4"}
+            def __init__(self): self.stream = io.BytesIO(b"ABCD")
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self, size=-1): return self.stream.read(size)
+        dest = Path(TEMP_DATA) / "download-test.bin"
+        partial = dest.with_suffix(dest.suffix + ".part")
+        dest.unlink(missing_ok=True)
+        partial.unlink(missing_ok=True)
+        with mock.patch.object(ia_local, "urlopen", return_value=FakeResponse()), \
+             mock.patch.object(ia_local, "_update_job"):
+            with self.assertRaises(ValueError):
+                ia_local._download("https://example.test/file", dest, 3, "job-test")
+        self.assertFalse(dest.exists())
+        self.assertFalse(partial.exists())
+
+    def test_download_accepts_exact_expected_size(self):
+        import io
+        class FakeResponse:
+            headers = {"Content-Length": "4"}
+            def __init__(self): self.stream = io.BytesIO(b"DATA")
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self, size=-1): return self.stream.read(size)
+        dest = Path(TEMP_DATA) / "download-exact.bin"
+        dest.unlink(missing_ok=True)
+        with mock.patch.object(ia_local, "urlopen", return_value=FakeResponse()), \
+             mock.patch.object(ia_local, "_update_job"):
+            ia_local._download("https://example.test/file", dest, 4, "job-test")
+        self.assertEqual(dest.read_bytes(), b"DATA")
+        dest.unlink(missing_ok=True)
+
     def test_archive_path_rejects_parent_traversal(self):
         root = Path(TEMP_DATA) / "extract"
         with self.assertRaises(ValueError):
@@ -98,3 +133,39 @@ class RuntimeCatalogTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LocalRequestSecurityMiddlewareTests(unittest.IsolatedAsyncioTestCase):
+    async def _run(self, headers, chunks, limit=8):
+        import server
+        messages = [{"type": "http.request", "body": chunk, "more_body": i < len(chunks)-1}
+                    for i, chunk in enumerate(chunks)]
+        async def receive():
+            return messages.pop(0) if messages else {"type": "http.request", "body": b"", "more_body": False}
+        sent = []
+        async def send(message):
+            sent.append(message)
+        async def app(scope, receive, send):
+            while True:
+                msg = await receive()
+                if not msg.get("more_body", False):
+                    break
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"ok"})
+        middleware = server.LocalRequestSecurityMiddleware(app)
+        scope = {"type": "http", "path": "/api/ai/models/import", "method": "POST", "headers": headers}
+        with mock.patch.object(server, "MAX_MODEL_UPLOAD_BODY", limit):
+            await middleware(scope, receive, send)
+        return sent
+
+    async def test_rejects_cross_origin_state_change(self):
+        sent = await self._run([(b"host", b"localhost:8002"), (b"origin", b"https://evil.example")], [b"x"])
+        self.assertEqual(sent[0]["status"], 403)
+
+    async def test_rejects_body_exceeding_limit_without_content_length(self):
+        sent = await self._run([(b"host", b"localhost:8002"), (b"origin", b"http://localhost:8002")], [b"1234", b"5678"], limit=6)
+        self.assertEqual(sent[0]["status"], 413)
+
+    async def test_accepts_body_at_limit(self):
+        sent = await self._run([(b"host", b"localhost:8002"), (b"origin", b"http://localhost:8002")], [b"1234", b"5678"], limit=8)
+        self.assertEqual(sent[0]["status"], 200)
