@@ -20,7 +20,99 @@ LIB_FILE = DATA / "biblioteca.json"
 WEB = BASE / "web"
 ACE = os.environ.get("ACE_URL", "http://127.0.0.1:8001").rstrip("/")
 
+MAX_MODEL_UPLOAD_BODY = 30 * 1024**3 + 1024 * 1024
+LOCAL_ORIGINS = {b"http://localhost:8002", b"http://127.0.0.1:8002"}
+LOCAL_HOSTS = {b"localhost:8002", b"127.0.0.1:8002"}
+UNSAFE_METHODS = {b"POST", b"PUT", b"PATCH", b"DELETE"}
+
+
+class LocalRequestSecurityMiddleware:
+    """Reject cross-origin state changes and cap model-import request bodies."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+        method = scope.get("method", "GET").upper().encode("ascii", "ignore")
+        headers = dict(scope.get("headers", []))
+        is_local_api = path.startswith(("/api/", "/ace/"))
+
+        if is_local_api and method in UNSAFE_METHODS:
+            host = headers.get(b"host", b"").lower()
+            origin = headers.get(b"origin", b"")
+            fetch_site = headers.get(b"sec-fetch-site", b"").lower()
+            if host not in LOCAL_HOSTS or origin not in LOCAL_ORIGINS:
+                await self._reject(send, 403, "Requisição bloqueada: origem local não confirmada.")
+                return
+            if fetch_site and fetch_site not in (b"same-origin", b"none"):
+                await self._reject(send, 403, "Requisição de outra origem não permitida.")
+                return
+        elif is_local_api:
+            host = headers.get(b"host", b"").lower()
+            origin = headers.get(b"origin")
+            if host not in LOCAL_HOSTS or (origin is not None and origin not in LOCAL_ORIGINS):
+                await self._reject(send, 403, "Acesso permitido somente pela interface local.")
+                return
+
+        if path != "/api/ai/models/import" or method != b"POST":
+            await self.app(scope, receive, send)
+            return
+
+        raw_length = headers.get(b"content-length")
+        if raw_length:
+            try:
+                if int(raw_length) > MAX_MODEL_UPLOAD_BODY:
+                    await self._reject(send, 413, "O envio excede o limite de 30 GB para modelos GGUF.")
+                    return
+            except ValueError:
+                await self._reject(send, 400, "Cabeçalho Content-Length inválido.")
+                return
+
+        received = 0
+        oversized = False
+        response_messages = []
+
+        async def limited_receive():
+            nonlocal received, oversized
+            message = await receive()
+            if message.get("type") == "http.request" and not oversized:
+                received += len(message.get("body", b""))
+                if received > MAX_MODEL_UPLOAD_BODY:
+                    oversized = True
+                    return {"type": "http.request", "body": b"", "more_body": False}
+            return message
+
+        async def capture_send(message):
+            response_messages.append(message)
+
+        try:
+            await self.app(scope, limited_receive, capture_send)
+        except Exception:
+            if not oversized:
+                raise
+
+        if oversized:
+            await self._reject(send, 413, "O envio excede o limite de 30 GB para modelos GGUF.")
+            return
+        for message in response_messages:
+            await send(message)
+
+    @staticmethod
+    async def _reject(send, status, detail):
+        body = json.dumps({"detail": detail}, ensure_ascii=False).encode("utf-8")
+        await send({"type": "http.response.start", "status": status,
+                    "headers": [(b"content-type", b"application/json; charset=utf-8"),
+                                (b"content-length", str(len(body)).encode("ascii"))]})
+        await send({"type": "http.response.body", "body": body})
+
+
 app = FastAPI()
+app.add_middleware(LocalRequestSecurityMiddleware)
 
 from legenda import router as legenda_router  # noqa: E402
 
