@@ -31,7 +31,3 @@
 ## Modelos importados pelo usuário
 
 A aplicação permite importar arquivos GGUF externos. Ela não verifica automaticamente a licença, procedência, segurança, arquitetura ou qualidade do modelo importado. A responsabilidade de confirmar autorização e termos de uso é do usuário.
-
-## Gemma
-
-Gemma ainda não está no catálogo de download automático. Alguns repositórios exigem login e aceite dos termos do Google. Só será adicionado após validar os termos da versão exata e o método de acesso/redistribuição aplicável.
