@@ -1,5 +1,11 @@
 # Social Music Beat
 
+> ⚠️ **ATENÇÃO: LEIA ANTES DE CRIAR E PUBLICAR MÚSICAS COM IA**
+>
+> Usar IA para gerar uma música **não garante, por si só, direitos autorais, exclusividade ou permissão para uso comercial**. Antes de publicar, confira a licença do modelo/serviço, os direitos sobre letras, melodias, vozes, samples e gravações utilizados e as regras atuais do YouTube, distribuidoras e demais plataformas. Evite imitar artistas ou usar material de terceiros sem autorização.
+>
+> 📘 **Leia o guia completo:** [CUIDADO, LEIA ANTES DE CRIAR (PDF)](CUIDADO-LEIA-ANTES-DE-CRIAR.pdf). O material é informativo e não substitui orientação jurídica.
+
 Ferramenta **local** para Windows, Linux e macOS que:
 
 1. **Cria uma música cantada** a partir da sua letra e de um estilo (motor: [ACE-Step 1.5](https://github.com/ACE-Step/ACE-Step-1.5));
@@ -90,7 +96,7 @@ D:\\IA_MODELS\\
 
 O arquivo [Musica-Prompt-Mestre.txt](Musica-Prompt-Mestre.txt) tem um prompt pronto para pedir a um assistente de IA uma letra em português já no formato que o programa espera (título, estilo, configurações e letra com as marcações). Preencha os campos entre colchetes e cole no assistente de sua preferência.
 
-### Como usar o compositor local (em desenvolvimento)
+### Como usar o compositor local
 
 1. Instale e inicie o Social Music Beat normalmente.
 2. Abra a aba **Compositor IA**.
@@ -104,7 +110,7 @@ Também é possível importar um arquivo GGUF já existente. A licença de model
 
 O runtime e os modelos são opcionais e ficam na pasta de dados do usuário, fora do repositório. A IA local usa a porta 8010 em `127.0.0.1`; o ACE-Step continua na porta 8001 e o servidor da interface em 8002.
 
-**Atenção:** esta primeira versão ainda precisa de teste de execução real em Windows, Linux e macOS. O pacote CUDA depende de drivers NVIDIA compatíveis e pode consumir muita VRAM; comece com poucas camadas na GPU ou use CPU. O compositor não é necessário para usar as funções musicais já existentes.
+**Atenção:** o fluxo do compositor foi instalado e testado em Windows. Linux e macOS ainda precisam de validação prática completa. O pacote CUDA depende de drivers NVIDIA compatíveis e pode consumir muita VRAM; comece com poucas camadas na GPU ou use CPU. O compositor é opcional e não é necessário para usar as funções musicais principais.
 
 ## Estrutura do projeto
 
@@ -147,7 +153,7 @@ A ferramenta continua funcionando sem baixar o runtime ou modelos de texto, e a 
 - Avisos de terceiros: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 - Licenças dos modelos: [MODEL_LICENSES.md](MODEL_LICENSES.md)
 
-**Estado:** implementação inicial em desenvolvimento. Os pacotes e o fluxo precisam ser validados em instalações reais antes de uma publicação estável.
+**Estado:** recurso opcional disponível nesta versão de desenvolvimento. O runtime e os modelos são baixados sob demanda; confira as licenças e os termos antes de usar.
 
 ## Projeto relacionado
 
