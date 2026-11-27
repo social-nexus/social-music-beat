@@ -23,6 +23,7 @@
 - Versão do pacote da interface atualizada para `3.1.0`.
 
 ### Em andamento
+- Tradução de status da separação Demucs (fila, carregamento e execução) para PT-BR, EN e ES.
 - Revisão dos fluxos de áudio: fases de separação/salvamento e nomes de faixas derivadas localizados para PT-BR, inglês e espanhol.
 - Revisão final de textos dinâmicos vindos do backend/provedores, acessibilidade e extração dos catálogos de idioma para arquivos próprios.
 - Revisão e testes multilíngues dos prompts Qwen/Gemma e dos parâmetros de idioma vocal do ACE-Step.
