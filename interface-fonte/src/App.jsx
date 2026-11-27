@@ -719,7 +719,7 @@ function CompositorPanel({ onUseLyrics }) {
         if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
         recordingTimerRef.current = null;
         recorder.onstop = null;
-        if (recorder.state !== "inactive") recorder.stop();
+        try { if (recorder.state !== "inactive") recorder.stop(); } catch { /* browser recorder may already be stopped */ }
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
         setRecording(false); setRecordingStartedAt(0);
