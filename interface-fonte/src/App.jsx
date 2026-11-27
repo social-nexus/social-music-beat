@@ -1215,7 +1215,7 @@ export default function App() {
       const id = await submitTask(params);
       phase(tx("phaseCreateMusic"));
       const items = await waitResult(id);
-      phase(uiLanguage === "en" ? "Saving..." : uiLanguage === "es" ? "Guardando..." : "Guardando...");
+      phase(tx("phaseSaving"));
       await saveItems(items, (it, n, total) => {
         const m = it.metas || {};
         return {
