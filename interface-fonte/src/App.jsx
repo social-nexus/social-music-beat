@@ -539,7 +539,7 @@ async function analyzeMelodyReference(file) {
   }
 }
 
-function CompositorPanel({ onUseLyrics }) {
+function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
   const [catalog, setCatalog] = useState({ runtimes: [], models: [], installed_models: [] });
   const [status, setStatus] = useState({});
   const [providerConfig, setProviderConfig] = useState({ providers: [], secure_storage_available: false });
@@ -799,8 +799,8 @@ function CompositorPanel({ onUseLyrics }) {
   return (
     <div className="mx-auto max-w-5xl space-y-5 p-4 lg:p-6">
       <div>
-        <h1 className="text-2xl font-black">Compositor de letras com IA</h1>
-        <p className="mt-1 text-sm text-zinc-400">Use Gemma/Qwen no computador ou conecte sua própria API. Ao escolher um provedor externo, os dados da composição serão enviados a esse serviço.</p>
+        <h1 className="text-2xl font-black">{t("composerTitle")}</h1>
+        <p className="mt-1 text-sm text-zinc-400">{t("composerIntro")}</p>
       </div>
 
       {busy && busySince > 0 && <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-3 py-2 text-xs text-sky-200">Operação em andamento · Tempo decorrido: <span className="font-mono">{mmss(Math.floor((Date.now() - busySince) / 1000))}</span></div>}\n\n      {(error || message) && (
@@ -1201,12 +1201,12 @@ export default function App() {
 
         {tab === "ajuda" ? (
           <div className="max-w-2xl p-6 space-y-4 text-sm text-zinc-300 leading-relaxed">
-            <h1 className="text-2xl font-black text-white">Como usar, em 4 passos</h1>
-            <p><b className="text-white">1. Criar.</b> Cole a letra, escolha o estilo e clique em Criar. Você recebe a música cantada (com uma voz guia).</p>
-            <p><b className="text-white">2. Separar.</b> Na música criada, clique em “Separar voz e instrumental”. Você recebe dois arquivos: só a voz guia e só o instrumental.</p>
-            <p><b className="text-white">3. Cantar.</b> Baixe o instrumental, ouça a voz guia para aprender a melodia e grave a sua voz (só a voz, de fone de ouvido).</p>
-            <p><b className="text-white">4. Ajustar a banda.</b> Clique em “Cantar por cima”, envie a sua gravação e escolha os instrumentos. O programa cria uma banda nova que acompanha o seu jeito de cantar.</p>
-            <p className="text-zinc-500">Mantenha abertas as duas janelas pretas enquanto usa. Para fechar tudo, feche as janelas pretas.</p>
+            <h1 className="text-2xl font-black text-white">{t("helpTitle")}</h1>
+            <p><b className="text-white">1.</b> {t("help1")}</p>
+            <p><b className="text-white">2.</b> {t("help2")}</p>
+            <p><b className="text-white">3.</b> {t("help3")}</p>
+            <p><b className="text-white">4.</b> {t("help4")}</p>
+            <p className="text-zinc-500">{t("helpWindows")}</p>
           </div>
         ) : tab === "compositor" ? (
           <CompositorPanel onUseLyrics={(output) => {
