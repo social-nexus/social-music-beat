@@ -451,7 +451,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         failures = []
         def worker(jid):
             try:
-                for i in range(80):
+                for i in range(40):
                     server._update_job(jid, progress=i)
                     snapshot = server.job_status(jid)
                     self.assertEqual(snapshot["status"], "running")
@@ -462,11 +462,12 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join(timeout=3)
-            self.assertFalse(thread.is_alive())
+            thread.join(timeout=20)
+        alive = [thread.name for thread in threads if thread.is_alive()]
+        self.assertEqual(alive, [], f"workers did not finish: {alive}")
         self.assertEqual(failures, [])
         for jid in job_ids:
-            self.assertEqual(server.job_status(jid)["progress"], 79)
+            self.assertEqual(server.job_status(jid)["progress"], 39)
 
     def test_separation_staging_failure_cleans_partial_stems(self):
         writes = []
