@@ -675,7 +675,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
     def test_cleanup_rejects_library_and_internal_metadata_files(self):
         jobs_file = self.data / server._JOBS_FILE_NAME
         jobs_file.write_text("{}", encoding="utf-8")
-        for name in ("biblioteca.json", server._JOBS_FILE_NAME, ".manual.backup", "track.wav"):
+        for name in ("biblioteca.json", server._JOBS_FILE_NAME, ".manual.backup", "track.wav", "1234567890_abcdef.exe"):
             with self.subTest(name=name):
                 with self.assertRaises(server.HTTPException) as raised:
                     server.cleanup_unregistered_audio({"file": name})
