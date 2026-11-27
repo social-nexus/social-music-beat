@@ -260,7 +260,7 @@ function VoiceModal({ track, onClose, onGo, language = "pt" }) {
           <div className="grid grid-cols-2 gap-3 mt-3">
             <input className={inputCls} type="number" placeholder="BPM (opcional)" value={bpm} onChange={(e) => setBpm(e.target.value)} />
             <select className={inputCls} value={key} onChange={(e) => setKey(e.target.value)}>
-              {KEYS.map((k) => <option key={k} value={k}>{k || "Tom: automático"}</option>)}
+              {KEYS.map((k) => <option key={k} value={k}>{k || tx("autoKey")}</option>)}
             </select>
           </div>
         </div>
@@ -1285,18 +1285,19 @@ export default function App() {
           </div>
         ) : tab === "compositor" ? (
           <CompositorPanel uiLanguage={uiLanguage} onUseLyrics={(output) => {
-            const title = output.match(/^TÍTULO:\s*(.+)$/im)?.[1]?.trim() || "";
-            const style = output.match(/^ESTILO:\s*(.+)$/im)?.[1]?.trim() || "";
-            const blocks = output.split(/\nLETRA:\s*\n?/i);
+            const title = output.match(/^(?:TÍTULO|TITLE):\s*(.+)$/im)?.[1]?.trim() || "";
+            const style = output.match(/^(?:ESTILO|STYLE):\s*(.+)$/im)?.[1]?.trim() || "";
+            const blocks = output.split(/\n(?:LETRA|LYRICS):\s*\n?/i);
             const lyrics = blocks[1]?.split(/\nESTILO INSTRUMENTAL\s*:/i)[0]?.trim() || output;
-            const duration = Number(output.match(/Duração em segundos:\s*(\d+)/i)?.[1] || 0);
+            const duration = Number(output.match(/(?:Duração|Duration|Duración) em segundos:\s*(\d+)/i)?.[1] || output.match(/Duration in seconds:\s*(\d+)/i)?.[1] || 0);
             setForm((f) => ({
               ...f,
               lyrics,
               title: title || f.title,
               style: style || f.style,
               duration: duration >= 30 && duration <= 240 ? duration : f.duration,
-              instrumentalOnly: false
+              instrumentalOnly: false,
+              lang: /^TITLE:/im.test(output) ? "en" : /^(?:TÍTULO):/im.test(output) && /^(?:ESTILO):/im.test(output) ? "pt" : /^(?:TÍTULO):/im.test(output) && /^(?:CONFIGURACIÓN):/im.test(output) ? "es" : f.lang
             }));
             setTab("criar");
           }} />
@@ -1381,7 +1382,7 @@ export default function App() {
               </div>
 
               <button onClick={() => setShowAdv((s) => !s)} className="text-xs font-semibold text-zinc-400 hover:text-white">
-                {showAdv ? "▾" : "▸"} Opções avançadas
+                {showAdv ? "▾" : "▸"} {tx("advanced")}
               </button>
               {showAdv && (
                 <div className="space-y-4 rounded-xl border border-white/5 p-4">
@@ -1416,7 +1417,7 @@ export default function App() {
                 disabled={busy || !online}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 text-base font-black text-white shadow-lg shadow-pink-500/20 disabled:opacity-40"
               >
-                {busy ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />} Criar
+                {busy ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />} {tx("createButton")}
               </button>
             </section>
 
