@@ -1,5 +1,23 @@
 # Histórico de alterações
 
+## [3.1.0] — Em desenvolvimento
+
+### Implementado até agora
+- Branch de desenvolvimento criada diretamente da tag estável `v3.0.0`, sem alterar a versão estável.
+- Preferência persistente de idioma da interface iniciada: Português do Brasil, English e Español.
+- Primeiras traduções aplicadas à navegação, avisos do motor, títulos principais, estado vazio da biblioteca e seletor de idioma da música.
+- Cronômetro do compositor de letras durante a geração.
+- Cronômetro das operações de áudio visível também em dispositivos móveis e ao navegar entre abas; o tempo final permanece na tela após a conclusão.
+- Versão do pacote da interface atualizada para `3.1.0`.
+
+### Em andamento
+- Tradução integral de todas as telas, modais, mensagens, erros e instruções.
+- Revisão e testes multilíngues dos prompts Qwen/Gemma e dos parâmetros de idioma vocal do ACE-Step.
+- Testes automatizados e validação de geração real antes da publicação.
+
+> Esta versão ainda não está pronta para distribuição. Acompanhe o plano em [docs/PLANO-VERSAO-3.1.0.md](docs/PLANO-VERSAO-3.1.0.md).
+
+
 As versões e datas abaixo descrevem a evolução do projeto. Consulte também o README, os avisos de terceiros e as licenças dos modelos antes de instalar ou usar componentes opcionais.
 
 ## [3.0.0] — Grande atualização: compositor com IA e novos fluxos de instalação
