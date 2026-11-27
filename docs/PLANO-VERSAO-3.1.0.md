@@ -1,0 +1,52 @@
+# Plano de desenvolvimento — Social Music Beat 3.1.0
+
+## Base e estratégia
+
+- Versão-base: tag imutável `v3.0.0`.
+- Branch de trabalho: `release/3.1.0`.
+- A tag e a branch principal não são alteradas nesta etapa.
+- A versão 3.1.0 só deve ser publicada depois de testes de interface, API, geração ACE-Step, separação Demucs e compositor local/API.
+
+## Escopo aprovado
+
+1. Cronômetros de operações demoradas, com tempo real desde o início até o término.
+2. Idioma da interface: Português do Brasil, English e Español.
+3. Idioma do conteúdo musical independente do idioma da interface.
+4. Compositor Qwen/Gemma e provedores por API orientados explicitamente ao idioma solicitado.
+5. ACE-Step recebe o idioma vocal correto para a geração cantada.
+
+## Situação técnica encontrada na v3.0.0
+
+- A interface já tinha um cronômetro geral para tarefas executadas por `runJob`, incluindo geração musical, separação e criação de banda/instrumentação.
+- O compositor já permitia escolher português do Brasil, inglês e espanhol para as letras, e o backend já instruía o modelo a responder no idioma solicitado.
+- O formulário de música já enviava `vocal_language` com os códigos `pt`, `en` e `es` ao ACE-Step.
+- A interface ainda não possuía uma preferência independente e persistente de idioma.
+
+## Implementado nesta etapa
+
+- Criada a branch `release/3.1.0` diretamente do commit apontado pela tag `v3.0.0`.
+- Adicionada preferência de idioma da interface com persistência local, com opções Português do Brasil, English e Español.
+- Iniciada a camada central de textos traduzidos e traduzidos os elementos principais de navegação, aviso de motor, cabeçalhos e estados vazios.
+- Timer do compositor de letras: o tempo decorrido aparece enquanto a letra está sendo gerada.
+- Timer de operações de áudio: o indicador da tarefa passou a ficar visível no layout principal, inclusive em telas móveis e ao navegar entre abas.
+- Ao terminar uma tarefa de áudio, o tempo total permanece visível até a próxima operação.
+- Versão do pacote da interface atualizada para `3.1.0`.
+
+## Próximas etapas
+
+1. Completar a tradução de todos os textos da interface, incluindo modais, validações, mensagens de erro, acessibilidade, ajuda e compositor.
+2. Centralizar as traduções em arquivos próprios para facilitar manutenção e futuras línguas.
+3. Tornar os rótulos e fases dos cronômetros multilíngues e revisar a medição em falhas/cancelamentos.
+4. Revisar e testar os idiomas musicais em todos os fluxos do ACE-Step, inclusive criação de banda com voz do usuário.
+5. Revisar os prompts do compositor para consistência multilíngue, preservando letras originais ao continuar uma composição.
+6. Adicionar testes automatizados para preferência de idioma, persistência, cronômetros e payloads de idioma.
+7. Executar build da interface e testes Python; validar geração real em Windows antes de publicar.
+
+## Regras de compatibilidade
+
+- Não remover nem renomear endpoints existentes sem necessidade.
+- Não alterar os pesos, runtimes ou instaladores de modelos nesta atualização.
+- O idioma da interface nunca deve sobrescrever automaticamente o idioma da música.
+- O idioma da música deve ser uma escolha independente do idioma visual.
+- Cronômetros devem medir tempo real decorrido, sem simular porcentagens de progresso.
+- Preservar a biblioteca de músicas, configurações, modelos e caminhos de armazenamento existentes.
