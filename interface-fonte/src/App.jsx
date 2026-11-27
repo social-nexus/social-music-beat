@@ -572,6 +572,7 @@ function CompositorPanel({ onUseLyrics }) {
   const [transcriptionModel, setTranscriptionModel] = useState("small");
   const [transcriptionMessage, setTranscriptionMessage] = useState("");
   const [recording, setRecording] = useState(false);
+  const [recordingStartedAt, setRecordingStartedAt] = useState(0);
   const melodyInputRef = useRef(null);
   const recorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -591,7 +592,7 @@ function CompositorPanel({ onUseLyrics }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => { if (!busy && !melodyBusy && !transcriptionBusy && !providerBusy) return undefined; const timer = window.setInterval(() => setTimerTick((n) => n + 1), 1000); return () => window.clearInterval(timer); }, [busy, melodyBusy, transcriptionBusy, providerBusy]);
+  useEffect(() => { if (!busy && !melodyBusy && !transcriptionBusy && !providerBusy && !recording) return undefined; const timer = window.setInterval(() => setTimerTick((n) => n + 1), 1000); return () => window.clearInterval(timer); }, [busy, melodyBusy, transcriptionBusy, providerBusy, recording]);
 
   useEffect(() => () => {
     if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
@@ -721,17 +722,18 @@ function CompositorPanel({ onUseLyrics }) {
         recordingTimerRef.current = null;
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
-        setRecording(false);
+        setRecording(false); setRecordingStartedAt(0);
         if (file.size) loadMelodyReference(file);
       };
       recorder.start();
+      setRecordingStartedAt(Date.now());
       recordingTimerRef.current = window.setTimeout(() => {
         if (recorderRef.current && recorderRef.current.state === "recording") recorderRef.current.stop();
       }, 30000);
       setRecording(true); setError(""); setMessage(t("recordingPrompt"));
     } catch (e) {
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null; setRecording(false);
+      streamRef.current = null; setRecording(false); setRecordingStartedAt(0);
       setError(e.message || t("micError"));
     }
   };
@@ -959,6 +961,7 @@ function CompositorPanel({ onUseLyrics }) {
             {melodyFile && <button type="button" onClick={clearMelodyReference} className="rounded-lg border border-white/15 px-3 py-2 text-xs text-zinc-300">{t("removeReference")}</button>}
             <input ref={melodyInputRef} type="file" accept="audio/*" className="hidden" onChange={(e)=>loadMelodyReference(e.target.files?.[0])}/>
           </div>
+          {recording && recordingStartedAt > 0 && <div className="flex items-center gap-2 text-xs text-rose-200"><Mic size={14}/> {t("elapsed")}: <span className="font-mono">{mmss(Math.floor((Date.now() - recordingStartedAt) / 1000))}</span> / 00:30</div>}
           {melodyBusy && <div className="flex items-center gap-2 text-xs text-zinc-300"><Loader2 size={14} className="animate-spin"/> {t("analyzingMelody")} <span className="font-mono">{mmss(Math.floor((Date.now() - melodyStartedAt) / 1000))}</span></div>}
           {melodyAnalysis && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
             <p className="text-xs font-semibold text-emerald-200">{t("referenceReady")} {melodyFile?.name || "gravação"}</p>
