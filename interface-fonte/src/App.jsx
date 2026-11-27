@@ -110,8 +110,8 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 const UI_TEXT = {
-  pt: { language: "Idioma", create: "Criar", composer: "Compositor IA", help: "Como usar", onlineWait: "O motor de música (ACE-Step) ainda está ligando ou foi fechado. Na primeira vez pode levar alguns minutos. Mantenha a janela “ACE-Step” aberta.", createMusic: "Criar música", library: "Minhas músicas", emptyLibrary: "Suas músicas aparecem aqui. Preencha a letra e o estilo e clique em Criar.", elapsed: "Tempo decorrido", processing: "Processando", helpTitle: "Como usar, em 4 passos", lyricsLanguage: "Idioma da música", lyricsPt: "Letra em português", lyricsEn: "Letra em inglês", lyricsEs: "Letra em espanhol", operationDone: "Operação concluída", operationInterrupted: "Operação interrompida" },
-  en: { language: "Language", create: "Create", composer: "AI Composer", help: "How to use", onlineWait: "The music engine (ACE-Step) is starting or has been closed. The first startup may take a few minutes. Keep the “ACE-Step” window open.", createMusic: "Create music", library: "My music", emptyLibrary: "Your music will appear here. Enter lyrics and a style, then click Create.", elapsed: "Elapsed time", processing: "Processing", helpTitle: "How to use, in 4 steps", lyricsLanguage: "Music language", lyricsPt: "Lyrics in Portuguese", lyricsEn: "Lyrics in English", lyricsEs: "Lyrics in Spanish", operationDone: "Operation completed", operationInterrupted: "Operation interrupted" },
+  pt: { language: "Idioma", create: "Criar", composer: "Compositor IA", help: "Como usar", onlineWait: "O motor de música (ACE-Step) ainda está ligando ou foi fechado. Na primeira vez pode levar alguns minutos. Mantenha a janela “ACE-Step” aberta.", createMusic: "Criar música", library: "Minhas músicas", emptyLibrary: "Suas músicas aparecem aqui. Preencha a letra e o estilo e clique em Criar.", elapsed: "Tempo decorrido", processing: "Processando", helpTitle: "Como usar, em 4 passos", lyricsLanguage: "Idioma da música", lyricsPt: "Letra em português", lyricsEn: "Letra em inglês", lyricsEs: "Letra em espanhol", operationDone: "Operação concluída", operationInterrupted: "Operação interrompida", singOver: "Cantar por cima", singDesc: "Você cantou em cima do instrumental de", singDesc2: "Envie só a sua voz (sem a música de fundo) e o programa cria uma banda nova que acompanha o seu jeito de cantar.", chooseVoice: tx("chooseVoice"), instrumentChoices: "{tx("instrumentChoices")}", styleOriginal: "{tx("styleOriginal")}", autoBand: "{tx("autoBand")}", createBand: "{tx("createBand")}", firstModel: "{tx("firstModel")}", autoKey: "{tx("autoKey")}", lyricsCaption: "Legenda da música", captionDesc: "Gera o arquivo .srt (vídeo) e o .lrc (letra sincronizada) de", audioUsed: "Áudio usado", useRecording: tx("useRecording"), backToTrack: tx("backToTrack"), lyricsLines: "{tx("lyricsLines")}", fastMode: "{tx("fastMode")}", whisperMode: "{tx("whisperMode")}", charsCaption: "{tx("charsCaption")}", whisperBase: "{tx("whisperBase")}", whisperSmall: "{tx("whisperSmall")}", captionTip: "{tx("captionTip")}", working: "Trabalhando...", makeCaption: "Gerar legenda", downloadSrt: "Baixar .srt", downloadLrc: "Baixar .lrc", copy: "Copiar", voice: "Voz", style: "Estilo", titleOptional: "Título (opcional)", advanced: "Opções avançadas", duration: "Duração", voiceAuto: "Automática", voiceFemale: "Feminina", voiceMale: "Masculina", lyrics: "Letra", lyricsHint: "Dica: marque as partes com [Verse 1], [Chorus], [Bridge] (em inglês). Ajuda o modelo.", styleHint: "Escolha uma categoria para ver ritmos diferentes. Os estilos já descrevem andamento, instrumentos e energia — não apenas o sentimento.", instrumentalOnly: "Só instrumental", withVoice: "Com voz", download: "Baixar", separate: "Separar voz e instrumental", delete: "Excluir", listen: "Ouvir", playHint: "Clique em ▶ numa música para ouvir", license: "Licença:", viewLicense: "ver licença", officialSource: "origem oficial", modelInstalled: "Modelo instalado", downloadModel: "Baixar modelo", importGguf: "Importar GGUF", activateModel: "Ativar modelo", stopAI: "Desligar IA", apiSave: "Salvar chave com segurança", apiRemove: "Remover chave", apiUse: "Usar este provedor", apiTest: "Testar conexão", apiKeyPlaceholder: "Cole sua chave de API aqui", providerModelPlaceholder: "Informe o identificador do modelo" },
+  en: { language: "Language", create: "Create", composer: "AI Composer", help: "How to use", onlineWait: "The music engine (ACE-Step) is starting or has been closed. The first startup may take a few minutes. Keep the “ACE-Step” window open.", createMusic: "Create music", library: "My music", emptyLibrary: "Your music will appear here. Enter lyrics and a style, then click Create.", elapsed: "Elapsed time", processing: "Processing", helpTitle: "How to use, in 4 steps", lyricsLanguage: "Music language", lyricsPt: "Lyrics in Portuguese", lyricsEn: "Lyrics in English", lyricsEs: "Lyrics in Spanish", operationDone: "Operation completed", operationInterrupted: "Operation interrupted", singOver: "Sing over", singDesc: "Did you sing over the instrumental of", singDesc2: "Upload only your voice (without the backing music) and the program will create a new band that follows your singing.", chooseVoice: "1. Choose the file with my voice (WAV or MP3, at least 10 seconds)", instrumentChoices: "2. Which instruments should the band have?", styleOriginal: "3. Style (pre-filled from the original song)", autoBand: "Afterwards, also separate the band only (without vocals). This takes a few extra minutes.", createBand: "Create the band for my voice", firstModel: "The engine loads a different model the first time, which may take a few minutes. Do not close the black windows.", autoKey: "Key: automatic", lyricsCaption: "Song subtitles", captionDesc: "Generates the .srt (video) and .lrc (synchronized lyrics) files for", audioUsed: "Audio used", useRecording: "Use my singing recording", backToTrack: "return to song audio", lyricsLines: "Lyrics (one sung line per row; [Verse] markers are ignored)", fastMode: "Fast: uses pauses in the singing", whisperMode: "Accurate: Whisper listens to the voice", charsCaption: "Characters per subtitle", whisperBase: "Whisper base (about 150 MB)", whisperSmall: "Whisper small (about 480 MB)", captionTip: "Fast mode works best when the singer breathes or pauses between lines. Singing is harder to align than speech, so review the result.", working: "Working...", makeCaption: "Generate subtitles", downloadSrt: "Download .srt", downloadLrc: "Download .lrc", copy: "Copy", voice: "Voice", style: "Style", titleOptional: "Title (optional)", advanced: "Advanced options", duration: "Duration", voiceAuto: "Automatic", voiceFemale: "Female", voiceMale: "Male", lyrics: "Lyrics", lyricsHint: "Tip: mark sections with [Verse 1], [Chorus], [Bridge] (in English). This helps the model.", styleHint: "Choose a category to explore different rhythms. Styles describe tempo, instruments, and energy—not just mood.", instrumentalOnly: "Instrumental only", withVoice: "With vocals", download: "Download", separate: "Separate vocals and instrumental", delete: "Delete", listen: "Listen", playHint: "Click ▶ on a song to listen", license: "License:", viewLicense: "view license", officialSource: "official source", modelInstalled: "Model installed", downloadModel: "Download model", importGguf: "Import GGUF", activateModel: "Activate model", stopAI: "Stop AI", apiSave: "Save key securely", apiRemove: "Remove key", apiUse: "Use this provider", apiTest: "Test connection", apiKeyPlaceholder: "Paste your API key here", providerModelPlaceholder: "Enter the model identifier" },
   es: { language: "Idioma", create: "Crear", composer: "Compositor IA", help: "Cómo usar", onlineWait: "El motor de música (ACE-Step) todavía se está iniciando o se ha cerrado. La primera vez puede tardar unos minutos. Mantén abierta la ventana “ACE-Step”.", createMusic: "Crear música", library: "Mi música", emptyLibrary: "Tus canciones aparecerán aquí. Escribe la letra y el estilo y haz clic en Crear.", elapsed: "Tiempo transcurrido", processing: "Procesando", helpTitle: "Cómo usar, en 4 pasos", lyricsLanguage: "Idioma de la música", lyricsPt: "Letra en portugués", lyricsEn: "Letra en inglés", lyricsEs: "Letra en español", operationDone: "Operación completada", operationInterrupted: "Operación interrumpida" }
 };
 const uiText = (language, key) => UI_TEXT[language]?.[key] || UI_TEXT.pt[key] || key;
@@ -125,7 +125,7 @@ async function http(url, opts) {
   return data;
 }
 const jsonPost = (url, body) =>
-  http(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  http(url, { method: "POST", headers: { "Content-Type": "application/json", singOver: "Cantar encima", singDesc: "¿Cantaste sobre el instrumental de", singDesc2: "Envía solo tu voz (sin la música de fondo) y el programa creará una nueva banda que seguirá tu forma de cantar.", chooseVoice: "1. Elegir el archivo con mi voz (WAV o MP3, mínimo 10 segundos)", instrumentChoices: "2. ¿Qué instrumentos debe tener la banda?", styleOriginal: "3. Estilo (ya viene el de la canción original)", autoBand: "Después, separar también solo la banda (sin la voz). Tarda unos minutos más.", createBand: "Crear la banda para mi voz", firstModel: "La primera vez, el motor carga un modelo diferente y puede tardar unos minutos. No cierres las ventanas negras.", autoKey: "Tonalidad: automática", lyricsCaption: "Subtítulos de la canción", captionDesc: "Genera los archivos .srt (vídeo) y .lrc (letra sincronizada) de", audioUsed: "Audio utilizado", useRecording: "Usar mi grabación cantando", backToTrack: "volver al audio de la canción", lyricsLines: "Letra (una línea cantada por línea; se ignoran las marcas [Verse])", fastMode: "Rápido: usa las pausas del canto", whisperMode: "Preciso: Whisper escucha la voz", charsCaption: "Caracteres por subtítulo", whisperBase: "Whisper base (aprox. 150 MB)", whisperSmall: "Whisper small (aprox. 480 MB)", captionTip: "El modo rápido funciona mejor cuando el cantante respira o hace pausas entre líneas. Cantar es más difícil de sincronizar que hablar, así que revisa el resultado.", working: "Trabajando...", makeCaption: "Generar subtítulos", downloadSrt: "Descargar .srt", downloadLrc: "Descargar .lrc", copy: "Copiar", voice: "Voz", style: "Estilo", titleOptional: "Título (opcional)", advanced: "Opciones avanzadas", duration: "Duración", voiceAuto: "Automática", voiceFemale: "Femenina", voiceMale: "Masculina", lyrics: "Letra", lyricsHint: "Consejo: marca las partes con [Verse 1], [Chorus], [Bridge] (en inglés). Ayuda al modelo.", styleHint: "Elige una categoría para ver diferentes ritmos. Los estilos describen tempo, instrumentos y energía, no solo el sentimiento.", instrumentalOnly: "Solo instrumental", withVoice: "Con voz", download: "Descargar", separate: "Separar voz e instrumental", delete: "Eliminar", listen: "Escuchar", playHint: "Haz clic en ▶ en una canción para escucharla", license: "Licencia:", viewLicense: "ver licencia", officialSource: "origen oficial", modelInstalled: "Modelo instalado", downloadModel: "Descargar modelo", importGguf: "Importar GGUF", activateModel: "Activar modelo", stopAI: "Apagar IA", apiSave: "Guardar clave de forma segura", apiRemove: "Eliminar clave", apiUse: "Usar este proveedor", apiTest: "Probar conexión", apiKeyPlaceholder: "Pega aquí tu clave de API", providerModelPlaceholder: "Introduce el identificador del modelo" }, body: JSON.stringify(body) });
 
 // Envia uma tarefa ao ACE-Step. Com arquivo: tudo vai dentro de "param_obj" (aceita listas).
 async function submitTask(params, file) {
@@ -207,7 +207,8 @@ function Seg({ value, onChange, options }) {
 
 const inputCls = "w-full rounded-xl bg-zinc-900/70 border border-white/10 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-pink-500/60";
 
-function VoiceModal({ track, onClose, onGo }) {
+function VoiceModal({ track, onClose, onGo, language = "pt" }) {
+  const tx = (key) => uiText(language, key);
   const [file, setFile] = useState(null);
   const [picked, setPicked] = useState(["drums", "bass", "guitar", "keyboard"]);
   const [style, setStyle] = useState(track.style || "");
@@ -222,10 +223,9 @@ function VoiceModal({ track, onClose, onGo }) {
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-[#14141a] border border-white/10 p-6 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold">Cantar por cima</h2>
+            <h2 className="text-lg font-bold">{tx("singOver")}</h2>
             <p className="text-xs text-zinc-400 mt-1">
-              Você cantou em cima do instrumental de “{track.title}”? Envie só a sua voz (sem a música de fundo) e o
-              programa cria uma banda nova que acompanha o seu jeito de cantar.
+              {tx("singDesc")} “{track.title}”? {tx("singDesc2")}
             </p>
           </div>
           <button onClick={onClose} className="text-zinc-500 hover:text-white"><X size={20} /></button>
@@ -286,7 +286,8 @@ function VoiceModal({ track, onClose, onGo }) {
 }
 
 // Legenda (SRT e LRC) de uma música: usa a voz separada e a letra salva, ou uma gravação sua
-function LegendaModal({ track, tracks, onClose }) {
+function LegendaModal({ track, tracks, onClose, language = "pt" }) {
+  const tx = (key) => uiText(language, key);
   const voz = track.kind === "voz" ? track : tracks.find((x) => x.kind === "voz" && x.parent === track.id);
   const fonte = voz || track;
   const [letra, setLetra] = useState(track.lyrics || "");
@@ -349,14 +350,14 @@ function LegendaModal({ track, tracks, onClose }) {
       <div className="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl bg-[#14141a] border border-white/10 p-6 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold">Legenda da música</h2>
-            <p className="text-xs text-zinc-400 mt-1">Gera o arquivo .srt (vídeo) e o .lrc (letra sincronizada) de “{track.title}”.</p>
+            <h2 className="text-lg font-bold">{tx("lyricsCaption")}</h2>
+            <p className="text-xs text-zinc-400 mt-1">{tx("captionDesc")} “{track.title}”.</p>
           </div>
           <button onClick={onClose} className="text-zinc-500 hover:text-white"><X size={20} /></button>
         </div>
 
         <div className="rounded-xl border border-white/10 p-3 text-xs text-zinc-300">
-          <div className="font-semibold text-white mb-1">Áudio usado</div>
+          <div className="font-semibold text-white mb-1">{tx("audioUsed")}</div>
           {outro ? `Seu arquivo: ${outro.name}` : `${fonte.title}${voz ? " (voz separada, melhor resultado)" : " (música inteira)"}`}
           {!outro && !voz && (
             <div className="mt-1 text-amber-300">Sem a voz separada o resultado costuma ser pior. Feche esta janela e use “Separar voz e instrumental” antes.</div>
@@ -399,7 +400,7 @@ function LegendaModal({ track, tracks, onClose }) {
           disabled={ocupado}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3 font-bold text-white disabled:opacity-50"
         >
-          {ocupado ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} {ocupado ? "Trabalhando..." : "Gerar legenda"}
+          {ocupado ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} {ocupado ? tx("working") : tx("makeCaption")}
         </button>
         {msg && <div className={`rounded-lg border p-3 text-xs break-words ${ocupado ? "border-white/10 text-zinc-300" : "border-red-500/30 bg-red-500/10 text-red-200"}`}>{msg}</div>}
 
@@ -412,9 +413,9 @@ function LegendaModal({ track, tracks, onClose }) {
             {res.avisos.map((a, i) => <div key={i} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-200">{a}</div>)}
             <textarea readOnly rows={8} className={`${inputCls} font-mono text-xs`} value={res.srt} />
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => baixar(res.srt, "srt")} className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-black">Baixar .srt</button>
-              <button onClick={() => baixar(res.lrc, "lrc")} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">Baixar .lrc</button>
-              <button onClick={() => navigator.clipboard.writeText(res.srt).catch(() => {})} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">Copiar</button>
+              <button onClick={() => baixar(res.srt, "srt")} className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-black">{tx("downloadSrt")}</button>
+              <button onClick={() => baixar(res.lrc, "lrc")} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">{tx("downloadLrc")}</button>
+              <button onClick={() => navigator.clipboard.writeText(res.srt).catch(() => {})} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">{tx("copy")}</button>
             </div>
           </div>
         )}
@@ -1437,7 +1438,7 @@ export default function App() {
                     <button
                       onClick={() => setPlayer({ id: t.id, title: t.title, url: t.file })}
                       className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${KIND_COLOR[t.kind] || KIND_COLOR.song}`}
-                      title="Ouvir"
+                      title={tx("listen")}
                     >
                       {playing ? <Pause className="text-white" /> : <Play className="text-white" />}
                     </button>
@@ -1458,20 +1459,20 @@ export default function App() {
                       </a>
                       {(t.kind === "song" || t.kind === "banda") && (
                         <button disabled={busy} onClick={() => separateTrack(t)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10 disabled:opacity-40">
-                          <Scissors size={14} /> Separar voz e instrumental
+                          <Scissors size={14} /> {tx("separate")}
                         </button>
                       )}
                       {(t.kind === "song" || t.kind === "banda" || t.kind === "voz") && t.lyrics && (
                         <button onClick={() => setLegendaFor(t)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">
-                          <FileText size={14} /> Legenda
+                          <FileText size={14} /> {tx("lyricsCaption")}
                         </button>
                       )}
                       {(t.kind === "song" || t.kind === "instrumental") && (
                         <button disabled={busy || !online} onClick={() => setVoiceFor(t)} className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-black hover:bg-zinc-200 disabled:opacity-40">
-                          <Mic size={14} /> Cantar por cima
+                          <Mic size={14} /> {tx("singOver")}
                         </button>
                       )}
-                      <button onClick={() => removeTrack(t)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title="Excluir">
+                      <button onClick={() => removeTrack(t)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title={tx("delete")}>
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -1491,12 +1492,12 @@ export default function App() {
             <audio key={player.url} src={player.url} controls autoPlay className="h-10 w-full" />
           </div>
         ) : (
-          <div className="text-center text-xs text-zinc-500">Clique em ▶ numa música para ouvir</div>
+          <div className="text-center text-xs text-zinc-500">{tx("playHint")}</div>
         )}
       </footer>
 
-      {legendaFor && <LegendaModal track={legendaFor} tracks={tracks} onClose={() => setLegendaFor(null)} />}
-      {voiceFor && <VoiceModal track={voiceFor} onClose={() => setVoiceFor(null)} onGo={(o) => singOver(voiceFor, o)} />}
+      {legendaFor && <LegendaModal track={legendaFor} tracks={tracks} onClose={() => setLegendaFor(null)} language={uiLanguage} />}
+      {voiceFor && <VoiceModal track={voiceFor} onClose={() => setVoiceFor(null)} onGo={(o) => singOver(voiceFor, o)} language={uiLanguage} />}
     </div>
   );
 }
