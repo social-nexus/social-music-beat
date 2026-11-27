@@ -720,6 +720,27 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             for info in server.jobs.values()
         ))
 
+    def test_delete_rejects_internal_or_unrecognized_file_names(self):
+        protected = {
+            "biblioteca.json": self.library_file,
+            server._JOBS_FILE_NAME: self.data / server._JOBS_FILE_NAME,
+            ".manual.backup": self.data / ".manual.backup",
+            "../outside.wav": self.data.parent / "outside.wav",
+            "subfolder/track.wav": self.data / "track.wav",
+        }
+        for name, target in protected.items():
+            with self.subTest(name=name):
+                server.write_lib([{"id": "unsafe", "file": name}])
+                if name not in ("biblioteca.json",):
+                    target.write_bytes(b"protected content")
+                before = target.read_bytes() if target.exists() else None
+                with self.assertRaises(server.HTTPException) as raised:
+                    server.delete_track("unsafe")
+                self.assertEqual(raised.exception.status_code, 400)
+                self.assertEqual(server.read_lib(), [{"id": "unsafe", "file": name}])
+                if before is not None:
+                    self.assertEqual(target.read_bytes(), before)
+
     def test_delete_unknown_id_is_noop(self):
         result = server.delete_track("missing")
         self.assertEqual(result, {"ok": True})
