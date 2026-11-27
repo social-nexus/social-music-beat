@@ -235,12 +235,12 @@ function VoiceModal({ track, onClose, onGo, language = "pt" }) {
           onClick={() => inputRef.current.click()}
           className="w-full rounded-xl border border-dashed border-white/20 py-4 text-sm text-zinc-300 hover:border-pink-500/60"
         >
-          {file ? `✔ ${file.name}` : "1. Escolher o arquivo com a minha voz (WAV ou MP3, mínimo 10 segundos)"}
+          {file ? `✔ ${file.name}` : tx("chooseVoice")}
         </button>
         <input ref={inputRef} type="file" accept="audio/*" className="hidden" onChange={(e) => setFile(e.target.files[0] || null)} />
 
         <div>
-          <p className="text-xs font-semibold text-zinc-300 mb-2">2. Quais instrumentos a banda deve ter?</p>
+          <p className="text-xs font-semibold text-zinc-300 mb-2">{tx("instrumentChoices")}</p>
           <div className="flex flex-wrap gap-2">
             {INSTRUMENTS.map((i) => (
               <button
@@ -255,10 +255,10 @@ function VoiceModal({ track, onClose, onGo, language = "pt" }) {
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-zinc-300 mb-2">3. Estilo (já vem o da música original)</p>
+          <p className="text-xs font-semibold text-zinc-300 mb-2">{tx("styleOriginal")}</p>
           <textarea rows={2} className={inputCls} value={style} onChange={(e) => setStyle(e.target.value)} />
           <div className="grid grid-cols-2 gap-3 mt-3">
-            <input className={inputCls} type="number" placeholder="BPM (opcional)" value={bpm} onChange={(e) => setBpm(e.target.value)} />
+            <input className={inputCls} type="number" placeholder={language === "en" ? "BPM (optional)" : language === "es" ? "BPM (opcional)" : "BPM (opcional)"} value={bpm} onChange={(e) => setBpm(e.target.value)} />
             <select className={inputCls} value={key} onChange={(e) => setKey(e.target.value)}>
               {KEYS.map((k) => <option key={k} value={k}>{k || tx("autoKey")}</option>)}
             </select>
@@ -267,7 +267,7 @@ function VoiceModal({ track, onClose, onGo, language = "pt" }) {
 
         <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
           <input type="checkbox" checked={autoSep} onChange={(e) => setAutoSep(e.target.checked)} />
-          Depois, separar também só a banda (sem a voz). Demora alguns minutos a mais.
+          {tx("autoBand")}
         </label>
 
         <button
@@ -275,10 +275,10 @@ function VoiceModal({ track, onClose, onGo, language = "pt" }) {
           onClick={() => onGo({ file, instruments: picked, style, bpm, key, autoSep })}
           className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3 font-bold text-white disabled:opacity-40"
         >
-          Criar a banda para a minha voz
+          {tx("createBand")}
         </button>
         <p className="text-[11px] text-zinc-500">
-          Na primeira vez o motor carrega um modelo diferente, o que pode levar alguns minutos. Não feche as janelas pretas.
+          {tx("firstModel")}
         </p>
       </div>
     </div>
@@ -306,8 +306,8 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
   const gerar = async () => {
     setRes(null);
     setMsg("");
-    if (!letra.trim()) { setMsg("A letra está vazia."); return; }
-    if (modo === "whisper" && !whisper) { setMsg("O Whisper não está instalado. Rode o instalar.bat de novo (ele instala o Whisper) e abra o programa outra vez."); return; }
+    if (!letra.trim()) { setMsg(language === "en" ? "The lyrics are empty." : language === "es" ? "La letra está vacía." : "A letra está vazia."); return; }
+    if (modo === "whisper" && !whisper) { setMsg(language === "en" ? "Whisper is not installed. Run instalar.bat again and reopen the app." : language === "es" ? "Whisper no está instalado. Ejecuta instalar.bat otra vez y vuelve a abrir el programa." : "O Whisper não está instalado. Rode o instalar.bat de novo e abra o programa outra vez."); return; }
     setOcupado(true);
     try {
       let jid;
@@ -326,7 +326,7 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
       for (;;) {
         await sleep(1200);
         const s = await http(`/api/legenda/job/${jid}`);
-        setMsg(s.msg || "Trabalhando...");
+        setMsg(s.msg || tx("working"));
         if (s.status === "erro") throw new Error(s.msg);
         if (s.status === "pronto") { setRes(s); setMsg(""); break; }
       }
@@ -358,41 +358,41 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
 
         <div className="rounded-xl border border-white/10 p-3 text-xs text-zinc-300">
           <div className="font-semibold text-white mb-1">{tx("audioUsed")}</div>
-          {outro ? `Seu arquivo: ${outro.name}` : `${fonte.title}${voz ? " (voz separada, melhor resultado)" : " (música inteira)"}`}
+          {outro ? `${language === "en" ? "Your file" : language === "es" ? "Tu archivo" : "Seu arquivo"}: ${outro.name}` : `${fonte.title}${voz ? (language === "en" ? " (separated vocals, better result)" : language === "es" ? " (voz separada, mejor resultado)" : " (voz separada, melhor resultado)") : (language === "en" ? " (full song)" : language === "es" ? " (canción completa)" : " (música inteira)")}`}
           {!outro && !voz && (
-            <div className="mt-1 text-amber-300">Sem a voz separada o resultado costuma ser pior. Feche esta janela e use “Separar voz e instrumental” antes.</div>
+            <div className="mt-1 text-amber-300">{language === "en" ? "Results are usually worse without separated vocals. Close this window and use “Separate vocals and instrumental” first." : language === "es" ? "El resultado suele ser peor sin la voz separada. Cierra esta ventana y usa primero “Separar voz e instrumental”." : "Sem a voz separada o resultado costuma ser pior. Feche esta janela e use “Separar voz e instrumental” antes."}</div>
           )}
           <div className="mt-2">
-            <button onClick={() => inputRef.current.click()} className="underline text-pink-300">Usar a minha gravação cantando</button>
-            {outro && <button onClick={() => setOutro(null)} className="ml-3 underline text-zinc-400">voltar ao áudio da música</button>}
+            <button onClick={() => inputRef.current.click()} className="underline text-pink-300">{tx("useRecording")}</button>
+            {outro && <button onClick={() => setOutro(null)} className="ml-3 underline text-zinc-400">{tx("backToTrack")}</button>}
             <input ref={inputRef} type="file" accept="audio/*" className="hidden" onChange={(e) => setOutro(e.target.files[0] || null)} />
           </div>
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-zinc-300 mb-2">Letra (uma linha cantada por linha; as marcações [Verse] são ignoradas)</p>
+          <p className="text-xs font-semibold text-zinc-300 mb-2">{tx("lyricsLines")}</p>
           <textarea rows={7} className={inputCls} value={letra} onChange={(e) => setLetra(e.target.value)} />
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-xs">
           <select className={inputCls} value={modo} onChange={(e) => setModo(e.target.value)}>
-            <option value="rapido">Rápido: usa as pausas do canto</option>
-            <option value="whisper">Preciso: Whisper ouve a voz</option>
+            <option value="rapido">{tx("fastMode")}</option>
+            <option value="whisper">{tx("whisperMode")}</option>
           </select>
           <label className="flex items-center gap-2 text-zinc-300">
-            Caracteres por legenda
+            {tx("charsCaption")}
             <input type="number" min={15} max={120} value={maxc} onChange={(e) => setMaxc(e.target.value)} className="w-16 rounded-lg bg-zinc-900 border border-white/10 px-2 py-1.5" />
           </label>
           {modo === "whisper" && (
             <select className={inputCls} value={modelo} onChange={(e) => setModelo(e.target.value)}>
-              <option value="base">Whisper base (cerca de 150 MB)</option>
-              <option value="small">Whisper small (cerca de 480 MB)</option>
+              <option value="base">{tx("whisperBase")}</option>
+              <option value="small">{tx("whisperSmall")}</option>
             </select>
           )}
         </div>
         <p className="text-[11px] text-zinc-500">
-          Rápido funciona melhor quando o cantor respira ou pausa entre as linhas. Cantar é mais difícil de alinhar do que falar, então confira o resultado.
-          {modo === "whisper" && (whisper ? " Whisper instalado." : " Whisper ainda não instalado: rode o instalar.bat de novo.")}
+          {tx("captionTip")}
+          {modo === "whisper" && (whisper ? (language === "en" ? " Whisper installed." : language === "es" ? " Whisper instalado." : " Whisper instalado.") : (language === "en" ? " Whisper is not installed yet: run instalar.bat again." : language === "es" ? " Whisper aún no está instalado: ejecuta instalar.bat otra vez." : " Whisper ainda não instalado: rode o instalar.bat de novo."))}
         </p>
 
         <button
@@ -407,8 +407,8 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
         {res && (
           <div className="space-y-3">
             <div className="text-xs text-zinc-400">
-              {res.info.legendas} linhas • modo {res.info.modo === "whisper" ? "preciso" : "rápido"} •{" "}
-              {res.info.modo === "whisper" ? `${Math.round(res.info.confianca * 100)}% das palavras casaram` : `qualidade do encaixe ${Math.round(res.info.confianca * 100)}%`}
+              {res.info.legendas} {language === "en" ? "lines" : language === "es" ? "líneas" : "linhas"} • {language === "en" ? "mode" : language === "es" ? "modo" : "modo"} {res.info.modo === "whisper" ? tx("whisperMode") : tx("fastMode")} •{" "}
+              {res.info.modo === "whisper" ? `${Math.round(res.info.confianca * 100)}% ${language === "en" ? "of words matched" : language === "es" ? "de las palabras coincidieron" : "das palavras casaram"}` : `${language === "en" ? "alignment quality" : language === "es" ? "calidad de sincronización" : "qualidade do encaixe"} ${Math.round(res.info.confianca * 100)}%`}
             </div>
             {res.avisos.map((a, i) => <div key={i} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-200">{a}</div>)}
             <textarea readOnly rows={8} className={`${inputCls} font-mono text-xs`} value={res.srt} />
