@@ -1254,7 +1254,8 @@ export default function App() {
       try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
     }
     if (!pending?.jobId || !pending?.track?.file || !pending?.titles?.voz || !pending?.titles?.instrumental) return;
-    runJob(pending.titles.voz, (phase) => separateInto(pending.track, pending.titles, phase, pending), pending.operationStartedAt ?? pending.createdAt);
+    // Older recovery records lack an operation timestamp; restart the timer rather than using the track's creation date.
+    runJob(pending.titles.voz, (phase) => separateInto(pending.track, pending.titles, phase, pending), pending.operationStartedAt ?? Date.now());
   }, []);
 
   // -------- 1) criar a música
