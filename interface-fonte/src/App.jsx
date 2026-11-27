@@ -1087,7 +1087,7 @@ export default function App() {
       phase(s.msg || "Separando...");
       if (s.status === "error") throw new Error(s.msg);
       if (s.status === "done") {
-        const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key };
+        const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key, language: t.language || form.lang };
         await addTrack({ ...base, id: uid(), kind: "voz", title: titles.voz, file: s.result.voz });
         await addTrack({ ...base, id: uid(), kind: "instrumental", title: titles.instrumental, file: s.result.instrumental });
         return;
@@ -1131,6 +1131,7 @@ export default function App() {
           kind: form.instrumentalOnly ? "instrumental" : "song",
           title: total > 1 ? `${title} (${n})` : title,
           lyrics: form.instrumentalOnly ? "" : form.lyrics.trim(),
+          language: form.lang,
           style: caption,
           bpm: m.bpm ?? null,
           key: m.keyscale || "",
@@ -1164,7 +1165,7 @@ export default function App() {
         thinking: false,
         use_cot_caption: false,
         use_cot_language: false,
-        vocal_language: form.lang,
+        vocal_language: parent.language || form.lang,
         audio_format: "wav",
         audio_duration: Math.round(seconds),
         batch_size: 1,
