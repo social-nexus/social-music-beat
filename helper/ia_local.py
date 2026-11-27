@@ -6,6 +6,7 @@ O servidor do llama.cpp escuta somente em 127.0.0.1.
 from __future__ import annotations
 
 import atexit
+from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -29,6 +30,28 @@ from ai_providers import generate_with_provider
 
 router = APIRouter(prefix="/api/ai", tags=["ia-local"])
 LOCK = threading.RLock()
+_RUNTIME_OPERATION_LOCK = threading.RLock()
+_MODEL_LOCKS_GUARD = threading.Lock()
+_MODEL_LOCKS: dict[str, tuple[threading.RLock, int]] = {}
+
+
+@contextmanager
+def _model_operation_lock(model_id: str):
+    """Serialize operations on one model without blocking unrelated models."""
+    with _MODEL_LOCKS_GUARD:
+        lock, users = _MODEL_LOCKS.get(model_id, (threading.RLock(), 0))
+        _MODEL_LOCKS[model_id] = (lock, users + 1)
+    lock.acquire()
+    try:
+        yield
+    finally:
+        lock.release()
+        with _MODEL_LOCKS_GUARD:
+            current_lock, users = _MODEL_LOCKS[model_id]
+            if current_lock is lock and users == 1:
+                _MODEL_LOCKS.pop(model_id, None)
+            elif current_lock is lock:
+                _MODEL_LOCKS[model_id] = (lock, users - 1)
 JOBS: dict[str, dict] = {}
 PROCESS: subprocess.Popen | None = None
 ACTIVE_MODEL: str | None = None
@@ -377,6 +400,14 @@ def _hf_file_digest(repo: str, filename: str) -> tuple[str, int]:
     return digest, size
 
 def _download_model_worker(jid: str, model_id: str):
+    with _model_operation_lock(model_id):
+        if model_id in MODEL_CATALOG and _model_file(model_id).is_file():
+            _update_job(jid, status="done", progress=100, message="Modelo já estava instalado.")
+            return
+        _download_model_worker_locked(jid, model_id)
+
+
+def _download_model_worker_locked(jid: str, model_id: str):
     staged = None
     metadata_staged = None
     try:
@@ -424,6 +455,11 @@ def _installed_models():
     return found
 
 def _stop_runtime():
+    with _RUNTIME_OPERATION_LOCK:
+        return _stop_runtime_locked()
+
+
+def _stop_runtime_locked():
     global PROCESS, ACTIVE_MODEL, ACTIVE_VARIANT
     with LOCK:
         proc = PROCESS
@@ -439,6 +475,12 @@ def _stop_runtime():
     return True
 
 def _start_runtime(model_id: str, variant: str, gpu_layers: int = 0):
+    with _model_operation_lock(model_id):
+        with _RUNTIME_OPERATION_LOCK:
+            return _start_runtime_locked(model_id, variant, gpu_layers)
+
+
+def _start_runtime_locked(model_id: str, variant: str, gpu_layers: int = 0):
     global PROCESS, ACTIVE_MODEL, ACTIVE_VARIANT
     if variant not in RUNTIME_CATALOG or _runtime_binary(variant) is None:
         raise ValueError("Instale primeiro o runtime escolhido.")
@@ -611,28 +653,31 @@ def delete_model(model_id: str, request: Request):
         raise HTTPException(400, "Modelo inválido.")
 
     # Não pare o runtime nem altere arquivos para IDs inválidos ou ausentes.
-    if not folder.is_dir() or folder.is_symlink():
-        raise HTTPException(404, "Modelo instalado não encontrado.")
-    if model_id == ACTIVE_MODEL:
-        try:
-            _stop_runtime()
-        except Exception as exc:
-            raise HTTPException(503, "Não foi possível parar o runtime; o modelo foi mantido.") from exc
+    with _model_operation_lock(model_id):
+        with _RUNTIME_OPERATION_LOCK:
+            # Revalidar dentro do bloqueio evita apagar um modelo que acabou de ser ativado.
+            if not folder.is_dir() or folder.is_symlink():
+                raise HTTPException(404, "Modelo instalado não encontrado.")
+            if model_id == ACTIVE_MODEL:
+                try:
+                    _stop_runtime()
+                except Exception as exc:
+                    raise HTTPException(503, "Não foi possível parar o runtime; o modelo foi mantido.") from exc
 
-    # A renomeação no mesmo volume é atômica: o modelo só sai da lista
-    # depois que a pasta inteira é isolada, nunca durante uma exclusão parcial.
-    quarantine = MODELS_DIR / f".{model_id}.deleting-{uuid.uuid4().hex}"
-    try:
-        os.replace(folder, quarantine)
-    except OSError as exc:
-        raise HTTPException(500, "Não foi possível isolar o modelo; os arquivos foram mantidos.") from exc
+            # A renomeação no mesmo volume é atômica: o modelo só sai da lista
+            # depois que a pasta inteira é isolada, nunca durante uma exclusão parcial.
+            quarantine = MODELS_DIR / f".{model_id}.deleting-{uuid.uuid4().hex}"
+            try:
+                os.replace(folder, quarantine)
+            except OSError as exc:
+                raise HTTPException(500, "Não foi possível isolar o modelo; os arquivos foram mantidos.") from exc
 
-    try:
-        shutil.rmtree(quarantine)
-    except OSError as exc:
-        # A pasta incompleta permanece oculta e não será listada como modelo instalado.
-        raise HTTPException(500, "O modelo foi isolado, mas a limpeza dos arquivos não terminou.") from exc
-    return {"ok": True}
+            try:
+                shutil.rmtree(quarantine)
+            except OSError as exc:
+                # A pasta incompleta permanece oculta e não será listada como modelo instalado.
+                raise HTTPException(500, "O modelo foi isolado, mas a limpeza dos arquivos não terminou.") from exc
+            return {"ok": True}
 
 def _language_directive(language: str) -> str:
     """Reforça o idioma de toda a saída textual sem traduzir tags estruturais."""

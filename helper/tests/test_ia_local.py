@@ -489,3 +489,59 @@ class ModelDeleteSafetyTests(unittest.TestCase):
         self.assertEqual(ctx.exception.status_code, 503)
         self.assertTrue((folder / "model.gguf").is_file())
         self.assertEqual(list(root.glob(".*.deleting-*")), [])
+
+
+class ModelOperationLockTests(unittest.TestCase):
+    def test_same_model_operations_are_serialized_and_registry_is_cleaned(self):
+        import threading
+        entered = threading.Event()
+        release = threading.Event()
+        second_entered = threading.Event()
+
+        def first():
+            with ia_local._model_operation_lock("imported-aaaaaaaaaa"):
+                entered.set()
+                self.assertTrue(release.wait(3))
+
+        def second():
+            self.assertTrue(entered.wait(3))
+            with ia_local._model_operation_lock("imported-aaaaaaaaaa"):
+                second_entered.set()
+
+        one = threading.Thread(target=first)
+        two = threading.Thread(target=second)
+        one.start()
+        two.start()
+        self.assertTrue(entered.wait(3))
+        self.assertFalse(second_entered.wait(0.05))
+        release.set()
+        one.join(3)
+        two.join(3)
+        self.assertFalse(one.is_alive())
+        self.assertFalse(two.is_alive())
+        self.assertTrue(second_entered.is_set())
+        self.assertNotIn("imported-aaaaaaaaaa", ia_local._MODEL_LOCKS)
+
+    def test_different_models_can_operate_independently(self):
+        import threading
+        both_entered = threading.Barrier(2)
+        errors = []
+
+        def worker(model_id):
+            try:
+                with ia_local._model_operation_lock(model_id):
+                    both_entered.wait(timeout=2)
+            except Exception as exc:
+                errors.append(exc)
+
+        one = threading.Thread(target=worker, args=("qwen3-4b-q4km",))
+        two = threading.Thread(target=worker, args=("gemma3-4b-it-q4km",))
+        one.start()
+        two.start()
+        one.join(3)
+        two.join(3)
+        self.assertFalse(one.is_alive())
+        self.assertFalse(two.is_alive())
+        self.assertEqual(errors, [])
+        self.assertNotIn("qwen3-4b-q4km", ia_local._MODEL_LOCKS)
+        self.assertNotIn("gemma3-4b-it-q4km", ia_local._MODEL_LOCKS)
