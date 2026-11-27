@@ -213,8 +213,11 @@ def recover_staged_deletions():
                     os.replace(staged, original)
                     recovered.append(("restored", original.name))
                 else:
-                    staged.unlink()
-                    recovered.append(("discarded_duplicate", staged.name))
+                    # The original path may have been recreated by another
+                    # process after the interrupted deletion. Matching names
+                    # alone do not prove the staged audio is a duplicate.
+                    # Preserve the staged copy rather than risk data loss.
+                    recovered.append(("preserved_conflict", staged.name))
             else:
                 staged.unlink()
                 recovered.append(("discarded", staged.name))
