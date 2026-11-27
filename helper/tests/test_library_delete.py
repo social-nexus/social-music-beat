@@ -843,6 +843,28 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(generated.exists())
         self.assertEqual(generated.read_bytes(), b"audio that must be preserved")
 
+    def test_cleanup_holds_library_lock_through_file_unlink(self):
+        server.write_lib([])
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"temporary audio")
+        original_unlink = Path.unlink
+        lock_was_available = []
+
+        def inspect_cleanup_lock(path, *args, **kwargs):
+            if path == generated:
+                acquired = server._lib_lock.acquire(blocking=False)
+                lock_was_available.append(acquired)
+                if acquired:
+                    server._lib_lock.release()
+            return original_unlink(path, *args, **kwargs)
+
+        with mock.patch.object(Path, "unlink", new=inspect_cleanup_lock):
+            result = server.cleanup_unregistered_audio({"file": generated.name})
+
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(lock_was_available, [False], "library lock must cover cleanup unlink")
+        self.assertFalse(generated.exists())
+
     def test_cleanup_does_not_remove_library_audio(self):
         generated = self.data / "1234567890_abcdef.wav"
         generated.write_bytes(b"registered audio")
