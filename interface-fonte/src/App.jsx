@@ -1192,7 +1192,19 @@ export default function App() {
     const { jobId: jid } = pending;
     for (;;) {
       await sleep(2000);
-      const s = await http(`/api/jobs/${jid}`);
+      let s;
+      try {
+        s = await http(`/api/jobs/${jid}`);
+      } catch (pollError) {
+        // A missing job means the server's bounded history expired or was reset.
+        // Network/temporary errors keep the recovery record for the next retry.
+        const message = String(pollError?.message || pollError);
+        if (/tarefa não encontrada|job not found|404/i.test(message)) {
+          try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
+          throw new Error(tx("errSepRecoveryExpired"));
+        }
+        throw pollError;
+      }
       const backendPhase = s.msg || "";
       const localizedPhase = backendPhase.includes("Carregando o separador")
         ? tx("phaseSepLoading")
