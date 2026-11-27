@@ -12,6 +12,7 @@ const checks = [
   ["completed and interrupted operations are displayed", /lastJob\.failed \? tx\("operationInterrupted"\) : tx\("operationDone"\)/],
   ["caption generation timer ticks while running", /setInterval\(\(\) => setElapsedTick\(\(n\) => n \+ 1\), 1000\)/],
   ["caption operation records final elapsed time", /setLastElapsed\(Math\.floor\(\(Date\.now\(\) - operationStartedAt\) \/ 1000\)\)/],
+  ["caption failures use localized generic error instead of backend-only text", /catch \(e\) \{\s*\/\/ Avoid leaking backend-only Portuguese details into the selected UI language\.\s*setMsg\(tx\("errOperationFailed"\)\)/],
   ["separation jobs use elapsed time from their start and clamp", /const elapsed = job \? Math\.max\(0, Math\.floor\(\(Date\.now\(\) - job\.startedAt\) \/ 1000\)\) : 0/],
   ["separation operation title is localized in all three languages", /uiLanguage === "en" \? "Separating" : uiLanguage === "es" \? "Separando" : "Separando"/],
   ["separation recovery restores original start or safely restarts old records", /runJob\(pending\.titles\.voz,[\s\S]*pending\.operationStartedAt \?\? Date\.now\(\)\)/],
