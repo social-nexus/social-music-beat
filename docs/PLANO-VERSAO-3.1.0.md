@@ -29,6 +29,7 @@
 - Iniciada a camada central de textos traduzidos e traduzidos os elementos principais de navegação, aviso de motor, cabeçalhos e estados vazios.
 - Timer do compositor de letras: o relógio agora cobre geração de letras, instalação/download/ativação do modelo, análise da referência melódica e transcrição Whisper, além de permanecer visível no painel de status enquanto a operação estiver ativa.
 - Prompt multilíngue Qwen/Gemma/API reforçado com instruções explícitas para escrever título, valores descritivos e letra no idioma escolhido (português brasileiro, inglês ou espanhol), mantendo tags estruturais em inglês.
+- Cabeçalhos do resultado da composição (título, estilo, configurações e letra) agora acompanham o idioma escolhido.
 - Testes de regressão adicionados para as três diretivas de idioma e rejeição de idiomas não suportados.
 - Timer de operações de áudio: o indicador da tarefa passou a ficar visível no layout principal, inclusive em telas móveis e ao navegar entre abas.
 - Ao terminar uma tarefa de áudio, o tempo total permanece visível até a próxima operação.
