@@ -715,6 +715,16 @@ function CompositorPanel({ onUseLyrics }) {
       const recorder = new MediaRecorder(stream);
       recorderRef.current = recorder;
       recorder.ondataavailable = (event) => { if (event.data?.size) recordedChunksRef.current.push(event.data); };
+      recorder.onerror = () => {
+        if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+        recorder.onstop = null;
+        if (recorder.state !== "inactive") recorder.stop();
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setRecording(false); setRecordingStartedAt(0);
+        setError(t("recordingFailed"));
+      };
       recorder.onstop = () => {
         const type = recorder.mimeType || "audio/webm";
         const file = new File(recordedChunksRef.current, "melodia-gravada.webm", { type });
