@@ -321,6 +321,7 @@ function LegendaModal({ track, tracks, onClose }) {
       } else {
         jid = (await jsonPost("/api/legenda/da-biblioteca", { file: fonte.file, roteiro: letra, modo, max_chars: Number(maxc), modelo })).job;
       }
+      if (!jid) throw new Error(t("captionStartError"));
       for (;;) {
         await sleep(1200);
         const s = await http(`/api/legenda/job/${jid}`);
@@ -330,8 +331,9 @@ function LegendaModal({ track, tracks, onClose }) {
       }
     } catch (e) {
       setMsg(String(e.message || e).slice(0, 300));
+    } finally {
+      setOcupado(false);
     }
-    setOcupado(false);
   };
 
   const baixar = (conteudo, ext) => {
