@@ -20,7 +20,7 @@ function extractCatalogKeys(locale) {
   const end = source.indexOf(endMarker, start);
   if (start < 0 || end < 0) return null;
   const block = source.slice(start, end);
-  return [...block.matchAll(/([A-Za-z_$][\\w$]*):\\s*(?:"[^"]*"|'[^']*')/g)].map((match) => match[1]);
+  return [...block.matchAll(/([A-Za-z_$][\w$]*):\s*(?:"[^"]*"|'[^']*')/g)].map((match) => match[1]);
 }
 
 const sourceKeys = Object.fromEntries(requiredLocales.map((locale) => [locale, extractCatalogKeys(locale)]));
