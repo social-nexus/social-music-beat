@@ -900,7 +900,10 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       setResult(r.lyrics);
       const labels = { full: tx("msgFullCreated"), continue: tx("msgContinueCreated"), chorus: tx("msgChorusCreated") };
       setMessage((labels[compositionMode] || tx("msgCompositionDone")) + " " + tx("msgWithModel") + " " + r.model + ".");
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      // Provider failures may contain backend-language details; show the selected UI locale.
+      setError(tx("errOperationFailed"));
+    }
     finally { setBusy(false); setOperationStartedAt(null); }
   };
 
