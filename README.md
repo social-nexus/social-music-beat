@@ -15,6 +15,15 @@ Ferramenta **local** para Windows, Linux e macOS que:
 
 Tudo roda no seu computador. A internet só é usada na instalação, para baixar os modelos.
 
+### Novidades previstas para a versão 3.1.0 (em desenvolvimento)
+
+- Interface disponível em **Português do Brasil, Inglês e Espanhol**, com preferência salva no computador.
+- Timers de tempo decorrido durante a geração de músicas e outras tarefas demoradas, incluindo separação de áudio, análise/transcrição de melodia, composição assistida e geração de legendas.
+- Indicadores de tempo total e por etapa quando a operação possui etapas separadas.
+
+
+
+
 > Projeto desenvolvido com apoio de inteligência artificial e testado pelo mantenedor em instalações reais no Windows. Linux e macOS contam com verificações automatizadas de código, mas ainda precisam de validação prática em computadores dessas plataformas.
 > Oferecido "como está", sem garantia. Veja [AVISOS.md](AVISOS.md).
 > O passo a passo completo, com mais detalhes, está no [MANUAL DE USO.pdf](MANUAL%20DE%20USO.pdf).
