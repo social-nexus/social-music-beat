@@ -760,7 +760,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(server.read_lib(), [])
 
     def test_read_library_invalid_utf8_is_fail_closed(self):
-        original = b"\\xff\\xfe\\xfa"
+        original = b"\xff\xfe\xfa"
         self.library_file.write_bytes(original)
         with self.assertRaises(RuntimeError):
             server.read_lib()
@@ -1174,12 +1174,12 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
 
     def test_sniff_ext_recognizes_supported_audio_signatures(self):
         samples = (
-            (b"RIFF\\x00\\x00\\x00\\x00WAVEaudio", "wav"),
-            (b"fLaC\\x00\\x00\\x00\\x22", "flac"),
-            (b"ID3\\x04\\x00\\x00\\x00\\x00\\x00\\x00", "mp3"),
-            (b"\\xff\\xfb\\x90\\x64audio-frame", "mp3"),
-            (b"\\xff\\xf3\\x90\\x64audio-frame", "mp3"),
-            (b"\\xff\\xf2\\x90\\x64audio-frame", "mp3"),
+            (b"RIFF\x00\x00\x00\x00WAVEaudio", "wav"),
+            (b"fLaC\x00\x00\x00\x22", "flac"),
+            (b"ID3\x04\x00\x00\x00\x00\x00\x00", "mp3"),
+            (b"\xff\xfb\x90\x64audio-frame", "mp3"),
+            (b"\xff\xf3\x90\x64audio-frame", "mp3"),
+            (b"\xff\xf2\x90\x64audio-frame", "mp3"),
         )
         for payload, expected in samples:
             with self.subTest(expected=expected, payload=payload[:4]):
@@ -1189,9 +1189,9 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         samples = (
             b"",
             b"RIFF",
-            b"RIFF\\x00\\x00\\x00\\x00NOPE",
+            b"RIFF\x00\x00\x00\x00NOPE",
             b"fLa",
-            b"\\xff",
+            b"\xff",
             b"<html>not audio</html>",
         )
         for payload in samples:
