@@ -7,10 +7,11 @@
 - Preferência persistente de idioma da interface iniciada: Português do Brasil, English e Español.
 - Tradução ampliada para as três línguas na criação musical, ajuda, compositor IA, configuração de provedores/modelos, modais Cantar por cima e Legendas, validações locais e análise melódica.
 - Cronômetro do compositor durante geração, instalação/download/ativação de modelos, análise de referência melódica e transcrição Whisper.
+- Cronômetro de geração de legendas SRT/LRC, com tempo decorrido e duração final após conclusão ou falha.
 - Reforço dos prompts multilíngues para Qwen/Gemma e APIs: título, descrições e letra seguem o idioma escolhido, mantendo tags estruturais em inglês.
 - Cabeçalhos do resultado (título, estilo, configurações e letra) localizados para português, inglês e espanhol.
 - Testes de regressão para português do Brasil, inglês e espanhol.
-- Faixas passam a guardar o idioma vocal selecionado; a criação posterior de banda reutiliza o idioma da faixa original, sem depender da seleção atual do formulário.
+- Faixas passam a guardar o idioma vocal selecionado; a criação posterior de banda e as faixas derivadas preservam o idioma original, sem depender da seleção atual do formulário.
 - Cronômetro das operações de áudio visível também em dispositivos móveis e ao navegar entre abas; o tempo final permanece na tela após a conclusão.
 - Versão do pacote da interface atualizada para `3.1.0`.
 
