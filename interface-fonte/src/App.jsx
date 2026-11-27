@@ -619,7 +619,7 @@ function CompositorPanel({ onUseLyrics }) {
   const waitJob = async (id, doneMessage) => {
     for (;;) {
       const j = await http("/api/ai/jobs/" + id);
-      setMessage(j.message || "Processando…");
+      setMessage(j.message || t("processing"));
       if (j.status === "done") { setMessage(doneMessage); return; }
       if (j.status === "error") throw new Error(j.message || "A operação falhou.");
       await sleep(1200);
@@ -663,7 +663,7 @@ function CompositorPanel({ onUseLyrics }) {
     setBusySince(Date.now()); setBusy(true); setError(""); setMessage(t("runtimePreparing"));
     try {
       const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
-      if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
+      if (r.job_id) await waitJob(r.job_id, t("runtimeInstallDone"));
       await refresh();
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
@@ -673,7 +673,7 @@ function CompositorPanel({ onUseLyrics }) {
     setBusySince(Date.now()); setBusy(true); setError(""); setMessage(t("modelDownloadPreparing"));
     try {
       const r = await jsonPost("/api/ai/models/download", { model_id: model, accept_license: gemmaAccepted });
-      if (r.job_id) await waitJob(r.job_id, "Modelo instalado e verificado.");
+      if (r.job_id) await waitJob(r.job_id, t("modelInstallDone"));
       await refresh();
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
