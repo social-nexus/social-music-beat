@@ -186,6 +186,9 @@ def read_lib():
 
 def recover_staged_deletions():
     """Restore staged audio still referenced by the library; discard committed deletions."""
+    # A missing metadata file is not proof that deletion committed. Preserve audio.
+    if not LIB_FILE.is_file():
+        return []
     try:
         with _lib_lock:
             referenced = {
