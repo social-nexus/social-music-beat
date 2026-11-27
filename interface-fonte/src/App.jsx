@@ -407,7 +407,7 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
         setMsg(s.msg || tx("working"));
         if (s.status === "erro") throw new Error(s.msg);
         if (s.status === "pronto") { setRes(s); setMsg(""); break; }
-        if (s.status !== "processando" && s.status !== "queued" && s.status !== "running") throw new Error(tx("errUnexpectedTaskStatus"));
+        if (s.status !== "rodando") throw new Error(tx("errUnexpectedTaskStatus"));
       }
     } catch (e) {
       setMsg(String(e.message || e).slice(0, 300));
