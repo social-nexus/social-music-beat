@@ -98,6 +98,18 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertIn("active", server.jobs)
         self.assertEqual(sum(1 for item in server.jobs.values() if item.get("finished_at")), server._JOBS_MAX_COMPLETED)
 
+    def test_separation_job_ids_are_full_uuid_and_registered(self):
+        server.jobs.clear()
+        with mock.patch.object(server.threading, "Thread") as thread_factory:
+            first = server.separate({"file": "track.wav"})
+            second = server.separate({"file": "track.wav"})
+        for response in (first, second):
+            self.assertEqual(len(response["job"]), 32)
+            self.assertRegex(response["job"], r"^[0-9a-f]{32}$")
+            self.assertEqual(server.job_status(response["job"])["status"], "running")
+        self.assertNotEqual(first["job"], second["job"])
+        self.assertEqual(thread_factory.call_count, 2)
+
     def test_separation_workers_are_serialized(self):
         server.jobs.clear()
         active = 0
