@@ -122,7 +122,7 @@ for (const locale of requiredLocales) {
 }
 
 
-const localizedDeleteErrors = { pt: "Não foi possível excluir a faixa. Ela foi restaurada na Biblioteca.", en: "Could not delete the track. It has been restored to the Library.", es: "No se pudo eliminar la pista. Se restauró en la Biblioteca." };
+const localizedDeleteErrors = { pt: "Não foi possível confirmar a exclusão. A Biblioteca foi atualizada.", en: "Could not confirm deletion. The Library has been refreshed.", es: "No se pudo confirmar la eliminación. La Biblioteca se actualizó." };
 for (const locale of requiredLocales) {
   if (uiText(locale, "errDeleteTrack") !== localizedDeleteErrors[locale]) {
     failed = true;
