@@ -998,6 +998,7 @@ export default function App() {
   const [tracks, setTracks] = useState([]);
   const [online, setOnline] = useState(false);
   const [job, setJob] = useState(null);
+  const [lastJob, setLastJob] = useState(null);
   const [, setTick] = useState(0);
   const [err, setErr] = useState("");
   const [player, setPlayer] = useState(null);
@@ -1037,9 +1038,16 @@ export default function App() {
 
   const runJob = async (title, fn) => {
     setErr("");
-    setJob({ title, phase: "Começando...", startedAt: Date.now() });
+    const startedAt = Date.now();
+    setLastJob(null);
+    setJob({ title, phase: "Começando...", startedAt });
     const phase = (p) => setJob((j) => (j ? { ...j, phase: p } : j));
-    try { await fn(phase); } catch (e) { setErr(String(e.message || e)); } finally { setJob(null); }
+    let failed = false;
+    try { await fn(phase); } catch (e) { failed = true; setErr(String(e.message || e)); }
+    finally {
+      setLastJob({ title, elapsed: Math.floor((Date.now() - startedAt) / 1000), failed });
+      setJob(null);
+    }
   };
 
   // Salva o que o motor gerou e cria as faixas na biblioteca
@@ -1217,7 +1225,7 @@ export default function App() {
           </select>
         </div>
         {job && (
-          <div className="mx-4 mt-4 flex items-center gap-4 rounded-2xl border border-pink-500/30 bg-pink-500/5 p-4">
+          <div role="status" aria-live="polite" className="mx-4 mt-4 flex items-center gap-4 rounded-2xl border border-pink-500/30 bg-pink-500/5 p-4">
             <Loader2 className="animate-spin text-pink-400" />
             <div className="min-w-0 flex-1">
               <div className="truncate font-bold">{job.title}</div>
@@ -1225,6 +1233,12 @@ export default function App() {
               <div className="text-[10px] uppercase tracking-wider text-zinc-500">{tx("elapsed")}</div>
             </div>
             <div className="font-mono text-lg text-pink-300">{mmss(elapsed)}</div>
+          </div>
+        )}
+        {!job && lastJob && (
+          <div role="status" className={`mx-4 mt-4 flex items-center justify-between gap-3 rounded-xl border p-3 text-sm ${lastJob.failed ? "border-red-500/20 bg-red-500/5 text-red-200" : "border-emerald-500/20 bg-emerald-500/5 text-emerald-200"}`}>
+            <span className="min-w-0 truncate">{lastJob.failed ? "Operação interrompida" : "Operação concluída"} · {lastJob.title}</span>
+            <span className="shrink-0 font-mono">{mmss(lastJob.elapsed)}</span>
           </div>
         )}
         {!online && (
