@@ -1117,8 +1117,8 @@ export default function App() {
   const separateTrack = (track) =>
     runJob(`${t("separatingTitlePrefix")}${track.title}`, (phase) =>
       separateInto(track, {
-        voz: `${track.title} (voz)`,
-        instrumental: track.kind === "banda" ? `${track.title} (só a banda)` : `${track.title} (instrumental)`,
+        voz: `${track.title}${t("voiceSuffix")}`,
+        instrumental: track.kind === "banda" ? `${track.title}${t("bandOnlySuffix")}` : `${track.title}${t("instrumentalSuffix")}`,
       }, phase));
 
   // -------- 3) cantar por cima: criar a banda para a voz do usuário
@@ -1154,13 +1154,13 @@ export default function App() {
       const items = await waitResult(id);
       phase("Guardando...");
       await saveItems(items, () => {
-        return { kind: "banda", title: `${parent.title} - com a minha voz`, lyrics: parent.lyrics, style: params.prompt, bpm: params.bpm ?? parent.bpm, key: params.key_scale || parent.key, parent: parent.id };
+        return { kind: "banda", title: `${parent.title}${t("voiceBandSuffix")}`, lyrics: parent.lyrics, style: params.prompt, bpm: params.bpm ?? parent.bpm, key: params.key_scale || parent.key, parent: parent.id };
       });
       if (o.autoSep) {
         // pega a faixa recém-criada (a mais nova da biblioteca)
         const fresh = await http("/api/library");
-        const t = fresh.find((x) => x.kind === "banda" && x.parent === parent.id);
-        if (t) await separateInto(t, { voz: `${t.title} (voz)`, instrumental: `${parent.title} - só a banda` }, phase);
+        const freshTrack = fresh.find((x) => x.kind === "banda" && x.parent === parent.id);
+        if (freshTrack) await separateInto(freshTrack, { voz: `${freshTrack.title}${t("voiceSuffix")}`, instrumental: `${parent.title}${t("bandOnlySuffix")}` }, phase);
       }
     });
   };
