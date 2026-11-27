@@ -133,7 +133,11 @@ def cleanup_stale_staging_files(now=None):
     """Remove only this app's abandoned staging files after a full day."""
     now = time.time() if now is None else now
     removed = []
-    for path in DATA.iterdir():
+    try:
+        candidates = list(DATA.iterdir())
+    except OSError:
+        return []
+    for path in candidates:
         if not (_SEPARATION_STAGING_RE.fullmatch(path.name)
                 or _LIBRARY_STAGING_RE.fullmatch(path.name)
                 or _JOBS_STAGING_RE.fullmatch(path.name)
@@ -189,7 +193,11 @@ def cleanup_orphaned_audio_files(now=None):
 def recover_separation_backups():
     """Restore previous separation outputs left behind by an interrupted pair commit."""
     recovered = []
-    for backup in DATA.iterdir():
+    try:
+        candidates = list(DATA.iterdir())
+    except OSError:
+        return []
+    for backup in candidates:
         match = _SEPARATION_BACKUP_RE.fullmatch(backup.name)
         if not match:
             continue
@@ -268,7 +276,11 @@ def recover_staged_deletions():
         return []
 
     recovered = []
-    for staged in DATA.iterdir():
+    try:
+        candidates = list(DATA.iterdir())
+    except OSError:
+        return []
+    for staged in candidates:
         match = _DELETE_STAGING_RE.fullmatch(staged.name)
         if not match:
             continue
