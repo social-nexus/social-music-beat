@@ -33,6 +33,10 @@ const checks = [
   ["separation job failures are normalized to localized messages, including interruption detection in EN", /const backendError = \(s\.msg \|\| ""\)\.toLowerCase\(\)[\s\S]*?backendError\.includes\("interrupted"\)[\s\S]*?tx\("errUnexpectedJobStatus"\)/],
   ["ACE task errors use the selected interface language", /async function waitResult\(id, uiLanguage = "pt"\)[\s\S]*?uiText\(uiLanguage, "errAceFailure"\)[\s\S]*?uiText\(uiLanguage, "errUnexpectedTaskStatus"\)/],
   ["both ACE task polling call sites pass interface language", /waitResult\(id, uiLanguage\)[\s\S]*waitResult\(id, uiLanguage\)/],
+  ["runtime installation errors use localized generic message", /async const installRuntime[\s\S]*?catch \(e\) \{\s*\/\/ Runtime\/model operations return backend-localized details; keep the UI locale consistent\.\s*setError\(tx\("errOperationFailed"\)\);/],
+  ["model download errors use localized generic message", /const downloadModel[\s\S]*?catch \(e\) \{\s*\/\/ Runtime\/model operations return backend-localized details; keep the UI locale consistent\.\s*setError\(tx\("errOperationFailed"\)\);/],
+  ["model activation errors use localized generic message", /const activate[\s\S]*?catch \(e\) \{\s*\/\/ Runtime\/model operations return backend-localized details; keep the UI locale consistent\.\s*setError\(tx\("errOperationFailed"\)\);/],
+  ["GGUF import errors use localized generic message", /const importModel[\s\S]*?catch \(e\) \{\s*\/\/ Runtime\/model operations return backend-localized details; keep the UI locale consistent\.\s*setError\(tx\("errOperationFailed"\)\);/],
 ];
 
 let failed = false;
