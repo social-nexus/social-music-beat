@@ -109,6 +109,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
+const UI_TEXT = {
+  pt: { language: "Idioma", create: "Criar", composer: "Compositor IA", help: "Como usar", onlineWait: "O motor de música (ACE-Step) ainda está ligando ou foi fechado. Na primeira vez pode levar alguns minutos. Mantenha a janela “ACE-Step” aberta.", createMusic: "Criar música", library: "Minhas músicas", emptyLibrary: "{tx("emptyLibrary")}", elapsed: "Tempo decorrido", processing: "Processando", helpTitle: "Como usar, em 4 passos" },
+  en: { language: "Language", create: "Create", composer: "AI Composer", help: "How to use", onlineWait: "The music engine (ACE-Step) is starting or has been closed. The first startup may take a few minutes. Keep the “ACE-Step” window open.", createMusic: "Create music", library: "My music", emptyLibrary: "Your music will appear here. Enter lyrics and a style, then click Create.", elapsed: "Elapsed time", processing: "Processing", helpTitle: "How to use, in 4 steps" },
+  es: { language: "Idioma", create: "Crear", composer: "Compositor IA", help: "Cómo usar", onlineWait: "El motor de música (ACE-Step) todavía se está iniciando o se ha cerrado. La primera vez puede tardar unos minutos. Mantén abierta la ventana “ACE-Step”.", createMusic: "Crear música", library: "Mi música", emptyLibrary: "Tus canciones aparecerán aquí. Escribe la letra y el estilo y haz clic en Crear.", elapsed: "Tiempo transcurrido", processing: "Procesando", helpTitle: "Cómo usar, en 4 pasos" }
+};
+const uiText = (language, key) => UI_TEXT[language]?.[key] || UI_TEXT.pt[key] || key;
+
 async function http(url, opts) {
   const r = await fetch(url, opts);
   const text = await r.text();
@@ -539,6 +546,14 @@ async function analyzeMelodyReference(file) {
 }
 
 function CompositorPanel({ onUseLyrics }) {
+  const [operationStartedAt, setOperationStartedAt] = useState(null);
+  const [operationTick, setOperationTick] = useState(0);
+  useEffect(() => {
+    if (!operationStartedAt) return undefined;
+    const timer = setInterval(() => setOperationTick((n) => n + 1), 1000);
+    return () => clearInterval(timer);
+  }, [operationStartedAt]);
+  const operationElapsed = operationStartedAt ? Math.floor((Date.now() - operationStartedAt) / 1000) : 0;
   const [catalog, setCatalog] = useState({ runtimes: [], models: [], installed_models: [] });
   const [status, setStatus] = useState({});
   const [providerConfig, setProviderConfig] = useState({ providers: [], secure_storage_available: false });
@@ -763,14 +778,14 @@ function CompositorPanel({ onUseLyrics }) {
   const generate = async () => {
     if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
     if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
-    setBusy(true); setError(""); setMessage(provider === "local" ? "Compondo a letra localmente…" : "Enviando solicitação ao provedor escolhido…"); setResult("");
+    setBusy(true); setOperationStartedAt(Date.now()); setOperationTick(0); setError(""); setMessage(provider === "local" ? "Compondo a letra localmente…" : "Enviando solicitação ao provedor escolhido…"); setResult("");
     try {
       const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
       setResult(r.lyrics);
       const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
       setMessage((labels[compositionMode] || "Composição concluída") + " com " + r.model + ".");
     } catch (e) { setError(e.message); }
-    finally { setBusy(false); }
+    finally { setBusy(false); setOperationStartedAt(null); }
   };
 
   const importModel = async (file) => {
@@ -959,6 +974,7 @@ function CompositorPanel({ onUseLyrics }) {
         <button disabled={busy||(provider==="local"&&(!status.runtime_running||!status.active_model))||(provider!=="local"&&(!providerModel||!providerConfig.providers.find((p)=>p.id===provider)?.configured))||(compositionMode==="full"?!theme.trim():!sourceLyrics.trim())} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
           {busy?<Loader2 size={18} className="animate-spin"/>:<Sparkles size={18}/>}
           {compositionMode==="full"?"Criar música completa":compositionMode==="continue"?"Continuar minha composição":"Criar somente o refrão"}
+          {busy && <span className="ml-2 font-mono text-xs text-pink-100">{mmss(operationElapsed)}</span>}
         </button>
         {result&&<div className="space-y-3"><label className="block text-xs font-semibold text-zinc-300">{compositionMode==="chorus"?"Refrão gerado — você pode editar":"Resultado — você pode editar antes de usar"}</label>
           <textarea rows={18} className={inputCls} value={result} onChange={(e)=>setResult(e.target.value)}/>
@@ -972,6 +988,13 @@ function CompositorPanel({ onUseLyrics }) {
 // ------------------------------------------------------------------ aplicativo
 export default function App() {
   const [tab, setTab] = useState("criar");
+  const [uiLanguage, setUiLanguage] = useState(() => {
+    try { return localStorage.getItem("socialMusicBeat.language") || "pt"; } catch { return "pt"; }
+  });
+  const tx = (key) => uiText(uiLanguage, key);
+  useEffect(() => {
+    try { localStorage.setItem("socialMusicBeat.language", uiLanguage); } catch { /* armazenamento indisponível */ }
+  }, [uiLanguage]);
   const [tracks, setTracks] = useState([]);
   const [online, setOnline] = useState(false);
   const [job, setJob] = useState(null);
@@ -1158,13 +1181,21 @@ export default function App() {
     <div className="min-h-screen bg-[#0c0c10] text-zinc-100 flex">
       {/* barra lateral */}
       <aside className="hidden md:flex w-56 shrink-0 flex-col gap-1 border-r border-white/5 p-4">
-        <div className="mb-6 px-2">
+        <div className="mb-4 px-2">
           <img src="./logo.png" alt="Social Music Beat" className="w-full h-auto select-none" draggable="false" />
         </div>
+        <label className="mb-3 block px-2 text-xs font-semibold text-zinc-400">
+          {tx("language")}
+          <select aria-label={tx("language")} value={uiLanguage} onChange={(e) => setUiLanguage(e.target.value)} className={inputCls + " mt-1"}>
+            <option value="pt">🇧🇷 Português do Brasil</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="es">🇪🇸 Español</option>
+          </select>
+        </label>
         {[
-          { id: "criar", label: "Criar", icon: <Sparkles size={16} /> },
-          { id: "compositor", label: "Compositor IA", icon: <Music size={16} /> },
-          { id: "ajuda", label: "Como usar", icon: <HelpCircle size={16} /> },
+          { id: "criar", label: tx("create"), icon: <Sparkles size={16} /> },
+          { id: "compositor", label: tx("composer"), icon: <Music size={16} /> },
+          { id: "ajuda", label: tx("help"), icon: <HelpCircle size={16} /> },
         ].map((n) => (
           <button
             key={n.id}
@@ -1180,7 +1211,7 @@ export default function App() {
         {!online && (
           <div className="m-4 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
             <AlertTriangle size={18} className="mt-0.5 shrink-0" />
-            <div>O motor de música (ACE-Step) ainda está ligando ou foi fechado. Na primeira vez pode levar alguns minutos. Mantenha a janela “ACE-Step” aberta.</div>
+            <div>{tx("onlineWait")}</div>
           </div>
         )}
         {err && (
@@ -1193,7 +1224,7 @@ export default function App() {
 
         {tab === "ajuda" ? (
           <div className="max-w-2xl p-6 space-y-4 text-sm text-zinc-300 leading-relaxed">
-            <h1 className="text-2xl font-black text-white">Como usar, em 4 passos</h1>
+            <h1 className="text-2xl font-black text-white">{tx("helpTitle")}</h1>
             <p><b className="text-white">1. Criar.</b> Cole a letra, escolha o estilo e clique em Criar. Você recebe a música cantada (com uma voz guia).</p>
             <p><b className="text-white">2. Separar.</b> Na música criada, clique em “Separar voz e instrumental”. Você recebe dois arquivos: só a voz guia e só o instrumental.</p>
             <p><b className="text-white">3. Cantar.</b> Baixe o instrumental, ouça a voz guia para aprender a melodia e grave a sua voz (só a voz, de fone de ouvido).</p>
@@ -1222,7 +1253,7 @@ export default function App() {
             {/* ---------------- formulário ---------------- */}
             <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-5 h-fit">
               <div className="flex items-center justify-between">
-                <h1 className="text-lg font-black">Criar música</h1>
+                <h1 className="text-lg font-black">{tx("createMusic")}</h1>
                 <Seg
                   value={form.instrumentalOnly ? "inst" : "voz"}
                   onChange={(v) => set("instrumentalOnly", v === "inst")}
@@ -1337,7 +1368,7 @@ export default function App() {
 
             {/* ---------------- lista de músicas ---------------- */}
             <section className="min-w-0 space-y-3">
-              <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">Minhas músicas ({tracks.length})</h2>
+              <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">{tx("library")} ({tracks.length})</h2>
 
               {job && (
                 <div className="flex items-center gap-4 rounded-2xl border border-pink-500/30 bg-pink-500/5 p-4">
