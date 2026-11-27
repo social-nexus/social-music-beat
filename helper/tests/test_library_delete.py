@@ -97,7 +97,6 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertNotIn("old", server.jobs)
         self.assertIn("active", server.jobs)
         self.assertEqual(sum(1 for item in server.jobs.values() if item.get("finished_at")), server._JOBS_MAX_COMPLETED)
-        self.assertLessEqual(len(server.jobs), server._JOBS_MAX_COMPLETED)
 
     def test_separation_workers_are_serialized(self):
         server.jobs.clear()
