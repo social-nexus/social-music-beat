@@ -99,7 +99,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             "d" * 32: {
                 "status": "error",
                 "msg": "oversized integer",
-                "created_at": 10 ** 10000,
+                "created_at": 10 ** 400,
                 "finished_at": True,
             },
         }), encoding="utf-8")
