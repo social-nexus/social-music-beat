@@ -545,7 +545,8 @@ async function analyzeMelodyReference(file) {
   }
 }
 
-function CompositorPanel({ onUseLyrics }) {
+function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
+  const panelLanguageLabel = uiLanguage === "en" ? "Song language" : uiLanguage === "es" ? "Idioma de la canción" : "Idioma da música";
   const [operationStartedAt, setOperationStartedAt] = useState(null);
   const [operationTick, setOperationTick] = useState(0);
   useEffect(() => {
@@ -968,7 +969,7 @@ function CompositorPanel({ onUseLyrics }) {
           <label className="text-xs font-semibold text-zinc-300">Gênero musical<input className={inputCls+" mt-1"} value={genre} onChange={(e)=>setGenre(e.target.value)}/></label>
           <label className="text-xs font-semibold text-zinc-300">Clima / sentimento<input className={inputCls+" mt-1"} value={mood} onChange={(e)=>setMood(e.target.value)}/></label>
           <label className="text-xs font-semibold text-zinc-300">Voz<select className={inputCls+" mt-1"} value={voice} onChange={(e)=>setVoice(e.target.value)}><option>indiferente</option><option>masculina</option><option>feminina</option><option>dueto</option></select></label>
-          <label className="text-xs font-semibold text-zinc-300">Idioma<select className={inputCls+" mt-1"} value={language} onChange={(e)=>setLanguage(e.target.value)}><option>português do Brasil</option><option>inglês</option><option>espanhol</option></select></label>
+          <label className="text-xs font-semibold text-zinc-300">{panelLanguageLabel}<select className={inputCls+" mt-1"} value={language} onChange={(e)=>setLanguage(e.target.value)}><option value="português do Brasil">{uiLanguage==="en"?"Brazilian Portuguese":uiLanguage==="es"?"Portugués de Brasil":"Português do Brasil"}</option><option value="inglês">{uiLanguage==="en"?"English":uiLanguage==="es"?"Inglés":"Inglês"}</option><option value="espanhol">{uiLanguage==="en"?"Spanish":uiLanguage==="es"?"Español":"Espanhol"}</option></select></label>
           {compositionMode!=="chorus"&&<label className="text-xs font-semibold text-zinc-300">Duração aproximada<select className={inputCls+" mt-1"} value={duration} onChange={(e)=>setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>}
         </div>
         <button disabled={busy||(provider==="local"&&(!status.runtime_running||!status.active_model))||(provider!=="local"&&(!providerModel||!providerConfig.providers.find((p)=>p.id===provider)?.configured))||(compositionMode==="full"?!theme.trim():!sourceLyrics.trim())} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
@@ -1265,7 +1266,7 @@ export default function App() {
             <p className="text-zinc-500">Mantenha abertas as duas janelas pretas enquanto usa. Para fechar tudo, feche as janelas pretas.</p>
           </div>
         ) : tab === "compositor" ? (
-          <CompositorPanel onUseLyrics={(output) => {
+          <CompositorPanel uiLanguage={uiLanguage} onUseLyrics={(output) => {
             const title = output.match(/^TÍTULO:\s*(.+)$/im)?.[1]?.trim() || "";
             const style = output.match(/^ESTILO:\s*(.+)$/im)?.[1]?.trim() || "";
             const blocks = output.split(/\nLETRA:\s*\n?/i);
