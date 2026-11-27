@@ -1239,7 +1239,7 @@ export default function App() {
           ? tx("phaseSepWorking")
           : backendPhase.includes("Na fila")
             ? tx("phaseSepQueued")
-            : (backendPhase || tx("phaseSepFallback"));
+            : tx("phaseSepFallback");
       phase(localizedPhase);
       if (s.status === "error") {
         try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
