@@ -124,6 +124,7 @@ _SEPARATION_STAGING_RE = re.compile(
 _LIBRARY_STAGING_RE = re.compile(r"\.biblioteca\.json\.[0-9a-f]{32}\.tmp")
 _AUDIO_STAGING_RE = re.compile(r"\.\d+_[0-9a-f]{6}\.[A-Za-z0-9]+\.[0-9a-f]{32}\.tmp")
 _DELETE_STAGING_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.deleting")
+_SEPARATION_BACKUP_RE = re.compile(r"\\.(?P<name>.+)\\.[0-9a-f]{32}\\.backup")
 
 
 def cleanup_stale_staging_files(now=None):
@@ -146,9 +147,35 @@ def cleanup_stale_staging_files(now=None):
     return removed
 
 
+def recover_separation_backups():
+    """Restore previous separation outputs left behind by an interrupted pair commit."""
+    recovered = []
+    for backup in DATA.iterdir():
+        match = _SEPARATION_BACKUP_RE.fullmatch(backup.name)
+        if not match:
+            continue
+        final = DATA / match.group("name")
+        try:
+            if not backup.is_file():
+                continue
+            if final.exists():
+                # The atomic promotion reached its destination; this backup is
+                # the superseded version and can now be discarded.
+                backup.unlink()
+                recovered.append(("discarded", backup.name))
+            else:
+                os.replace(backup, final)
+                recovered.append(("restored", final.name))
+        except OSError:
+            # Preserve the backup for another startup attempt.
+            continue
+    return recovered
+
+
 @app.on_event("startup")
 def recover_stale_staging_files():
     recover_staged_deletions()
+    recover_separation_backups()
     cleanup_stale_staging_files()
 
 
