@@ -628,10 +628,10 @@ function CompositorPanel({ onUseLyrics }) {
 
   const saveProviderKey = async () => {
     if (!provider || provider === "local" || !apiKey.trim()) { setError("Escolha um provedor e informe a chave de API."); return; }
-    setProviderStartedAt(Date.now()); setProviderBusy(true); setError(""); setMessage("Salvando a chave no cofre seguro do sistema…");
+    setProviderStartedAt(Date.now()); setProviderBusy(true); setError(""); setMessage(t("providerSaving"));
     try {
       await jsonPost("/api/ai/providers/key", { provider, api_key: apiKey.trim() });
-      setApiKey(""); await refresh(); setMessage("Chave salva no cofre de credenciais do sistema.");
+      setApiKey(""); await refresh(); setMessage(t("providerKeySaved"));
     } catch (e) { setError(e.message); }
     finally { setProviderBusy(false); }
   };
@@ -644,7 +644,7 @@ function CompositorPanel({ onUseLyrics }) {
     finally { setProviderBusy(false); }
   };
   const testProvider = async () => {
-    setProviderStartedAt(Date.now()); setProviderBusy(true); setError(""); setMessage("Testando conexão com o provedor…");
+    setProviderStartedAt(Date.now()); setProviderBusy(true); setError(""); setMessage(t("providerTesting"));
     try {
       const r = await jsonPost("/api/ai/providers/test", { provider, model: providerModel });
       setMessage("Conexão funcionando: " + r.message);
@@ -654,13 +654,13 @@ function CompositorPanel({ onUseLyrics }) {
   const removeProviderKey = async () => {
     if (!window.confirm("Remover a chave salva deste provedor?")) return;
     setProviderStartedAt(Date.now()); setProviderBusy(true); setError("");
-    try { await http("/api/ai/providers/key/" + provider, { method: "DELETE" }); await refresh(); setMessage("Chave removida do cofre de credenciais."); }
+    try { await http("/api/ai/providers/key/" + provider, { method: "DELETE" }); await refresh(); setMessage(t("providerKeyRemoved")); }
     catch (e) { setError(e.message); }
     finally { setProviderBusy(false); }
   };
 
   const installRuntime = async () => {
-    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Preparando o motor local…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage(t("runtimePreparing"));
     try {
       const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
       if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
@@ -670,7 +670,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const downloadModel = async () => {
-    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Preparando o download do modelo…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage(t("modelDownloadPreparing"));
     try {
       const r = await jsonPost("/api/ai/models/download", { model_id: model, accept_license: gemmaAccepted });
       if (r.job_id) await waitJob(r.job_id, "Modelo instalado e verificado.");
@@ -680,11 +680,11 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const activate = async () => {
-    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Carregando o modelo na memória…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage(t("modelLoading"));
     try {
       await jsonPost("/api/ai/models/activate", { model_id: model, variant: runtime, gpu_layers: Number(gpuLayers) });
       await refresh();
-      setMessage("Modelo ativo. Você já pode compor.");
+      setMessage(t("modelActive"));
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   };
@@ -693,12 +693,12 @@ function CompositorPanel({ onUseLyrics }) {
     if (!file) return;
     if (!file.type.startsWith("audio/")) { setError("Escolha um arquivo de áudio."); return; }
     if (file.size > 25 * 1024 * 1024) { setError("O arquivo deve ter no máximo 25 MB."); return; }
-    setMelodyStartedAt(Date.now()); setMelodyBusy(true); setError(""); setMessage("Analisando a referência musical no navegador…");
+    setMelodyStartedAt(Date.now()); setMelodyBusy(true); setError(""); setMessage(t("melodyAnalyzing"));
     try {
       const analysis = await analyzeMelodyReference(file);
       setMelodyFile(file);
       setMelodyAnalysis(analysis);
-      setMessage("Referência analisada. Somente o resumo musical será enviado ao modelo local.");
+      setMessage(t("melodyAnalyzed"));
     } catch (e) {
       setMelodyFile(null); setMelodyAnalysis(null);
       setError("Não consegui analisar este áudio. Tente WAV, MP3 ou M4A em outro navegador. " + e.message);
@@ -728,7 +728,7 @@ function CompositorPanel({ onUseLyrics }) {
       recordingTimerRef.current = window.setTimeout(() => {
         if (recorderRef.current && recorderRef.current.state === "recording") recorderRef.current.stop();
       }, 30000);
-      setRecording(true); setError(""); setMessage("Gravando… cante a ideia musical e depois pressione Parar.");
+      setRecording(true); setError(""); setMessage(t("recordingPrompt"));
     } catch (e) {
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null; setRecording(false);
@@ -742,7 +742,7 @@ function CompositorPanel({ onUseLyrics }) {
 
   const transcribeMelodyReference = async () => {
     if (!melodyFile) { setError("Grave ou importe uma referência de áudio primeiro."); return; }
-    setTranscriptionStartedAt(Date.now()); setTranscriptionBusy(true); setTranscriptionMessage("Preparando o áudio para o Whisper…"); setError("");
+    setTranscriptionStartedAt(Date.now()); setTranscriptionBusy(true); setTranscriptionMessage(t("whisperPreparing")); setError("");
     try {
       const { blob } = await toWavBlob(melodyFile, 30);
       const fd = new FormData();
@@ -778,24 +778,24 @@ function CompositorPanel({ onUseLyrics }) {
   const generate = async () => {
     if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
     if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
-    setBusySince(Date.now()); setBusy(true); setError(""); setMessage(provider === "local" ? "Compondo a letra localmente…" : "Enviando solicitação ao provedor escolhido…"); setResult("");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage(provider === "local" ? t("lyricsComposing") : t("providerSending")); setResult("");
     try {
       const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
       setResult(r.lyrics);
-      const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
-      setMessage((labels[compositionMode] || "Composição concluída") + " com " + r.model + ".");
+      const labels = { full: t("songFullCreated"), continue: t("compositionContinued"), chorus: t("chorusCreated") };
+      setMessage((labels[compositionMode] || t("compositionDone")) + " com " + r.model + ".");
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   };
 
   const importModel = async (file) => {
     if (!file) return;
-    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Importando arquivo GGUF…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage(t("ggufImporting"));
     try {
       const fd = new FormData(); fd.append("file", file);
       await http("/api/ai/models/import", { method: "POST", body: fd });
       await refresh();
-      setMessage("Modelo importado. Confirme a licença e selecione-o para ativar.");
+      setMessage(t("ggufImported"));
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   };
@@ -903,7 +903,7 @@ function CompositorPanel({ onUseLyrics }) {
             <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
           <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">{t("activateModel")}</button>
-          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusySince(Date.now()); setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{t("stopAI")}</button>}
+          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusySince(Date.now()); setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage(t("runtimeStopped")); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{t("stopAI")}</button>}
         </div>
         <p className="text-xs text-zinc-500">{t("importedLicenseNote")}</p>
       </section>
