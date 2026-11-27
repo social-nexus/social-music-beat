@@ -90,8 +90,9 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertFalse(self.audio_file.exists())
 
     def test_cleanup_does_not_remove_library_audio(self):
-        result = server.cleanup_unregistered_audio({"file": str(self.audio_file)})
-        self.assertEqual(result, {"ok": True})
+        with self.assertRaises(server.HTTPException) as raised:
+            server.cleanup_unregistered_audio({"file": str(self.audio_file)})
+        self.assertEqual(raised.exception.status_code, 409)
         self.assertTrue(self.audio_file.exists())
 
     def test_delete_unknown_id_is_noop(self):
