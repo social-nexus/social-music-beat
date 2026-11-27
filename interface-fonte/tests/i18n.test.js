@@ -1,12 +1,40 @@
+import { readFileSync } from "node:fs";
 import { UI_TEXT, localeCoverage, uiText } from "../src/i18n.js";
 
 const requiredLocales = ["pt", "en", "es"];
 let failed = false;
+const source = readFileSync(new URL("../src/i18n.js", import.meta.url), "utf8");
 
 for (const locale of requiredLocales) {
   if (!UI_TEXT[locale]) {
     failed = true;
     console.error(`Missing required locale catalog: ${locale}`);
+  }
+}
+
+function extractCatalogKeys(locale) {
+  const next = locale === "pt" ? "en" : locale === "en" ? "es" : null;
+  const startMarker = `  ${locale}: {`;
+  const start = source.indexOf(startMarker);
+  const endMarker = next ? `\n  ${next}: {` : "\n};";
+  const end = source.indexOf(endMarker, start);
+  if (start < 0 || end < 0) return null;
+  const block = source.slice(start, end);
+  return [...block.matchAll(/([A-Za-z_$][\\w$]*):\\s*(?:"[^"]*"|'[^']*')/g)].map((match) => match[1]);
+}
+
+const sourceKeys = Object.fromEntries(requiredLocales.map((locale) => [locale, extractCatalogKeys(locale)]));
+for (const locale of requiredLocales) {
+  const keys = sourceKeys[locale];
+  if (!keys) {
+    failed = true;
+    console.error(`Could not parse source catalog: ${locale}`);
+    continue;
+  }
+  const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
+  if (duplicates.length) {
+    failed = true;
+    console.error(`Locale ${locale} has duplicate source keys:`, [...new Set(duplicates)].join(", "));
   }
 }
 
@@ -38,4 +66,4 @@ if (uiText("pt", "__missing_key__") !== "__missing_key__") {
 }
 
 if (failed) process.exit(1);
-console.log("All required locales, key parity, and fallback checks passed.");
+console.log("All required locales, unique source keys, key parity, and fallback checks passed.");
