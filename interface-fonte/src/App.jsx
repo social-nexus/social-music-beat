@@ -1208,6 +1208,25 @@ export default function App() {
       </aside>
 
       <main className="flex-1 min-w-0 pb-32">
+        <div className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-3 md:hidden">
+          <span className="text-xs font-semibold text-zinc-400">{tx("language")}</span>
+          <select aria-label={tx("language")} value={uiLanguage} onChange={(e) => setUiLanguage(e.target.value)} className="max-w-[210px] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100">
+            <option value="pt">🇧🇷 Português do Brasil</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="es">🇪🇸 Español</option>
+          </select>
+        </div>
+        {job && (
+          <div className="mx-4 mt-4 flex items-center gap-4 rounded-2xl border border-pink-500/30 bg-pink-500/5 p-4">
+            <Loader2 className="animate-spin text-pink-400" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-bold">{job.title}</div>
+              <div className="text-xs text-zinc-400">{job.phase}</div>
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500">{tx("elapsed")}</div>
+            </div>
+            <div className="font-mono text-lg text-pink-300">{mmss(elapsed)}</div>
+          </div>
+        )}
         {!online && (
           <div className="m-4 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
             <AlertTriangle size={18} className="mt-0.5 shrink-0" />
@@ -1369,17 +1388,6 @@ export default function App() {
             {/* ---------------- lista de músicas ---------------- */}
             <section className="min-w-0 space-y-3">
               <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">{tx("library")} ({tracks.length})</h2>
-
-              {job && (
-                <div className="flex items-center gap-4 rounded-2xl border border-pink-500/30 bg-pink-500/5 p-4">
-                  <Loader2 className="animate-spin text-pink-400" />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-bold">{job.title}</div>
-                    <div className="text-xs text-zinc-400">{job.phase}</div>
-                  </div>
-                  <div className="font-mono text-sm text-pink-300">{mmss(elapsed)}</div>
-                </div>
-              )}
 
               {tracks.length === 0 && !job && (
                 <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-zinc-500">
