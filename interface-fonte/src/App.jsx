@@ -1176,8 +1176,20 @@ export default function App() {
     }
   };
 
-  const separateInto = async (t, titles, phase) => {
-    const { job: jid } = await jsonPost("/api/separate", { file: t.file });
+  const SEPARATION_RECOVERY_KEY = "socialMusicBeat.pendingSeparation.v1";
+  const separateInto = async (t, titles, phase, recovered = null) => {
+    let pending = recovered;
+    if (!pending) {
+      const { job: jid } = await jsonPost("/api/separate", { file: t.file });
+      pending = {
+        jobId: jid, track: t, titles,
+        ids: { voz: uid(), instrumental: uid() },
+        createdAt: Date.now(),
+      };
+      // Keep only the minimum local reference needed to resume this one UI job.
+      try { localStorage.setItem(SEPARATION_RECOVERY_KEY, JSON.stringify(pending)); } catch { /* Storage may be disabled; polling still works in this tab. */ }
+    }
+    const { jobId: jid } = pending;
     for (;;) {
       await sleep(2000);
       const s = await http(`/api/jobs/${jid}`);
@@ -1190,27 +1202,41 @@ export default function App() {
             ? tx("phaseSepQueued")
             : (backendPhase || tx("phaseSepFallback"));
       phase(localizedPhase);
-      if (s.status === "error") throw new Error((s.msg || "").toLowerCase().includes("interrompida") ? tx("errSepInterrupted") : (s.msg || tx("errUnexpectedJobStatus")));
+      if (s.status === "error") {
+        try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
+        throw new Error((s.msg || "").toLowerCase().includes("interrompida") ? tx("errSepInterrupted") : (s.msg || tx("errUnexpectedJobStatus")));
+      }
       if (s.status === "done") {
         if (!s.result?.voz || !s.result?.instrumental) throw new Error(tx("errUnexpectedJobStatus"));
-        const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key, language: t.language || form.lang };
+        const source = pending.track || t;
+        const savedTitles = pending.titles || titles;
+        const base = { createdAt: pending.createdAt || Date.now(), parent: source.id, style: source.style, lyrics: source.lyrics, bpm: source.bpm, key: source.key, language: source.language || form.lang };
         const pair = [
-          { ...base, id: uid(), kind: "voz", title: titles.voz, file: s.result.voz },
-          { ...base, id: uid(), kind: "instrumental", title: titles.instrumental, file: s.result.instrumental },
+          { ...base, id: pending.ids?.voz || uid(), kind: "voz", title: savedTitles.voz, file: s.result.voz },
+          { ...base, id: pending.ids?.instrumental || uid(), kind: "instrumental", title: savedTitles.instrumental, file: s.result.instrumental },
         ];
-        try {
-          await jsonPost("/api/library/batch", { items: pair });
-          setTracks((prev) => [...pair, ...prev.filter((item) => !pair.some((saved) => saved.id === item.id))]);
-        } catch (persistError) {
-          // Both generated stems are unregistered when the batch commit fails.
-          await Promise.all(pair.map((item) => jsonPost("/api/audio/cleanup", { file: item.file }).catch(() => null)));
-          throw persistError;
-        }
+        // Stable IDs make recovery safe if the browser closed after the server
+        // committed the batch but before local storage was cleared.
+        await jsonPost("/api/library/batch", { items: pair });
+        setTracks((prev) => [...pair, ...prev.filter((item) => !pair.some((saved) => saved.id === item.id))]);
+        try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
         return;
       }
       if (s.status !== "running") throw new Error(tx("errUnexpectedJobStatus"));
     }
   };
+
+  useEffect(() => {
+    let pending = null;
+    try {
+      const raw = localStorage.getItem(SEPARATION_RECOVERY_KEY);
+      if (raw) pending = JSON.parse(raw);
+    } catch {
+      try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
+    }
+    if (!pending?.jobId || !pending?.track?.file || !pending?.titles?.voz || !pending?.titles?.instrumental) return;
+    runJob(pending.titles.voz, (phase) => separateInto(pending.track, pending.titles, phase, pending));
+  }, []);
 
   // -------- 1) criar a música
   const createSong = () => {
