@@ -208,15 +208,15 @@ async function submitTask(params, file) {
   return id;
 }
 
-async function waitResult(id) {
+async function waitResult(id, uiLanguage = "pt") {
   for (;;) {
     await sleep(2000);
     const res = await jsonPost("/ace/query_result", { task_id_list: [id] });
     const item = res?.data?.[0];
     if (!item) continue;
     if (item.status === 1) return JSON.parse(item.result);
-    if (item.status === 2) throw new Error(uiText(language, "errAceFailure"));
-    if (item.status !== 0) throw new Error(uiText(language, "errUnexpectedTaskStatus"));
+    if (item.status === 2) throw new Error(uiText(uiLanguage, "errAceFailure"));
+    if (item.status !== 0) throw new Error(uiText(uiLanguage, "errUnexpectedTaskStatus"));
   }
 }
 
@@ -1284,7 +1284,7 @@ export default function App() {
       phase(tx("phaseSendMusic"));
       const id = await submitTask(params);
       phase(tx("phaseCreateMusic"));
-      const items = await waitResult(id);
+      const items = await waitResult(id, uiLanguage);
       phase(tx("phaseSaving"));
       await saveItems(items, (it, n, total) => {
         const m = it.metas || {};
