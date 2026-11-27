@@ -971,7 +971,7 @@ function CompositorPanel({ onUseLyrics }) {
 }
 
 // ------------------------------------------------------------------ aplicativo
-export default function App() {
+export default function App() {\n  const { lang, setLang, t } = useLocale();
   const [tab, setTab] = useState("criar");
   const [tracks, setTracks] = useState([]);
   const [online, setOnline] = useState(false);
@@ -1177,7 +1177,7 @@ export default function App() {
         ))}
       </aside>
 
-      <main className="flex-1 min-w-0 pb-32">
+      <main className="flex-1 min-w-0 pb-32">\n        <div className="flex justify-end px-4 pt-3"><label className="flex items-center gap-2 text-xs text-zinc-400"><span>{t("language")}</span><select aria-label={t("language")} value={lang} onChange={(e) => setLang(e.target.value)} className="rounded-lg border border-white/10 bg-[#17171b] px-2 py-1.5 text-zinc-200"><option value="pt-BR">🇧🇷 Português (Brasil)</option><option value="en">🇺🇸 English</option><option value="es">🇪🇸 Español</option></select></label></div>
         {!online && (
           <div className="m-4 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
             <AlertTriangle size={18} className="mt-0.5 shrink-0" />
