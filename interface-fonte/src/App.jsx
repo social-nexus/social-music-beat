@@ -646,7 +646,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const installRuntime = async () => {
-    setBusy(true); setError(""); setMessage("Preparando o motor local…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Preparando o motor local…");
     try {
       const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
       if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
