@@ -63,3 +63,5 @@
 
 
 - **Auditoria multilíngue (em andamento):** confirmação de remoção de API Key, aviso de gravação incompatível com navegador e mensagens de início/falha de transcrição Whisper agora usam catálogo PT-BR/EN/ES.
+
+- **Auditoria dos fluxos de áudio:** mensagens de fase de separação e salvamento agora são localizadas; títulos padrão de música, banda, voz e instrumental respeitam PT-BR/EN/ES na criação e separação automática.
