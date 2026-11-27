@@ -111,7 +111,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertIn("arquivos de resultado", recovered["msg"].lower())
 
     def test_recovery_rejects_mismatched_separation_output_pair(self):
-        jid = "g" * 32
+        jid = "9" * 32
         vocals = self.data / "1234567890_abcdef_voz.wav"
         instrumental = self.data / "1234567890_123456_instrumental.wav"
         vocals.write_bytes(b"vocals")
