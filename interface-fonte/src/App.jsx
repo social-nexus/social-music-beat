@@ -426,9 +426,9 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
 
 
 // Analisa uma amostra curta no próprio navegador. O áudio bruto não é enviado à IA.
-async function analyzeMelodyReference(file) {
+async function analyzeMelodyReference(file, language = "pt") {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!AudioCtx) throw new Error("Este navegador não oferece análise de áudio compatível.");
+  if (!AudioCtx) throw new Error(language === "en" ? "This browser does not support compatible audio analysis." : language === "es" ? "Este navegador no admite análisis de audio compatible." : "Este navegador não oferece análise de áudio compatível.");
   const context = new AudioCtx();
   try {
     const buffer = await context.decodeAudioData(await file.arrayBuffer());
@@ -499,20 +499,20 @@ async function analyzeMelodyReference(file) {
       const sorted = [...values].sort((a, b) => a - b);
       return sorted.length ? sorted[Math.floor(sorted.length / 2)] : null;
     };
-    let contour = "não foi possível estimar com confiança";
+    let contour = language === "en" ? "could not be estimated reliably" : language === "es" ? "no se pudo estimar con fiabilidad" : "não foi possível estimar com confiança";
     let range = "";
     if (pitches.length >= 4) {
       const center = median(pitches);
       const steps = pitches.map((p) => p - center);
-      const groups = steps.map((v) => v < -2 ? "grave" : v > 2 ? "agudo" : "médio");
+      const groups = steps.map((v) => v < -2 ? (language === "en" ? "low" : language === "es" ? "grave" : "grave") : v > 2 ? (language === "en" ? "high" : language === "es" ? "agudo" : "agudo") : (language === "en" ? "mid" : language === "es" ? "medio" : "médio"));
       const compact = [];
       for (const group of groups) if (compact[compact.length - 1] !== group) compact.push(group);
       contour = compact.slice(0, 12).join(" → ");
-      range = `variação aproximada de ${Math.round(Math.max(...pitches) - Math.min(...pitches))} semitons`;
+      range = `${language === "en" ? "approximate range of" : language === "es" ? "rango aproximado de" : "variação aproximada de"} ${Math.round(Math.max(...pitches) - Math.min(...pitches))} ${language === "en" ? "semitones" : language === "es" ? "semitonos" : "semitons"}`;
     }
     const avg = envelope.reduce((a, b) => a + b, 0) / Math.max(1, envelope.length);
     const variance = envelope.reduce((a, b) => a + (b - avg) ** 2, 0) / Math.max(1, envelope.length);
-    const dynamics = Math.sqrt(variance) > avg * 0.55 ? "dinâmica variada, com mudanças de intensidade" : "dinâmica relativamente constante";
+    const dynamics = Math.sqrt(variance) > avg * 0.55 ? (language === "en" ? "varied dynamics, with changes in intensity" : language === "es" ? "dinámica variada, con cambios de intensidad" : "dinâmica variada, com mudanças de intensidade") : (language === "en" ? "relatively steady dynamics" : language === "es" ? "dinámica relativamente constante" : "dinâmica relativamente constante");
     // Segmentação aproximada por energia: identifica blocos cantados e pausas entre frases.
     const activeThreshold = Math.max(0.006, avg * 0.32);
     const active = envelope.map((v) => v > activeThreshold);
@@ -528,17 +528,17 @@ async function analyzeMelodyReference(file) {
     }
     if (phraseStart >= 0) { const d = (lastActive - phraseStart + 1) * 0.02; if (d >= 0.18) phraseDurations.push(d); }
     const phraseText = phraseDurations.length
-      ? "frases vocais aproximadas: " + phraseDurations.length + ", duração média " + (phraseDurations.reduce((a,b)=>a+b,0)/phraseDurations.length).toFixed(1) + " s, pausas detectadas: " + Math.max(0, phraseDurations.length - 1)
-      : "não foi possível separar frases e pausas com confiança";
-    const tempoText = bestTempo && bestScore > 0.12 ? `pulso estimado em torno de ${bestTempo} BPM (estimativa automática)` : "pulso não identificado com confiança";
+      ? (language === "en" ? "approximate vocal phrases: " : language === "es" ? "frases vocales aproximadas: " : "frases vocais aproximadas: ") + phraseDurations.length + (language === "en" ? ", average duration " : language === "es" ? ", duración media " : ", duração média ") + (phraseDurations.reduce((a,b)=>a+b,0)/phraseDurations.length).toFixed(1) + " s, " + (language === "en" ? "pauses detected: " : language === "es" ? "pausas detectadas: " : "pausas detectadas: ") + Math.max(0, phraseDurations.length - 1)
+      : (language === "en" ? "could not separate phrases and pauses reliably" : language === "es" ? "no fue posible separar frases y pausas con fiabilidad" : "não foi possível separar frases e pausas com confiança");
+    const tempoText = bestTempo && bestScore > 0.12 ? (language === "en" ? `estimated pulse around ${bestTempo} BPM (automatic estimate)` : language === "es" ? `pulso estimado alrededor de ${bestTempo} BPM (estimación automática)` : `pulso estimado em torno de ${bestTempo} BPM (estimativa automática)`) : (language === "en" ? "pulse not identified reliably" : language === "es" ? "pulso no identificado con fiabilidad" : "pulso não identificado com confiança");
     const summary = [
-      `Duração analisada: ${seconds.toFixed(1)} segundos.`,
+      `${language === "en" ? "Analyzed duration" : language === "es" ? "Duración analizada" : "Duração analisada"}: ${seconds.toFixed(1)} ${language === "en" ? "seconds" : language === "es" ? "segundos" : "segundos"}.`,
       tempoText + ".",
       phraseText + ".",
-      `Dinâmica: ${dynamics}.`,
-      `Contorno de altura aproximado: ${contour}.`,
-      range ? `Tessitura estimada: ${range}.` : "",
-      "Todas as medidas são aproximadas; use como orientação de fraseado, não como transcrição exata de notas."
+      `${language === "en" ? "Dynamics" : language === "es" ? "Dinámica" : "Dinâmica"}: ${dynamics}.`,
+      `${language === "en" ? "Approximate pitch contour" : language === "es" ? "Contorno de altura aproximado" : "Contorno de altura aproximado"}: ${contour}.`,
+      range ? `${language === "en" ? "Estimated range" : language === "es" ? "Tesitura estimada" : "Tessitura estimada"}: ${range}.` : "",
+      language === "en" ? "All measurements are approximate; use them as phrasing guidance, not as an exact transcription of notes." : language === "es" ? "Todas las medidas son aproximadas; úsalas como orientación del fraseo, no como transcripción exacta de notas." : "Todas as medidas são aproximadas; use como orientação de fraseado, não como transcrição exata de notas."
     ].filter(Boolean).join(" ");
     return { summary, seconds, tempo: bestTempo && bestScore > 0.12 ? bestTempo : null, contour };
   } finally {
@@ -548,7 +548,7 @@ async function analyzeMelodyReference(file) {
 
 function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   const tx = (key) => uiText(uiLanguage, key);
-  const panelLanguageLabel = uiLanguage === "en" ? tx("songLanguage");
+  const panelLanguageLabel = tx("songLanguage");
   const [operationStartedAt, setOperationStartedAt] = useState(null);
   const [operationTick, setOperationTick] = useState(0);
   useEffect(() => {
@@ -708,7 +708,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     if (file.size > 25 * 1024 * 1024) { setError("O arquivo deve ter no máximo 25 MB."); return; }
     setMelodyBusy(true); setError(""); setMessage("Analisando a referência musical no navegador…");
     try {
-      const analysis = await analyzeMelodyReference(file);
+      const analysis = await analyzeMelodyReference(file, uiLanguage);
       setMelodyFile(file);
       setMelodyAnalysis(analysis);
       setMessage("Referência analisada. Somente o resumo musical será enviado ao modelo local.");
