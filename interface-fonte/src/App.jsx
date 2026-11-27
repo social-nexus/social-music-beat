@@ -905,7 +905,7 @@ function CompositorPanel({ onUseLyrics }) {
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
         <div><h2 className="font-bold">{t("composerStepTitle")}</h2><p className="mt-1 text-xs text-zinc-400">{t("composerStepHelp")}</p></div>
         <div className="grid gap-2 sm:grid-cols-3">
-          {[{id:"full",title:"Música completa",desc:"Começar uma letra do zero."},{id:"continue",title:"Continuar composição",desc:"Preservar sua letra e desenvolver o restante."},{id:"chorus",title:"Criar somente refrão",desc:"Escrever um refrão para sua composição."}].map((item)=>(
+          {[{id:"full",title:t("modeFull"),desc:t("modeFullDesc")},{id:"continue",title:t("modeContinue"),desc:t("modeContinueDesc")},{id:"chorus",title:t("modeChorus"),desc:t("modeChorusDesc")}].map((item)=>(
             <button key={item.id} type="button" onClick={()=>{setCompositionMode(item.id);setResult("");setError("");}}
               className={`rounded-xl border p-3 text-left transition ${compositionMode===item.id?"border-pink-500 bg-pink-500/10":"border-white/10 bg-white/[0.02] hover:bg-white/[0.05]"}`}>
               <span className="block text-sm font-bold text-white">{item.title}</span><span className="mt-1 block text-[11px] leading-relaxed text-zinc-400">{item.desc}</span>
@@ -913,7 +913,7 @@ function CompositorPanel({ onUseLyrics }) {
           ))}
         </div>
         {compositionMode!=="full"&&<div>
-          <label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="continue"?"Sua composição (a IA manterá o que você já escreveu)":"Sua composição (base para criar o refrão)"}</label>
+          <label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="continue"?t("modeContinueLabel"):t("modeChorusLabel")}</label>
           <textarea rows={9} className={inputCls} value={sourceLyrics} onChange={(e)=>setSourceLyrics(e.target.value)} placeholder={"Cole aqui sua letra. Você pode incluir marcações como [Verse 1] e [Bridge]."}/>
           <p className="mt-1 text-[11px] text-zinc-500">{compositionMode==="continue"?"A IA deve preservar seus versos e completar as partes que faltam, sem reescrever sua identidade.":"A IA analisará o tema, a mensagem e o sentimento da letra para criar apenas o refrão."}</p>
         </div>}
