@@ -401,9 +401,6 @@ def _hf_file_digest(repo: str, filename: str) -> tuple[str, int]:
 
 def _download_model_worker(jid: str, model_id: str):
     with _model_operation_lock(model_id):
-        if model_id in MODEL_CATALOG and _model_file(model_id).is_file():
-            _update_job(jid, status="done", progress=100, message="Modelo já estava instalado.")
-            return
         _download_model_worker_locked(jid, model_id)
 
 
