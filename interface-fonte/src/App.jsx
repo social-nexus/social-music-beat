@@ -808,7 +808,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       setMessage(tx("msgMelodyAnalyzed"));
     } catch (e) {
       setMelodyFile(null); setMelodyAnalysis(null);
-      setError(tx("errAudioAnalyze") + e.message);
+      setError(tx("errOperationFailed"));
     } finally { setMelodyBusy(false); }
   };
 
@@ -839,7 +839,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     } catch (e) {
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null; setRecording(false);
-      setError(e.message || tx("errMicrophone"));
+      setError(tx("errOperationFailed"));
     }
   };
 
@@ -872,7 +872,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
         }
       }
     } catch (e) {
-      setError(tx("errWhisper") + String(e.message || e).slice(0, 260));
+      setError(tx("errOperationFailed"));
       setTranscriptionMessage("");
     } finally { setTranscriptionBusy(false); }
   };
