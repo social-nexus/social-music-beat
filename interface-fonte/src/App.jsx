@@ -248,7 +248,7 @@ function VoiceModal({ track, onClose, onGo, language = "pt" }) {
                 onClick={() => toggle(i.id)}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${picked.includes(i.id) ? "bg-pink-500 border-pink-500 text-white" : "border-white/15 text-zinc-300 hover:border-white/40"}`}
               >
-                {i.label}
+                {tx(i.id)}
               </button>
             ))}
           </div>
@@ -1145,7 +1145,7 @@ export default function App() {
 
   // -------- 2) separar voz e instrumental
   const separateTrack = (t) =>
-    runJob(`Separando: ${t.title}`, (phase) =>
+    runJob(`${uiLanguage === "en" ? "Separating" : uiLanguage === "es" ? "Separando" : "Separando"}: ${t.title}`, (phase) =>
       separateInto(t, {
         voz: `${t.title} (voz)`,
         instrumental: t.kind === "banda" ? `${t.title} (só a banda)` : `${t.title} (instrumental)`,
@@ -1447,7 +1447,7 @@ export default function App() {
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-bold">{t.title}</div>
                       <div className="truncate text-xs text-zinc-400">
-                        {KIND[t.kind] || "Faixa"}{t.bpm ? ` • ${Math.round(t.bpm)} BPM` : ""}{t.key ? ` • ${t.key}` : ""}
+                        {tx(t.kind === "song" ? "trackSong" : t.kind === "instrumental" ? "trackInstrumental" : t.kind === "voz" ? "trackVoice" : t.kind === "banda" ? "trackBand" : "trackGeneric")}{t.bpm ? ` • ${Math.round(t.bpm)} BPM` : ""}{t.key ? ` • ${t.key}` : ""}
                       </div>
                       {t.style && <div className="truncate text-[11px] text-zinc-600">{t.style}</div>}
                     </div>
