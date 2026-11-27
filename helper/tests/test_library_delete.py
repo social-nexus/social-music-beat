@@ -60,8 +60,8 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
 
     def test_recovery_preserves_completed_separation_results(self):
         jid = "b" * 32
-        vocals = self.data / "result_voz.wav"
-        instrumental = self.data / "result_instrumental.wav"
+        vocals = self.data / "1234567890_abcdef_voz.wav"
+        instrumental = self.data / "1234567890_abcdef_instrumental.wav"
         vocals.write_bytes(b"vocals")
         instrumental.write_bytes(b"instrumental")
         server.jobs.clear()
@@ -86,6 +86,50 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(recovered["result"]["voz"], f"/musicas/{vocals.name}")
         self.assertTrue(vocals.exists())
         self.assertTrue(instrumental.exists())
+
+    def test_recovery_rejects_malformed_completed_result_paths(self):
+        jid = "f" * 32
+        sentinel = self.data / "biblioteca.json"
+        server.jobs.clear()
+        server.jobs[jid] = {
+            "status": "done",
+            "created_at": time.time(),
+            "finished_at": time.time(),
+            "result": {
+                "voz": f"/musicas/{sentinel.name}",
+                "instrumental": "/musicas/1234567890_abcdef_instrumental.wav",
+            },
+        }
+        with server._jobs_registry_lock:
+            server._persist_jobs_locked()
+        server.jobs.clear()
+
+        server.recover_separation_jobs()
+
+        recovered = server.job_status(jid)
+        self.assertEqual(recovered["status"], "error")
+        self.assertIn("arquivos de resultado", recovered["msg"].lower())
+
+    def test_recovery_rejects_mismatched_separation_output_pair(self):
+        jid = "g" * 32
+        vocals = self.data / "1234567890_abcdef_voz.wav"
+        instrumental = self.data / "1234567890_123456_instrumental.wav"
+        vocals.write_bytes(b"vocals")
+        instrumental.write_bytes(b"instrumental")
+        server.jobs.clear()
+        server.jobs[jid] = {
+            "status": "done",
+            "created_at": time.time(),
+            "finished_at": time.time(),
+            "result": {"voz": f"/musicas/{vocals.name}", "instrumental": f"/musicas/{instrumental.name}"},
+        }
+        with server._jobs_registry_lock:
+            server._persist_jobs_locked()
+        server.jobs.clear()
+
+        server.recover_separation_jobs()
+
+        self.assertEqual(server.job_status(jid)["status"], "error")
 
     def test_recovery_preserves_invalid_utf8_job_registry(self):
         jobs_file = self.data / server._JOBS_FILE_NAME
