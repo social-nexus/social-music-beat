@@ -39,6 +39,26 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(server.read_lib(), [])
         self.assertFalse(self.audio_file.exists())
 
+    def test_delete_preserves_audio_shared_with_remaining_track(self):
+        server.write_lib([
+            {"id": "track-1", "file": "track.wav"},
+            {"id": "track-2", "file": "track.wav"},
+        ])
+        result = server.delete_track("track-1")
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(server.read_lib(), [{"id": "track-2", "file": "track.wav"}])
+        self.assertTrue(self.audio_file.exists())
+    
+    def test_delete_duplicate_records_stages_audio_only_once(self):
+        server.write_lib([
+            {"id": "dup-id", "file": "track.wav"},
+            {"id": "dup-id", "file": "track.wav"},
+        ])
+        result = server.delete_track("dup-id")
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(server.read_lib(), [])
+        self.assertFalse(self.audio_file.exists())
+
     def test_audio_stage_failure_keeps_metadata_and_audio(self):
         original_replace = server.os.replace
 
