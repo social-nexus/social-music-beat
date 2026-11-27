@@ -834,12 +834,12 @@ function CompositorPanel({ onUseLyrics }) {
         </label>
         {provider !== "local" && <>
           <label className="block text-xs font-semibold text-zinc-300">Modelo (ID do provedor)
-            <input className={inputCls + " mt-1"} value={providerModel} onChange={(e) => setProviderModel(e.target.value)} list="provider-model-options" placeholder="Informe o identificador do modelo"/>
+            <input className={inputCls + " mt-1"} value={providerModel} onChange={(e) => setProviderModel(e.target.value)} list="provider-model-options" placeholder={t("providerModelPlaceholder")}/>
             <datalist id="provider-model-options">{(providerConfig.providers.find((p) => p.id === provider)?.models || []).map((m) => <option key={m} value={m}/>)}</datalist>
           </label>
           <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
             <p className="text-xs text-zinc-300">{providerConfig.providers.find((p) => p.id === provider)?.configured ? "Uma chave já está cadastrada para este provedor." : "Cadastre sua chave de API para habilitar este provedor."}</p>
-            <input type="password" autoComplete="new-password" className={inputCls} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Cole sua chave de API aqui"/>
+            <input type="password" autoComplete="new-password" className={inputCls} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder={t("apiKeyPlaceholder")}/>
             <div className="flex flex-wrap gap-2">
               <button disabled={providerBusy || !apiKey.trim() || !providerConfig.secure_storage_available} onClick={saveProviderKey} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-black disabled:opacity-40">{t("providerSaveKey")}</button>
               <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured} onClick={removeProviderKey} className="rounded-lg border border-white/15 px-3 py-2 text-xs">{t("providerRemoveKey")}</button>
@@ -935,7 +935,7 @@ function CompositorPanel({ onUseLyrics }) {
             </select>
           </label>
           <label className="block text-xs font-semibold text-zinc-300">{t("melodyWords")}
-            <textarea rows={3} className={inputCls + " mt-1"} value={melodyWords} onChange={(e) => setMelodyWords(e.target.value)} placeholder="A letra reconhecida aparecerá aqui. Você também pode corrigir ou escrever manualmente."/>
+            <textarea rows={3} className={inputCls + " mt-1"} value={melodyWords} onChange={(e) => setMelodyWords(e.target.value)} placeholder={t("melodyWordsPlaceholder")}/>
           </label>
           <div className="flex flex-wrap items-center gap-2">
             <label className="text-[11px] text-zinc-400">Modelo Whisper
@@ -1272,7 +1272,7 @@ export default function App() {
                 <textarea
                   rows={3}
                   className={inputCls}
-                  placeholder="Ex.: pop animado, violão, bateria leve (clique nos botões abaixo para preencher)"
+                  placeholder={t("stylePlaceholder")}
                   value={form.style}
                   onChange={(e) => set("style", e.target.value)}
                 />
@@ -1317,7 +1317,7 @@ export default function App() {
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-zinc-300">{t("titleOptional")}</label>
-                <input className={inputCls} value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Minha música" />
+                <input className={inputCls} value={form.title} onChange={(e) => set("title", e.target.value)} placeholder={t("titlePlaceholder")} />
               </div>
 
               <button onClick={() => setShowAdv((s) => !s)} className="text-xs font-semibold text-zinc-400 hover:text-white">
@@ -1332,7 +1332,7 @@ export default function App() {
                     <input type="range" min={30} max={240} step={10} value={form.duration} onChange={(e) => set("duration", Number(e.target.value))} className="w-full" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <input className={inputCls} type="number" placeholder="BPM (automático)" value={form.bpm} onChange={(e) => set("bpm", e.target.value)} />
+                    <input className={inputCls} type="number" placeholder={t("bpmPlaceholder")} value={form.bpm} onChange={(e) => set("bpm", e.target.value)} />
                     <select className={inputCls} value={form.key} onChange={(e) => set("key", e.target.value)}>
                       {KEYS.map((k) => <option key={k} value={k}>{k || "Tom: automático"}</option>)}
                     </select>
@@ -1387,7 +1387,7 @@ export default function App() {
                     <button
                       onClick={() => setPlayer({ id: t.id, title: t.title, url: t.file })}
                       className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${KIND_COLOR[t.kind] || KIND_COLOR.song}`}
-                      title="Ouvir"
+                      title={t("trackListen")}
                     >
                       {playing ? <Pause className="text-white" /> : <Play className="text-white" />}
                     </button>
@@ -1421,7 +1421,7 @@ export default function App() {
                           <Mic size={14} /> Cantar por cima
                         </button>
                       )}
-                      <button onClick={() => removeTrack(t)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title="Excluir">
+                      <button onClick={() => removeTrack(t)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title={t("trackDelete")}>
                         <Trash2 size={15} />
                       </button>
                     </div>
