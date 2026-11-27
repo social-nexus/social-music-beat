@@ -206,7 +206,9 @@ def delete_track(tid: str):
 
         # Do not remove audio that is still referenced by another library entry.
         remaining = [t for t in items if t.get("id") != tid]
-        retained_names = {Path(str(t.get("file", ""))).name for t in remaining if t.get("file")}
+        # Case-fold names for cross-platform safety: Windows treats filenames
+        # case-insensitively, so differently-cased metadata may still share one file.
+        retained_names = {Path(str(t.get("file", ""))).name.casefold() for t in remaining if t.get("file")}
         # Stage unique files only. If metadata persistence fails, restore staged
         # files so the client can reload and keep the track instead of losing it.
         staged_files = []
@@ -214,9 +216,9 @@ def delete_track(tid: str):
         try:
             for track in gone:
                 name = Path(str(track.get("file", ""))).name
-                if not name or name in retained_names or name in staged_names:
+                if not name or name.casefold() in retained_names or name.casefold() in staged_names:
                     continue
-                staged_names.add(name)
+                staged_names.add(name.casefold())
                 audio_path = DATA / name
                 if audio_path.is_file():
                     staged_path = DATA / f".{name}.{uuid.uuid4().hex}.deleting"
