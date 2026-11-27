@@ -548,6 +548,7 @@ function CompositorPanel({ onUseLyrics }) {
   const [providerModel, setProviderModel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [providerBusy, setProviderBusy] = useState(false);
+  const [providerStartedAt, setProviderStartedAt] = useState(0);
   const [runtime, setRuntime] = useState("");
   const [model, setModel] = useState("qwen3-4b-q4km");
   const [gemmaAccepted, setGemmaAccepted] = useState(false);
@@ -584,7 +585,7 @@ function CompositorPanel({ onUseLyrics }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => { if (!busy && !melodyBusy && !transcriptionBusy) return undefined; const timer = window.setInterval(() => setTimerTick((n) => n + 1), 1000); return () => window.clearInterval(timer); }, [busy, melodyBusy, transcriptionBusy]);
+  useEffect(() => { if (!busy && !melodyBusy && !transcriptionBusy && !providerBusy) return undefined; const timer = window.setInterval(() => setTimerTick((n) => n + 1), 1000); return () => window.clearInterval(timer); }, [busy, melodyBusy, transcriptionBusy, providerBusy]);
 
   useEffect(() => () => {
     if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
@@ -621,7 +622,7 @@ function CompositorPanel({ onUseLyrics }) {
 
   const saveProviderKey = async () => {
     if (!provider || provider === "local" || !apiKey.trim()) { setError("Escolha um provedor e informe a chave de API."); return; }
-    setProviderBusy(true); setError(""); setMessage("Salvando a chave no cofre seguro do sistema…");
+    setProviderStartedAt(Date.now()); setProviderBusy(true); setError(""); setMessage("Salvando a chave no cofre seguro do sistema…");
     try {
       await jsonPost("/api/ai/providers/key", { provider, api_key: apiKey.trim() });
       setApiKey(""); await refresh(); setMessage("Chave salva no cofre de credenciais do sistema.");
@@ -653,7 +654,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const installRuntime = async () => {
-    setBusySince(Date.now()); setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Preparando o motor local…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Preparando o motor local…");
     try {
       const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
       if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
@@ -807,6 +808,8 @@ function CompositorPanel({ onUseLyrics }) {
       </div>
 
       {busy && busySince > 0 && <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-3 py-2 text-xs text-sky-200">{t("operationElapsed")}: <span className="font-mono">{mmss(Math.floor((Date.now() - busySince) / 1000))}</span></div>}
+
+      {providerBusy && providerStartedAt > 0 && <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 px-3 py-2 text-xs text-violet-200">{t("providerElapsed")}: <span className="font-mono">{mmss(Math.floor((Date.now() - providerStartedAt) / 1000))}</span></div>}
 
       {(error || message) && (
         <div className={error ? "rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200" : "rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-sm text-sky-200"}>
