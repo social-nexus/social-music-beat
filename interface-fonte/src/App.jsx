@@ -233,17 +233,26 @@ function encodeWav(pcm, rate) {
 }
 
 // Converte qualquer áudio (mp3, wav, m4a...) para WAV mono 44,1 kHz
-async function toWavBlob(file, maxSec = 600) {
+async function toWavBlob(file, maxSec = 600, uiLanguage = "pt") {
+  let decoded;
   const ctx = new AudioContext();
-  const decoded = await ctx.decodeAudioData(await file.arrayBuffer());
-  ctx.close();
+  try {
+    decoded = await ctx.decodeAudioData(await file.arrayBuffer());
+  } catch {
+    throw new Error(uiText(uiLanguage, "errAudioConvert"));
+  } finally {
+    try { await ctx.close(); } catch { /* Audio context cleanup is best effort. */ }
+  }
+  if (!Number.isFinite(decoded?.duration) || decoded.duration <= 0) {
+    throw new Error(uiText(uiLanguage, "errAudioConvert"));
+  }
   const seconds = Math.min(decoded.duration, maxSec);
   const rate = 44100;
   const off = new OfflineAudioContext(1, Math.ceil(seconds * rate), rate);
   const node = off.createBufferSource();
   node.buffer = decoded;
   node.connect(off.destination);
-  node.start();
+  node.start(0, 0, seconds);
   const rendered = await off.startRendering();
   const f32 = rendered.getChannelData(0);
   const pcm = new Int16Array(f32.length);
@@ -390,7 +399,7 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
     try {
       let jid;
       if (outro) {
-        const { blob } = await toWavBlob(outro);
+        const { blob } = await toWavBlob(outro, 600, language);
         const fd = new FormData();
         fd.append("audio", blob, "audio.wav");
         fd.append("roteiro", letra);
@@ -840,7 +849,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     if (!melodyFile) { setError(tx("errMelodyReference")); return; }
     setTranscriptionBusy(true); setTranscriptionMessage(tx("msgWhisperPrepare")); setError("");
     try {
-      const { blob } = await toWavBlob(melodyFile, 30);
+      const { blob } = await toWavBlob(melodyFile, 30, uiLanguage);
       const fd = new FormData();
       fd.append("audio", blob, "referencia.wav");
       fd.append("modelo", transcriptionModel);
@@ -1317,7 +1326,7 @@ export default function App() {
     setVoiceFor(null);
     return runJob(`${uiLanguage === "en" ? "Band for" : uiLanguage === "es" ? "Banda para" : "Banda para"}: ${parent.title}`, async (phase) => {
       phase(uiLanguage === "en" ? "Preparing your voice..." : uiLanguage === "es" ? "Preparando tu voz..." : "Preparando a sua voz...");
-      const { blob, seconds } = await toWavBlob(o.file);
+      const { blob, seconds } = await toWavBlob(o.file, 600, uiLanguage);
       if (seconds < 10) throw new Error(uiLanguage === "en" ? "Your voice recording must be at least 10 seconds long." : uiLanguage === "es" ? "La grabación de tu voz debe durar al menos 10 segundos." : "O áudio da sua voz precisa ter pelo menos 10 segundos.");
       const params = {
         prompt: o.style.trim() || parent.style || "band accompaniment",
