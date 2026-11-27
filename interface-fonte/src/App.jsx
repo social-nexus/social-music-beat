@@ -1135,8 +1135,9 @@ export default function App() {
   }, [job]);
 
   const addTrack = useCallback(async (t) => {
-    setTracks((prev) => [t, ...prev]);
-    await jsonPost("/api/library", t).catch(() => {});
+    // Persist first; only publish the track in the UI after the server confirms it.
+    await jsonPost("/api/library", t);
+    setTracks((prev) => [t, ...prev.filter((item) => item.id !== t.id)]);
   }, []);
 
   const runJob = async (title, fn) => {
@@ -1162,8 +1163,9 @@ export default function App() {
     for (const it of items) {
       if (!it.file) continue;
       n += 1;
-      const { file } = await jsonPost("/api/save", { url: it.file });
-      await addTrack({ id: uid(), file, createdAt: Date.now(), ...make(it, n, items.length) });
+      const saved = await jsonPost("/api/save", { url: it.file });
+      if (!saved?.file) throw new Error(tx("errNoAudio"));
+      await addTrack({ id: uid(), file: saved.file, createdAt: Date.now(), ...make(it, n, items.length) });
     }
     if (!n) throw new Error(tx("errNoAudio"));
   };
@@ -1184,6 +1186,7 @@ export default function App() {
       phase(localizedPhase);
       if (s.status === "error") throw new Error(s.msg || tx("errUnexpectedJobStatus"));
       if (s.status === "done") {
+        if (!s.result?.voz || !s.result?.instrumental) throw new Error(tx("errUnexpectedJobStatus"));
         const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key, language: t.language || form.lang };
         await addTrack({ ...base, id: uid(), kind: "voz", title: titles.voz, file: s.result.voz });
         await addTrack({ ...base, id: uid(), kind: "instrumental", title: titles.instrumental, file: s.result.instrumental });
