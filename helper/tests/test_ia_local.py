@@ -104,6 +104,47 @@ class RuntimeCatalogTests(unittest.TestCase):
                 self.assertEqual(ia_local.JOBS[jid]["status"], "error")
                 self.assertIn("thread startup failed", ia_local.JOBS[jid]["message"])
 
+    def test_runtime_replacement_preserves_previous_install_on_swap_failure(self):
+        root = Path(TEMP_DATA) / "runtime-swap-failure"
+        final = root / "runtime"
+        staged = root / ".runtime.staging"
+        final.mkdir(parents=True, exist_ok=True)
+        staged.mkdir(parents=True, exist_ok=True)
+        (final / "llama-server").write_text("working-old", encoding="utf-8")
+        (staged / "llama-server").write_text("new-runtime", encoding="utf-8")
+        real_replace = os.replace
+        calls = 0
+
+        def fail_staged_swap(source, destination):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise OSError("simulated activation failure")
+            return real_replace(source, destination)
+
+        with mock.patch.object(ia_local.os, "replace", side_effect=fail_staged_swap):
+            with self.assertRaisesRegex(OSError, "simulated activation failure"):
+                ia_local._replace_runtime_directory(staged, final)
+
+        self.assertEqual((final / "llama-server").read_text(encoding="utf-8"), "working-old")
+        self.assertTrue(staged.exists())
+        self.assertFalse(any(root.glob(".runtime.backup-*")))
+
+    def test_runtime_replacement_activates_new_install_and_cleans_backup(self):
+        root = Path(TEMP_DATA) / "runtime-swap-success"
+        final = root / "runtime"
+        staged = root / ".runtime.staging"
+        final.mkdir(parents=True, exist_ok=True)
+        staged.mkdir(parents=True, exist_ok=True)
+        (final / "llama-server").write_text("old", encoding="utf-8")
+        (staged / "llama-server").write_text("new", encoding="utf-8")
+
+        ia_local._replace_runtime_directory(staged, final)
+
+        self.assertEqual((final / "llama-server").read_text(encoding="utf-8"), "new")
+        self.assertFalse(staged.exists())
+        self.assertFalse(any(root.glob(".runtime.backup-*")))
+
     def test_archive_path_rejects_parent_traversal(self):
         root = Path(TEMP_DATA) / "extract"
         with self.assertRaises(ValueError):

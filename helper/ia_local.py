@@ -293,6 +293,22 @@ def _runtime_binary(variant: str) -> Path | None:
     candidates = list(root.rglob(meta["binary"])) if root.exists() else []
     return candidates[0] if candidates else None
 
+def _replace_runtime_directory(staged: Path, final: Path):
+    """Replace a runtime directory without deleting the working install first."""
+    backup = final.with_name(f".{final.name}.backup-{uuid.uuid4().hex}")
+    had_existing = final.exists()
+    if had_existing:
+        os.replace(final, backup)
+    try:
+        os.replace(staged, final)
+    except Exception:
+        if had_existing and backup.exists() and not final.exists():
+            os.replace(backup, final)
+        raise
+    if backup.exists():
+        shutil.rmtree(backup, ignore_errors=True)
+
+
 def _install_runtime_worker(jid: str, variant: str):
     meta = RUNTIME_CATALOG[variant]
     try:
@@ -315,9 +331,17 @@ def _install_runtime_worker(jid: str, variant: str):
             if binary is None:
                 raise ValueError("O pacote não contém llama-server.")
             final = RUNTIME_DIR / variant
-            if final.exists():
-                shutil.rmtree(final)
-            shutil.copytree(extracted, final)
+            final.parent.mkdir(parents=True, exist_ok=True)
+            staged = final.with_name(f".{final.name}.staging-{uuid.uuid4().hex}")
+            try:
+                shutil.copytree(extracted, staged)
+                staged_binary = staged / binary.relative_to(extracted)
+                if os.name != "nt":
+                    staged_binary.chmod(staged_binary.stat().st_mode | 0o111)
+                _replace_runtime_directory(staged, final)
+            finally:
+                if staged.exists():
+                    shutil.rmtree(staged, ignore_errors=True)
             installed = final / binary.relative_to(extracted)
             if os.name != "nt":
                 installed.chmod(installed.stat().st_mode | 0o111)
