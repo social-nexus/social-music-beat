@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useLocale } from "./i18n";
 import {
   AlertTriangle, Download, FileText, HelpCircle, Loader2, Mic, Music, Pause, Play, Scissors, Sparkles, Trash2, X,
 } from "lucide-react";
@@ -1152,7 +1153,7 @@ export default function App() {
   };
 
   const busy = !!job;
-  const elapsed = job ? Math.floor((Date.now() - job.startedAt) / 1000) : 0;
+  const elapsed = job ? Math.floor((Date.now() - job.startedAt) / 1000) : 0;\n  const phaseElapsed = job ? Math.floor((Date.now() - (job.phaseStartedAt || job.startedAt)) / 1000) : 0;
 
   return (
     <div className="min-h-screen bg-[#0c0c10] text-zinc-100 flex">
@@ -1344,9 +1345,9 @@ export default function App() {
                   <Loader2 className="animate-spin text-pink-400" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-bold">{job.title}</div>
-                    <div className="text-xs text-zinc-400">{job.phase}</div>
+                    <div className="text-xs text-zinc-400">{t("stage")}: {job.phase}</div><div className="mt-1 text-[11px] text-zinc-500">{t("stageElapsed")}: <span className="font-mono">{mmss(phaseElapsed)}</span></div>
                   </div>
-                  <div className="font-mono text-sm text-pink-300">{mmss(elapsed)}</div>
+                  <div className="text-right"><div className="text-[10px] text-zinc-500">{t("totalElapsed")}</div><div className="font-mono text-sm text-pink-300">{mmss(elapsed)}</div></div>
                 </div>
               )}
 
