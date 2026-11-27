@@ -1114,11 +1114,11 @@ export default function App() {
   };
 
   // -------- 2) separar voz e instrumental
-  const separateTrack = (t) =>
-    runJob(`${t("separatingTitlePrefix")}${t.title}`, (phase) =>
-      separateInto(t, {
-        voz: `${t.title} (voz)`,
-        instrumental: t.kind === "banda" ? `${t.title} (só a banda)` : `${t.title} (instrumental)`,
+  const separateTrack = (track) =>
+    runJob(`${t("separatingTitlePrefix")}${track.title}`, (phase) =>
+      separateInto(track, {
+        voz: `${track.title} (voz)`,
+        instrumental: track.kind === "banda" ? `${track.title} (só a banda)` : `${track.title} (instrumental)`,
       }, phase));
 
   // -------- 3) cantar por cima: criar a banda para a voz do usuário
