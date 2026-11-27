@@ -73,7 +73,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         original_replace = server.os.replace
 
         def fail_second_move(src, dst):
-            if Path(dst) == final_instrumental:
+            if Path(src) == staged_instrumental and Path(dst) == final_instrumental:
                 raise OSError("simulated promotion failure")
             return original_replace(src, dst)
 
