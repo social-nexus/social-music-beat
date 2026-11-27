@@ -391,6 +391,13 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(raised.exception.status_code, 409)
         self.assertTrue(self.audio_file.exists())
 
+    def test_cleanup_cannot_bypass_registered_audio_with_different_case(self):
+        server.write_lib([{"id": "track-1", "file": "TRACK.WAV"}])
+        with self.assertRaises(server.HTTPException) as raised:
+            server.cleanup_unregistered_audio({"file": "track.wav"})
+        self.assertEqual(raised.exception.status_code, 409)
+        self.assertTrue(self.audio_file.exists())
+
     def test_delete_unknown_id_is_noop(self):
         result = server.delete_track("missing")
         self.assertEqual(result, {"ok": True})
