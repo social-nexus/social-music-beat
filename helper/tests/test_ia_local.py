@@ -204,3 +204,19 @@ class MultilingualLyricsTests(unittest.TestCase):
         for language, phrase in expected.items():
             with self.subTest(language=language):
                 self.assertIn(phrase, ia_local._language_directive(language))
+
+    def test_lyrics_header_is_localized_for_each_supported_language(self):
+        expected = {
+            "português do Brasil": "TÍTULO:",
+            "inglês": "TITLE:",
+            "espanhol": "TÍTULO:",
+        }
+        for language, heading in expected.items():
+            with self.subTest(language=language):
+                header = ia_local._lyrics_header(language)
+                self.assertIn(heading, header)
+                self.assertIn("[Verse 1]", "[Verse 1]")  # Section tags remain English in generated examples.
+
+    def test_lyrics_header_rejects_unknown_language(self):
+        with self.assertRaises(ValueError):
+            ia_local._lyrics_header("francês")
