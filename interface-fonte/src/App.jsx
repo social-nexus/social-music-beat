@@ -964,10 +964,10 @@ function CompositorPanel({ onUseLyrics }) {
           {recording && recordingStartedAt > 0 && <div className="flex items-center gap-2 text-xs text-rose-200"><Mic size={14}/> {t("elapsed")}: <span className="font-mono">{mmss(Math.floor((Date.now() - recordingStartedAt) / 1000))}</span> / 00:30</div>}
           {melodyBusy && <div className="flex items-center gap-2 text-xs text-zinc-300"><Loader2 size={14} className="animate-spin"/> {t("analyzingMelody")} <span className="font-mono">{mmss(Math.floor((Date.now() - melodyStartedAt) / 1000))}</span></div>}
           {melodyAnalysis && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
-            <p className="text-xs font-semibold text-emerald-200">{t("referenceReady")} {melodyFile?.name || "gravação"}</p>
+            <p className="text-xs font-semibold text-emerald-200">{t("referenceReady")} {melodyFile?.name || t("recordingFallback")}</p>
             <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">{melodyAnalysis.summary}</p>
           </div>}
-          <p className="text-[11px] text-zinc-500">Privacidade: a análise melódica continua no navegador. Se você solicitar a transcrição, o áudio será processado somente pelo Whisper instalado neste computador (CPU), sem serviço externo, e será apagado após o processamento. O Whisper pode errar palavras cantadas ou não reconhecer sílabas inventadas; revise a letra. A transcrição não cria legendas nem timestamps.</p>
+          <p className="text-[11px] text-zinc-500">{t("privacyMelodyNotice")}</p>
         </div>
         <div><label className="mb-1.5 block text-xs font-semibold text-zinc-300">{compositionMode==="full"?"Tema ou história":"Orientação adicional (opcional)"}</label>
           <textarea rows={2} className={inputCls} value={theme} onChange={(e)=>setTheme(e.target.value)} placeholder={compositionMode==="full"?"Ex.: um pai ensinando o filho a pescar e lembrando da própria infância":"Ex.: deixe o refrão mais emocionante, simples e fácil de memorizar"}/>
