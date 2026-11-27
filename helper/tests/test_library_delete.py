@@ -1,4 +1,6 @@
 import os
+import threading
+import time
 import tempfile
 import unittest
 import sys
@@ -82,6 +84,35 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertFalse(final_instrumental.exists())
         self.assertFalse(staged_vocals.exists())
         self.assertFalse(staged_instrumental.exists())
+
+    def test_separation_workers_are_serialized(self):
+        server.jobs.clear()
+        active = 0
+        maximum = 0
+        counter_lock = threading.Lock()
+        def mocked_separate(src, stem):
+            nonlocal active, maximum
+            with counter_lock:
+                active += 1
+                maximum = max(maximum, active)
+            time.sleep(0.04)
+            with counter_lock:
+                active -= 1
+            return {"voice": "v.wav", "instrumental": "i.wav"}
+        server._separation_job_lock = threading.Lock()
+        with mock.patch.object(server, "separate_file", side_effect=mocked_separate):
+            threads = []
+            for jid in ("job-a", "job-b"):
+                server.jobs[jid] = {"status": "running", "msg": "Na fila..."}
+                thread = threading.Thread(target=server.run_separation, args=(jid, self.audio_file))
+                thread.start()
+                threads.append(thread)
+            for thread in threads:
+                thread.join(timeout=2)
+                self.assertFalse(thread.is_alive())
+        self.assertEqual(maximum, 1)
+        self.assertEqual(server.jobs["job-a"]["status"], "done")
+        self.assertEqual(server.jobs["job-b"]["status"], "done")
 
     def test_audio_persist_publishes_complete_file(self):
         result = server._persist_audio_content(b"full-audio-payload", "wav")

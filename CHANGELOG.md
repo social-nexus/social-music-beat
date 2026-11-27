@@ -1,6 +1,7 @@
 # Histórico de alterações
 
 ## [3.1.0]
+- Serialize backend Demucs separation jobs so concurrent requests queue safely instead of using the model at the same time.
 - Persist multi-version song generation as a single library batch; clean up all downloaded files if the batch fails.
 - Save downloaded generated audio through a temporary file and atomic rename to avoid partially written library files.
 - Register separated vocal and instrumental stems together, preventing partial library updates.

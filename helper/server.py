@@ -384,12 +384,18 @@ def separate_file(src: Path, stem: str):
     return out
 
 
+_separation_job_lock = threading.Lock()
+
+
 def run_separation(jid: str, src: Path):
     try:
-        jobs[jid]["msg"] = "Carregando o separador (na primeira vez baixa um arquivo pequeno)..."
-        stem = f"{int(time.time())}_{uuid.uuid4().hex[:6]}"
-        jobs[jid]["msg"] = "Separando voz e instrumental. Pode levar alguns minutos..."
-        jobs[jid].update(status="done", result=separate_file(src, stem))
+        # Demucs/model inference is serialized to prevent concurrent model use.
+        jobs[jid]["msg"] = "Na fila..."
+        with _separation_job_lock:
+            jobs[jid]["msg"] = "Carregando o separador (na primeira vez baixa um arquivo pequeno)..."
+            stem = f"{int(time.time())}_{uuid.uuid4().hex[:6]}"
+            jobs[jid]["msg"] = "Separando voz e instrumental. Pode levar alguns minutos..."
+            jobs[jid].update(status="done", result=separate_file(src, stem))
     except Exception as e:  # mostra o erro de forma simples na interface
         jobs[jid].update(status="error", msg=f"{type(e).__name__}: {e}"[:400])
 
