@@ -570,6 +570,8 @@ async def save_audio(payload: dict):
         raise HTTPException(502, "Não consegui conectar ao motor de áudio para baixar o arquivo.") from exc
     if r.status_code != 200:
         raise HTTPException(502, "Não consegui baixar o áudio gerado.")
+    if not r.content:
+        raise HTTPException(502, "O motor de áudio retornou um arquivo vazio.")
     return {"file": _persist_audio_content(r.content, sniff_ext(r.content))}
 
 
