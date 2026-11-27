@@ -1432,7 +1432,7 @@ export default function App() {
                         onClick={() => setStyleCategory(category)}
                         className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${styleCategory === category ? "border-pink-500 bg-pink-500/15 text-pink-200" : "border-white/10 text-zinc-400 hover:border-white/30 hover:text-white"}`}
                       >
-                        {category}
+                        {(STYLE_CATEGORY_LABELS[category] && STYLE_CATEGORY_LABELS[category][uiLanguage]) || category}
                       </button>
                     ))}
                   </div>
@@ -1444,7 +1444,7 @@ export default function App() {
                         onClick={() => set("style", form.style.trim() ? `${form.style.trim().replace(/,$/, "")}, ${s.v}` : s.v)}
                         className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-zinc-300 hover:border-pink-500/60 hover:text-white"
                       >
-                        + {s.label}
+                        + {(STYLE_LABELS[s.label] && STYLE_LABELS[s.label][uiLanguage]) || s.label}
                       </button>
                     ))}
                   </div>
