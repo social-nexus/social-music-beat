@@ -1,11 +1,20 @@
 import os
 import tempfile
 import unittest
+import sys
+import types
 from pathlib import Path
 from unittest import mock
 
 TEST_DATA = tempfile.mkdtemp(prefix="smb-library-delete-tests-")
 os.environ["SOCIAL_MUSIC_BEAT_DATA"] = TEST_DATA
+
+# The library route tests do not exercise subtitle generation; avoid importing its
+# optional numpy/soundfile dependencies in the lightweight CI test environment.
+stub_legenda = types.ModuleType("legenda")
+from fastapi import APIRouter
+stub_legenda.router = APIRouter()
+sys.modules["legenda"] = stub_legenda
 
 import server
 
