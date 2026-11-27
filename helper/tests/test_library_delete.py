@@ -89,7 +89,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
 
     def test_recovery_preserves_invalid_utf8_job_registry(self):
         jobs_file = self.data / server._JOBS_FILE_NAME
-        original = b"\\xff\\xfe\\xfa"
+        original = b"\xff\xfe\xfa"
         jobs_file.write_bytes(original)
         sentinel = "e" * 32
         server.jobs.clear()
