@@ -746,7 +746,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     finally { setProviderBusy(false); }
   };
   const removeProviderKey = async () => {
-    if (!window.confirm("Remover a chave salva deste provedor?")) return;
+    if (!window.confirm(tx("msgRemoveKeyConfirm"))) return;
     setProviderBusy(true); setError("");
     try { await http("/api/ai/providers/key/" + provider, { method: "DELETE" }); await refresh(); setMessage(tx("msgApiKeyRemoved")); }
     catch (e) { setError(e.message); }
@@ -801,7 +801,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
 
   const startMelodyRecording = async () => {
     try {
-      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error("Gravação não suportada neste navegador.");
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error(tx("msgRecordingUnsupported"));
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       recordedChunksRef.current = [];
@@ -845,14 +845,14 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       const whisperLanguage = language.startsWith("inglês") ? "en" : language.startsWith("espanhol") ? "es" : "pt";
       fd.append("idioma", whisperLanguage);
       const started = await http("/api/legenda/transcrever", { method: "POST", body: fd });
-      if (!started.job) throw new Error("O Whisper não iniciou a transcrição.");
+      if (!started.job) throw new Error(tx("msgWhisperNotStarted"));
       for (;;) {
         await sleep(1200);
         const job = await http("/api/legenda/transcrever/" + started.job);
         setTranscriptionMessage(job.msg || tx("msgWhisperListen"));
         if (job.status === "erro") throw new Error(job.msg || "Não foi possível transcrever o áudio.");
         if (job.status === "pronto") {
-          if (!job.transcript?.trim()) throw new Error("O Whisper não identificou palavras. Se você apenas cantarolou, pode deixar o campo de palavras vazio.");
+          if (!job.transcript?.trim()) throw new Error(tx("msgWhisperNoWords"));
           setMelodyWords(job.transcript.trim());
           setTranscriptionMessage(tx("msgWhisperDone"));
           return;
