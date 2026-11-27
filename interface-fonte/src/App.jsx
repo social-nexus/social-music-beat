@@ -1291,9 +1291,16 @@ export default function App() {
 
   const removeTrack = async (t) => {
     if (!window.confirm(`${tx("deleteConfirm")} “${t.title}”? ${tx("deleteFileConfirm")}`)) return;
+    const previousPlayer = player?.id === t.id ? player : null;
     setTracks((prev) => prev.filter((x) => x.id !== t.id));
-    if (player?.id === t.id) setPlayer(null);
-    await http(`/api/library/${t.id}`, { method: "DELETE" }).catch(() => {});
+    if (previousPlayer) setPlayer(null);
+    try {
+      await http(`/api/library/${t.id}`, { method: "DELETE" });
+    } catch {
+      setTracks((prev) => prev.some((x) => x.id === t.id) ? prev : [t, ...prev]);
+      if (previousPlayer) setPlayer(previousPlayer);
+      setErr(tx("errDeleteTrack"));
+    }
   };
 
   const busy = !!job;

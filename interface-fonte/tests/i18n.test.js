@@ -121,6 +121,15 @@ for (const locale of requiredLocales) {
   }
 }
 
+
+const localizedDeleteErrors = { pt: "Não foi possível excluir a faixa. Ela foi restaurada na Biblioteca.", en: "Could not delete the track. It has been restored to the Library.", es: "No se pudo eliminar la pista. Se restauró en la Biblioteca." };
+for (const locale of requiredLocales) {
+  if (uiText(locale, "errDeleteTrack") !== localizedDeleteErrors[locale]) {
+    failed = true;
+    console.error(`Locale ${locale}: delete-track error message mismatch`);
+  }
+}
+
 // Verify the library actions that were recently audited remain localized.
 const localizedLibraryLabels = {
   pt: { download: "Baixar", separate: "Separar voz e instrumental" },

@@ -85,3 +85,7 @@ As versões e datas abaixo descrevem a evolução do projeto. Consulte também o
 
 ### Estados inesperados de tarefas
 - Prevenção de tarefas globais simultâneas e encerramento explícito de polling com status desconhecido.
+
+
+### Exclusão com restauração em falha
+- Exclusão da Biblioteca agora restaura faixa e player em caso de erro de servidor, com aviso localizado.
