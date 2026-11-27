@@ -722,10 +722,10 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
 
   const saveProviderKey = async () => {
     if (!provider || provider === "local" || !apiKey.trim()) { setError("Escolha um provedor e informe a chave de API."); return; }
-    setProviderBusy(true); setError(""); setMessage("Salvando a chave no cofre seguro do sistema…");
+    setProviderBusy(true); setError(""); setMessage(tx("msgSaveApiKey"));
     try {
       await jsonPost("/api/ai/providers/key", { provider, api_key: apiKey.trim() });
-      setApiKey(""); await refresh(); setMessage("Chave salva no cofre de credenciais do sistema.");
+      setApiKey(""); await refresh(); setMessage(tx("msgApiKeySaved"));
     } catch (e) { setError(e.message); }
     finally { setProviderBusy(false); }
   };
@@ -738,7 +738,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     finally { setProviderBusy(false); }
   };
   const testProvider = async () => {
-    setProviderBusy(true); setError(""); setMessage("Testando conexão com o provedor…");
+    setProviderBusy(true); setError(""); setMessage(tx("msgTestProvider"));
     try {
       const r = await jsonPost("/api/ai/providers/test", { provider, model: providerModel });
       setMessage("Conexão funcionando: " + r.message);
@@ -748,13 +748,13 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   const removeProviderKey = async () => {
     if (!window.confirm("Remover a chave salva deste provedor?")) return;
     setProviderBusy(true); setError("");
-    try { await http("/api/ai/providers/key/" + provider, { method: "DELETE" }); await refresh(); setMessage("Chave removida do cofre de credenciais."); }
+    try { await http("/api/ai/providers/key/" + provider, { method: "DELETE" }); await refresh(); setMessage(tx("msgApiKeyRemoved")); }
     catch (e) { setError(e.message); }
     finally { setProviderBusy(false); }
   };
 
   const installRuntime = async () => {
-    setBusy(true); setError(""); setMessage("Preparando o motor local…");
+    setBusy(true); setError(""); setMessage(tx("msgPrepareRuntime"));
     try {
       const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
       if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
@@ -764,7 +764,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   };
 
   const downloadModel = async () => {
-    setBusy(true); setError(""); setMessage("Preparando o download do modelo…");
+    setBusy(true); setError(""); setMessage(tx("msgPrepareModelDownload"));
     try {
       const r = await jsonPost("/api/ai/models/download", { model_id: model, accept_license: gemmaAccepted });
       if (r.job_id) await waitJob(r.job_id, "Modelo instalado e verificado.");
@@ -774,11 +774,11 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   };
 
   const activate = async () => {
-    setBusy(true); setError(""); setMessage("Carregando o modelo na memória…");
+    setBusy(true); setError(""); setMessage(tx("msgLoadModel"));
     try {
       await jsonPost("/api/ai/models/activate", { model_id: model, variant: runtime, gpu_layers: Number(gpuLayers) });
       await refresh();
-      setMessage("Modelo ativo. Você já pode compor.");
+      setMessage(tx("msgModelReady"));
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   };
@@ -787,12 +787,12 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     if (!file) return;
     if (!file.type.startsWith("audio/")) { setError("Escolha um arquivo de áudio."); return; }
     if (file.size > 25 * 1024 * 1024) { setError("O arquivo deve ter no máximo 25 MB."); return; }
-    setMelodyBusy(true); setError(""); setMessage("Analisando a referência musical no navegador…");
+    setMelodyBusy(true); setError(""); setMessage(tx("msgAnalyzeMelody"));
     try {
       const analysis = await analyzeMelodyReference(file, uiLanguage);
       setMelodyFile(file);
       setMelodyAnalysis(analysis);
-      setMessage("Referência analisada. Somente o resumo musical será enviado ao modelo local.");
+      setMessage(tx("msgMelodyAnalyzed"));
     } catch (e) {
       setMelodyFile(null); setMelodyAnalysis(null);
       setError("Não consegui analisar este áudio. Tente WAV, MP3 ou M4A em outro navegador. " + e.message);
@@ -822,7 +822,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       recordingTimerRef.current = window.setTimeout(() => {
         if (recorderRef.current && recorderRef.current.state === "recording") recorderRef.current.stop();
       }, 30000);
-      setRecording(true); setError(""); setMessage("Gravando… cante a ideia musical e depois pressione Parar.");
+      setRecording(true); setError(""); setMessage(tx("msgRecordingIdea"));
     } catch (e) {
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null; setRecording(false);
@@ -884,12 +884,12 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
 
   const importModel = async (file) => {
     if (!file) return;
-    setBusy(true); setError(""); setMessage("Importando arquivo GGUF…");
+    setBusy(true); setError(""); setMessage(tx("msgImportGguf"));
     try {
       const fd = new FormData(); fd.append("file", file);
       await http("/api/ai/models/import", { method: "POST", body: fd });
       await refresh();
-      setMessage("Modelo importado. Confirme a licença e selecione-o para ativar.");
+      setMessage(tx("msgGgufImported"));
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   };
