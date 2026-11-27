@@ -1387,7 +1387,7 @@ export default function App() {
                     <button
                       onClick={() => setPlayer({ id: track.id, title: track.title, url: track.file })}
                       className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${KIND_COLOR[track.kind] || KIND_COLOR.song}`}
-                      title={track("trackListen")}
+                      title={t("trackListen")}
                     >
                       {playing ? <Pause className="text-white" /> : <Play className="text-white" />}
                     </button>
@@ -1421,7 +1421,7 @@ export default function App() {
                           <Mic size={14} /> Cantar por cima
                         </button>
                       )}
-                      <button onClick={() => removeTrack(track)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title={track("trackDelete")}>
+                      <button onClick={() => removeTrack(track)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title={t("trackDelete")}>
                         <Trash2 size={15} />
                       </button>
                     </div>
