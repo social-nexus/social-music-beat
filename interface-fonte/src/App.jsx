@@ -680,7 +680,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   const [error, setError] = useState("");
   // O mesmo relógio acompanha instalação, download, ativação, análise, transcrição e composição.
   useEffect(() => {
-    const operationBusy = busy || providerBusy || melodyBusy || transcriptionBusy;
+    const operationBusy = busy || providerBusy || melodyBusy || transcriptionBusy || recording;
     if (operationBusy && !operationStartedAt) {
       setOperationStartedAt(Date.now());
       setOperationTick(0);
