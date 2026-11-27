@@ -1059,7 +1059,7 @@ export default function App() {
     setErr("");
     const startedAt = Date.now();
     setLastJob(null);
-    setJob({ title, phase: "Começando...", startedAt });
+    setJob({ title, phase: uiLanguage === "en" ? "Starting..." : uiLanguage === "es" ? "Iniciando..." : "Começando...", startedAt });
     const phase = (p) => setJob((j) => (j ? { ...j, phase: p } : j));
     let failed = false;
     try { await fn(phase); } catch (e) { failed = true; setErr(String(e.message || e)); }
@@ -1078,7 +1078,7 @@ export default function App() {
       const { file } = await jsonPost("/api/save", { url: it.file });
       await addTrack({ id: uid(), file, createdAt: Date.now(), ...make(it, n, items.length) });
     }
-    if (!n) throw new Error("O motor não devolveu nenhum áudio.");
+    if (!n) throw new Error(uiLanguage === "en" ? "The engine did not return any audio." : uiLanguage === "es" ? "El motor no devolvió ningún audio." : "O motor não devolveu nenhum áudio.");
   };
 
   const separateInto = async (t, titles, phase) => {
@@ -1101,8 +1101,8 @@ export default function App() {
   const createSong = () => {
     const title = form.title.trim() || "Minha música";
     return runJob(title, async (phase) => {
-      if (!form.instrumentalOnly && !form.lyrics.trim()) throw new Error("Escreva a letra (ou escolha “Só instrumental”).");
-      if (!form.style.trim()) throw new Error("Descreva o estilo da música. Dá para clicar nos botões de estilo.");
+      if (!form.instrumentalOnly && !form.lyrics.trim()) throw new Error(uiLanguage === "en" ? "Enter the lyrics (or choose “Instrumental only”)." : uiLanguage === "es" ? "Escribe la letra (o elige “Solo instrumental”)." : "Escreva a letra (ou escolha “Só instrumental”).");
+      if (!form.style.trim()) throw new Error(uiLanguage === "en" ? "Describe the music style. You can also click the style buttons." : uiLanguage === "es" ? "Describe el estilo musical. También puedes usar los botones de estilos." : "Descreva o estilo da música. Dá para clicar nos botões de estilo.");
       const voice = form.instrumentalOnly ? "" : form.voiceKind === "female" ? "female vocals" : form.voiceKind === "male" ? "male vocals" : "";
       const caption = [form.style.trim(), voice].filter(Boolean).join(", ");
       const params = {
@@ -1122,11 +1122,11 @@ export default function App() {
       };
       if (form.bpm) params.bpm = Number(form.bpm);
       if (form.key) params.key_scale = form.key;
-      phase("Enviando para o motor de música...");
+      phase(uiLanguage === "en" ? "Sending to the music engine..." : uiLanguage === "es" ? "Enviando al motor de música..." : "Enviando para o motor de música...");
       const id = await submitTask(params);
-      phase("Criando a música... (na primeira vez demora mais)");
+      phase(uiLanguage === "en" ? "Creating the song... (the first run takes longer)" : uiLanguage === "es" ? "Creando la canción... (la primera vez tarda más)" : "Criando a música... (na primeira vez demora mais)");
       const items = await waitResult(id);
-      phase("Guardando...");
+      phase(uiLanguage === "en" ? "Saving..." : uiLanguage === "es" ? "Guardando..." : "Guardando...");
       await saveItems(items, (it, n, total) => {
         const m = it.metas || {};
         return {
@@ -1155,9 +1155,9 @@ export default function App() {
   const singOver = (parent, o) => {
     setVoiceFor(null);
     return runJob(`Banda para: ${parent.title}`, async (phase) => {
-      phase("Preparando a sua voz...");
+      phase(uiLanguage === "en" ? "Preparing your voice..." : uiLanguage === "es" ? "Preparando tu voz..." : "Preparando a sua voz...");
       const { blob, seconds } = await toWavBlob(o.file);
-      if (seconds < 10) throw new Error("O áudio da sua voz precisa ter pelo menos 10 segundos.");
+      if (seconds < 10) throw new Error(uiLanguage === "en" ? "Your voice recording must be at least 10 seconds long." : uiLanguage === "es" ? "La grabación de tu voz debe durar al menos 10 segundos." : "O áudio da sua voz precisa ter pelo menos 10 segundos.");
       const params = {
         prompt: o.style.trim() || parent.style || "band accompaniment",
         lyrics: parent.lyrics || "",
@@ -1178,9 +1178,9 @@ export default function App() {
       };
       if (o.bpm) params.bpm = Number(o.bpm);
       if (o.key) params.key_scale = o.key;
-      phase("Enviando... (na primeira vez o motor troca de modelo: pode levar alguns minutos)");
+      phase(uiLanguage === "en" ? "Sending... (the engine switches models on first use and may take a few minutes)" : uiLanguage === "es" ? "Enviando... (la primera vez el motor cambia de modelo y puede tardar unos minutos)" : "Enviando... (na primeira vez o motor troca de modelo: pode levar alguns minutos)");
       const id = await submitTask(params, blob);
-      phase("Criando a banda para a sua voz...");
+      phase(uiLanguage === "en" ? "Creating the band for your voice..." : uiLanguage === "es" ? "Creando la banda para tu voz..." : "Criando a banda para a sua voz...");
       const items = await waitResult(id);
       phase("Guardando...");
       await saveItems(items, () => {
@@ -1321,7 +1321,7 @@ export default function App() {
                   <textarea
                     rows={10}
                     className={inputCls}
-                    placeholder={"[Verse 1]\nEscreva a sua letra aqui...\n\n[Chorus]\nO refrão vai aqui..."}
+                    placeholder={uiLanguage === "en" ? "[Verse 1]\nWrite your lyrics here...\n\n[Chorus]\nYour chorus goes here..." : uiLanguage === "es" ? "[Verse 1]\nEscribe tu letra aquí...\n\n[Chorus]\nAquí va el estribillo..." : "[Verse 1]\nEscreva a sua letra aqui...\n\n[Chorus]\nO refrão vai aqui..."}
                     value={form.lyrics}
                     onChange={(e) => set("lyrics", e.target.value)}
                   />
@@ -1396,7 +1396,7 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-3">
                     <input className={inputCls} type="number" placeholder={tx("bpmAuto")} value={form.bpm} onChange={(e) => set("bpm", e.target.value)} />
                     <select className={inputCls} value={form.key} onChange={(e) => set("key", e.target.value)}>
-                      {KEYS.map((k) => <option key={k} value={k}>{k || "Tom: automático"}</option>)}
+                      {KEYS.map((k) => <option key={k} value={k}>{k || tx("autoKey")}</option>)}
                     </select>
                     <label className="text-xs font-semibold text-zinc-300">{tx("lyricsLanguage")}
                       <select className={inputCls + " mt-1"} value={form.lang} onChange={(e) => set("lang", e.target.value)}>
