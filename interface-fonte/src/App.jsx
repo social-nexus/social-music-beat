@@ -1219,7 +1219,10 @@ export default function App() {
         throw new Error((s.msg || "").toLowerCase().includes("interrompida") ? tx("errSepInterrupted") : (s.msg || tx("errUnexpectedJobStatus")));
       }
       if (s.status === "done") {
-        if (!s.result?.voz || !s.result?.instrumental) throw new Error(tx("errUnexpectedJobStatus"));
+        if (!s.result?.voz || !s.result?.instrumental) {
+          try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
+          throw new Error(tx("errUnexpectedJobStatus"));
+        }
         const source = pending.track || t;
         const savedTitles = pending.titles || titles;
         const base = { createdAt: pending.createdAt || Date.now(), parent: source.id, style: source.style, lyrics: source.lyrics, bpm: source.bpm, key: source.key, language: source.language || form.lang };
@@ -1234,7 +1237,10 @@ export default function App() {
         try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
         return;
       }
-      if (s.status !== "running") throw new Error(tx("errUnexpectedJobStatus"));
+      if (s.status !== "running") {
+        try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
+        throw new Error(tx("errUnexpectedJobStatus"));
+      }
     }
   };
 
