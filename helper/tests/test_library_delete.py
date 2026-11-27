@@ -86,6 +86,19 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertFalse(staged_vocals.exists())
         self.assertFalse(staged_instrumental.exists())
 
+    def test_job_registry_prunes_expired_and_caps_completed_entries(self):
+        server.jobs.clear()
+        now = 500000.0
+        server.jobs["old"] = {"status": "done", "finished_at": now - server._JOBS_TTL_SECONDS - 1}
+        for i in range(server._JOBS_MAX_COMPLETED + 5):
+            server.jobs[f"done-{i}"] = {"status": "done", "finished_at": now - i}
+        server.jobs["active"] = {"status": "running", "created_at": now}
+        server._prune_jobs(now)
+        self.assertNotIn("old", server.jobs)
+        self.assertNotIn("active", server.jobs)
+        self.assertEqual(sum(1 for item in server.jobs.values() if item.get("finished_at")), server._JOBS_MAX_COMPLETED)
+        self.assertLessEqual(len(server.jobs), server._JOBS_MAX_COMPLETED)
+
     def test_separation_workers_are_serialized(self):
         server.jobs.clear()
         active = 0
