@@ -1262,7 +1262,11 @@ export default function App() {
     } catch {
       try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
     }
-    if (!pending?.jobId || !pending?.track?.file || !pending?.titles?.voz || !pending?.titles?.instrumental) return;
+    const validRecovery = typeof pending?.jobId === "string" && pending.jobId.trim() && typeof pending?.track?.id === "string" && typeof pending?.track?.file === "string" && pending.track.file.trim() && typeof pending?.titles?.voz === "string" && pending.titles.voz.trim() && typeof pending?.titles?.instrumental === "string" && pending.titles.instrumental.trim() && (!pending.ids || (typeof pending.ids === "object" && (!pending.ids.voz || typeof pending.ids.voz === "string") && (!pending.ids.instrumental || typeof pending.ids.instrumental === "string"))) && (pending.operationStartedAt == null || Number.isFinite(pending.operationStartedAt));
+    if (!validRecovery) {
+      try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
+      return;
+    }
     // Older recovery records lack an operation timestamp; restart the timer rather than using the track's creation date.
     runJob(pending.titles.voz, (phase) => separateInto(pending.track, pending.titles, phase, pending), pending.operationStartedAt ?? Date.now());
   }, []);

@@ -12,6 +12,7 @@ const checks = [
   ["separation jobs use elapsed time from their start and clamp", /const elapsed = job \? Math\.max\(0, Math\.floor\(\(Date\.now\(\) - job\.startedAt\) \/ 1000\)\) : 0/],
   ["separation operation title is localized in all three languages", /uiLanguage === "en" \? "Separating" : uiLanguage === "es" \? "Separando" : "Separando"/],
   ["separation recovery restores original start or safely restarts old records", /runJob\(pending\.titles\.voz,[\s\S]*pending\.operationStartedAt \?\? Date\.now\(\)\)/],
+  ["separation recovery validates persisted shape and clears invalid data", /const validRecovery = typeof pending\?\.jobId === "string"[\s\S]*?if \(!validRecovery\) \{\s*try \{ localStorage\.removeItem\(SEPARATION_RECOVERY_KEY\); \} catch \{\}\s*return;\s*\}/],
   ["recovery record saves separation operation start timestamp", /operationStartedAt: Date\.now\(\)/],
   ["elapsed timer clamps future recovery timestamps", /Math\.max\(0, Math\.floor\(\(Date\.now\(\) - job\.startedAt\) \/ 1000\)\)/],
   ["sing-over operation title is localized in all three languages", /uiLanguage === "en" \? "Band for" : uiLanguage === "es" \? "Banda para" : "Banda para"/],
