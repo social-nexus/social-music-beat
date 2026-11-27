@@ -860,6 +860,23 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             asyncio.run(server.save_audio({"url": "https://example.invalid/file.wav"}))
         self.assertEqual(raised.exception.status_code, 400)
 
+    def test_save_audio_rejects_similar_or_extra_paths(self):
+        import asyncio
+        invalid_urls = (
+            "/v1/audio-extra",
+            "/v1/audio/extra",
+            "https://host.invalid/other/v1/audio",
+            "https://host.invalid/v1/audio-extra",
+            "https://[malformed/v1/audio",
+        )
+        for url in invalid_urls:
+            with self.subTest(url=url):
+                with mock.patch.object(server.httpx, "AsyncClient") as client_factory:
+                    with self.assertRaises(server.HTTPException) as raised:
+                        asyncio.run(server.save_audio({"url": url}))
+                self.assertEqual(raised.exception.status_code, 400)
+                client_factory.assert_not_called()
+
     def test_save_audio_fetches_from_configured_ace_host_and_persists(self):
         import asyncio
         response = mock.Mock(status_code=200, content=b"audio-bytes")
