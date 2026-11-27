@@ -423,10 +423,10 @@ class ModelDeleteSafetyTests(unittest.TestCase):
     def test_missing_model_does_not_stop_runtime(self):
         root = Path(TEMP_DATA) / "model-delete-missing"
         root.mkdir(parents=True, exist_ok=True)
-        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
-             mock.patch.object(ia_local, "_stop_runtime") as stop:
-            with self.assertRaises(ia_local.HTTPException) as ctx:
-                ia_local.delete_model("imported-0123456789", self._request())
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with mock.patch.object(ia_local, "_stop_runtime") as stop:
+                with self.assertRaises(ia_local.HTTPException) as ctx:
+                    ia_local.delete_model("imported-0123456789", self._request())
         self.assertEqual(ctx.exception.status_code, 404)
         stop.assert_not_called()
 
@@ -444,10 +444,10 @@ class ModelDeleteSafetyTests(unittest.TestCase):
         root = Path(TEMP_DATA) / "model-delete-rename-failure"
         root.mkdir(parents=True, exist_ok=True)
         folder = self._model(root)
-        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
-             mock.patch.object(ia_local.os, "replace", side_effect=OSError("rename failed")):
-            with self.assertRaises(ia_local.HTTPException) as ctx:
-                ia_local.delete_model(folder.name, self._request())
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with mock.patch.object(ia_local.os, "replace", side_effect=OSError("rename failed")):
+                with self.assertRaises(ia_local.HTTPException) as ctx:
+                    ia_local.delete_model(folder.name, self._request())
         self.assertEqual(ctx.exception.status_code, 500)
         self.assertTrue((folder / "model.gguf").is_file())
 
@@ -455,10 +455,10 @@ class ModelDeleteSafetyTests(unittest.TestCase):
         root = Path(TEMP_DATA) / "model-delete-cleanup-failure"
         root.mkdir(parents=True, exist_ok=True)
         folder = self._model(root)
-        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
-             mock.patch.object(ia_local.shutil, "rmtree", side_effect=OSError("cleanup failed")):
-            with self.assertRaises(ia_local.HTTPException) as ctx:
-                ia_local.delete_model(folder.name, self._request())
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with mock.patch.object(ia_local.shutil, "rmtree", side_effect=OSError("cleanup failed")):
+                with self.assertRaises(ia_local.HTTPException) as ctx:
+                    ia_local.delete_model(folder.name, self._request())
         self.assertEqual(ctx.exception.status_code, 500)
         self.assertFalse(folder.exists())
         quarantined = list(root.glob(".*.deleting-*"))
@@ -469,10 +469,10 @@ class ModelDeleteSafetyTests(unittest.TestCase):
         root = Path(TEMP_DATA) / "model-delete-active"
         root.mkdir(parents=True, exist_ok=True)
         folder = self._model(root)
-        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
-             mock.patch.object(ia_local, "ACTIVE_MODEL", folder.name), \\
-             mock.patch.object(ia_local, "_stop_runtime") as stop:
-            result = ia_local.delete_model(folder.name, self._request())
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with mock.patch.object(ia_local, "ACTIVE_MODEL", folder.name):
+                with mock.patch.object(ia_local, "_stop_runtime") as stop:
+                    result = ia_local.delete_model(folder.name, self._request())
         self.assertEqual(result, {"ok": True})
         stop.assert_called_once_with()
         self.assertFalse(folder.exists())
