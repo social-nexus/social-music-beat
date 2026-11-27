@@ -636,7 +636,7 @@ function CompositorPanel({ onUseLyrics }) {
     finally { setProviderBusy(false); }
   };
   const saveProviderChoice = async () => {
-    setProviderBusy(true); setError("");
+    setProviderStartedAt(Date.now()); setProviderBusy(true); setError("");
     try {
       await http("/api/ai/providers/config", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, model: providerModel }) });
       await refresh(); setMessage(provider === "local" ? "IA local selecionada." : "Provedor e modelo selecionados.");
@@ -644,7 +644,7 @@ function CompositorPanel({ onUseLyrics }) {
     finally { setProviderBusy(false); }
   };
   const testProvider = async () => {
-    setProviderBusy(true); setError(""); setMessage("Testando conexão com o provedor…");
+    setProviderStartedAt(Date.now()); setProviderBusy(true); setError(""); setMessage("Testando conexão com o provedor…");
     try {
       const r = await jsonPost("/api/ai/providers/test", { provider, model: providerModel });
       setMessage("Conexão funcionando: " + r.message);
@@ -653,7 +653,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
   const removeProviderKey = async () => {
     if (!window.confirm("Remover a chave salva deste provedor?")) return;
-    setProviderBusy(true); setError("");
+    setProviderStartedAt(Date.now()); setProviderBusy(true); setError("");
     try { await http("/api/ai/providers/key/" + provider, { method: "DELETE" }); await refresh(); setMessage("Chave removida do cofre de credenciais."); }
     catch (e) { setError(e.message); }
     finally { setProviderBusy(false); }
