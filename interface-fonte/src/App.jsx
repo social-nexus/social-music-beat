@@ -110,9 +110,9 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 const UI_TEXT = {
-  pt: { language: "Idioma", create: "Criar", composer: "Compositor IA", help: "Como usar", onlineWait: "O motor de música (ACE-Step) ainda está ligando ou foi fechado. Na primeira vez pode levar alguns minutos. Mantenha a janela “ACE-Step” aberta.", createMusic: "Criar música", library: "Minhas músicas", emptyLibrary: "{tx("emptyLibrary")}", elapsed: "Tempo decorrido", processing: "Processando", helpTitle: "Como usar, em 4 passos" },
-  en: { language: "Language", create: "Create", composer: "AI Composer", help: "How to use", onlineWait: "The music engine (ACE-Step) is starting or has been closed. The first startup may take a few minutes. Keep the “ACE-Step” window open.", createMusic: "Create music", library: "My music", emptyLibrary: "Your music will appear here. Enter lyrics and a style, then click Create.", elapsed: "Elapsed time", processing: "Processing", helpTitle: "How to use, in 4 steps" },
-  es: { language: "Idioma", create: "Crear", composer: "Compositor IA", help: "Cómo usar", onlineWait: "El motor de música (ACE-Step) todavía se está iniciando o se ha cerrado. La primera vez puede tardar unos minutos. Mantén abierta la ventana “ACE-Step”.", createMusic: "Crear música", library: "Mi música", emptyLibrary: "Tus canciones aparecerán aquí. Escribe la letra y el estilo y haz clic en Crear.", elapsed: "Tiempo transcurrido", processing: "Procesando", helpTitle: "Cómo usar, en 4 pasos" }
+  pt: { language: "Idioma", create: "Criar", composer: "Compositor IA", help: "Como usar", onlineWait: "O motor de música (ACE-Step) ainda está ligando ou foi fechado. Na primeira vez pode levar alguns minutos. Mantenha a janela “ACE-Step” aberta.", createMusic: "Criar música", library: "Minhas músicas", emptyLibrary: "Suas músicas aparecem aqui. Preencha a letra e o estilo e clique em Criar.", elapsed: "Tempo decorrido", processing: "Processando", helpTitle: "Como usar, em 4 passos", lyricsLanguage: "Idioma da música", lyricsPt: "Letra em português", lyricsEn: "Letra em inglês", lyricsEs: "Letra em espanhol" },
+  en: { language: "Language", create: "Create", composer: "AI Composer", help: "How to use", onlineWait: "The music engine (ACE-Step) is starting or has been closed. The first startup may take a few minutes. Keep the “ACE-Step” window open.", createMusic: "Create music", library: "My music", emptyLibrary: "Your music will appear here. Enter lyrics and a style, then click Create.", elapsed: "Elapsed time", processing: "Processing", helpTitle: "How to use, in 4 steps", lyricsLanguage: "Music language", lyricsPt: "Lyrics in Portuguese", lyricsEn: "Lyrics in English", lyricsEs: "Lyrics in Spanish" },
+  es: { language: "Idioma", create: "Crear", composer: "Compositor IA", help: "Cómo usar", onlineWait: "El motor de música (ACE-Step) todavía se está iniciando o se ha cerrado. La primera vez puede tardar unos minutos. Mantén abierta la ventana “ACE-Step”.", createMusic: "Crear música", library: "Mi música", emptyLibrary: "Tus canciones aparecerán aquí. Escribe la letra y el estilo y haz clic en Crear.", elapsed: "Tiempo transcurrido", processing: "Procesando", helpTitle: "Cómo usar, en 4 pasos", lyricsLanguage: "Idioma de la música", lyricsPt: "Letra en portugués", lyricsEn: "Letra en inglés", lyricsEs: "Letra en español" }
 };
 const uiText = (language, key) => UI_TEXT[language]?.[key] || UI_TEXT.pt[key] || key;
 
@@ -1377,11 +1377,13 @@ export default function App() {
                     <select className={inputCls} value={form.key} onChange={(e) => set("key", e.target.value)}>
                       {KEYS.map((k) => <option key={k} value={k}>{k || "Tom: automático"}</option>)}
                     </select>
-                    <select className={inputCls} value={form.lang} onChange={(e) => set("lang", e.target.value)}>
-                      <option value="pt">Letra em português</option>
-                      <option value="en">Letra em inglês</option>
-                      <option value="es">Letra em espanhol</option>
-                    </select>
+                    <label className="text-xs font-semibold text-zinc-300">{tx("lyricsLanguage")}
+                      <select className={inputCls + " mt-1"} value={form.lang} onChange={(e) => set("lang", e.target.value)}>
+                        <option value="pt">{tx("lyricsPt")}</option>
+                        <option value="en">{tx("lyricsEn")}</option>
+                        <option value="es">{tx("lyricsEs")}</option>
+                      </select>
+                    </label>
                     <select className={inputCls} value={form.versions} onChange={(e) => set("versions", Number(e.target.value))}>
                       <option value={1}>1 versão</option>
                       <option value={2}>2 versões (usa mais memória)</option>
