@@ -647,22 +647,40 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
 
     def test_cleanup_removes_unregistered_audio(self):
         server.write_lib([])
-        result = server.cleanup_unregistered_audio({"file": str(self.audio_file)})
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"temporary audio")
+        result = server.cleanup_unregistered_audio({"file": str(generated)})
         self.assertEqual(result, {"ok": True})
-        self.assertFalse(self.audio_file.exists())
+        self.assertFalse(generated.exists())
 
     def test_cleanup_does_not_remove_library_audio(self):
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"registered audio")
+        server.write_lib([{"id": "track-1", "file": generated.name}])
         with self.assertRaises(server.HTTPException) as raised:
-            server.cleanup_unregistered_audio({"file": str(self.audio_file)})
+            server.cleanup_unregistered_audio({"file": str(generated)})
         self.assertEqual(raised.exception.status_code, 409)
-        self.assertTrue(self.audio_file.exists())
+        self.assertTrue(generated.exists())
 
     def test_cleanup_cannot_bypass_registered_audio_with_different_case(self):
-        server.write_lib([{"id": "track-1", "file": "TRACK.WAV"}])
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"registered audio")
+        server.write_lib([{"id": "track-1", "file": "1234567890_ABCDEF.WAV"}])
         with self.assertRaises(server.HTTPException) as raised:
-            server.cleanup_unregistered_audio({"file": "track.wav"})
+            server.cleanup_unregistered_audio({"file": generated.name})
         self.assertEqual(raised.exception.status_code, 409)
-        self.assertTrue(self.audio_file.exists())
+        self.assertTrue(generated.exists())
+
+    def test_cleanup_rejects_library_and_internal_metadata_files(self):
+        jobs_file = self.data / server._JOBS_FILE_NAME
+        jobs_file.write_text("{}", encoding="utf-8")
+        for name in ("biblioteca.json", server._JOBS_FILE_NAME, ".manual.backup", "track.wav"):
+            with self.subTest(name=name):
+                with self.assertRaises(server.HTTPException) as raised:
+                    server.cleanup_unregistered_audio({"file": name})
+                self.assertEqual(raised.exception.status_code, 400)
+        self.assertTrue(self.library_file.exists())
+        self.assertTrue(jobs_file.exists())
 
     def test_delete_is_blocked_while_source_separation_is_running(self):
         server.jobs.clear()
