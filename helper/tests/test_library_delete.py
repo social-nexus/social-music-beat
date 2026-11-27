@@ -68,6 +68,8 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         final_instrumental = self.data / "instrumental.wav"
         staged_vocals.write_bytes(b"staged vocals")
         staged_instrumental.write_bytes(b"staged instrumental")
+        final_vocals.write_bytes(b"previous vocals")
+        final_instrumental.write_bytes(b"previous instrumental")
         original_replace = server.os.replace
 
         def fail_second_move(src, dst):
@@ -81,10 +83,11 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                     [staged_vocals, staged_instrumental],
                     [final_vocals, final_instrumental],
                 )
-        self.assertFalse(final_vocals.exists())
-        self.assertFalse(final_instrumental.exists())
+        self.assertEqual(final_vocals.read_bytes(), b"previous vocals")
+        self.assertEqual(final_instrumental.read_bytes(), b"previous instrumental")
         self.assertFalse(staged_vocals.exists())
         self.assertFalse(staged_instrumental.exists())
+        self.assertFalse(any(self.data.glob("*.backup")))
 
     def test_job_registry_prunes_expired_and_caps_completed_entries(self):
         server.jobs.clear()
