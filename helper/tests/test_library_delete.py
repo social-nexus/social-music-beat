@@ -53,6 +53,52 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(len(server.read_lib()), 1)
         self.assertTrue(self.audio_file.exists())
 
+    def test_delete_staging_second_file_failure_restores_first(self):
+        second_audio = self.data / "second.wav"
+        second_audio.write_bytes(b"second audio")
+        server.write_lib([
+            {"id": "dup-id", "file": "track.wav"},
+            {"id": "dup-id", "file": "second.wav"},
+        ])
+        original_replace = server.os.replace
+        def fail_second_stage(src, dst):
+            if Path(src) == second_audio:
+                raise OSError("simulated second staging failure")
+            return original_replace(src, dst)
+        with mock.patch.object(server.os, "replace", side_effect=fail_second_stage):
+            with self.assertRaises(server.HTTPException) as raised:
+                server.delete_track("dup-id")
+        self.assertEqual(raised.exception.status_code, 500)
+        self.assertIn("preparar a exclusão", raised.exception.detail)
+        self.assertTrue(self.audio_file.exists())
+        self.assertTrue(second_audio.exists())
+        self.assertEqual(len(server.read_lib()), 2)
+        self.assertFalse(any(self.data.glob("*.deleting")))
+
+    def test_delete_staging_rollback_failure_reports_retained_file(self):
+        second_audio = self.data / "second.wav"
+        second_audio.write_bytes(b"second audio")
+        server.write_lib([
+            {"id": "dup-id", "file": "track.wav"},
+            {"id": "dup-id", "file": "second.wav"},
+        ])
+        original_replace = server.os.replace
+        def fail_second_stage_and_first_restore(src, dst):
+            if Path(src) == second_audio:
+                raise OSError("simulated second staging failure")
+            if Path(src).name.endswith(".deleting") and Path(dst) == self.audio_file:
+                raise OSError("simulated restore failure")
+            return original_replace(src, dst)
+        with mock.patch.object(server.os, "replace", side_effect=fail_second_stage_and_first_restore):
+            with self.assertRaises(server.HTTPException) as raised:
+                server.delete_track("dup-id")
+        self.assertIn(".deleting", raised.exception.detail)
+        retained = list(self.data.glob(".*.deleting"))
+        self.assertEqual(len(retained), 1)
+        self.assertEqual(retained[0].read_bytes(), b"audio sample")
+        self.assertTrue(second_audio.exists())
+        self.assertEqual(len(server.read_lib()), 2)
+
     def test_metadata_write_failure_restores_audio(self):
         with mock.patch.object(server, "write_lib", side_effect=OSError("simulated disk write error")):
             with self.assertRaises(server.HTTPException):
