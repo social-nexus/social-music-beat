@@ -306,7 +306,14 @@ def cleanup_unregistered_audio(payload: dict):
         raise HTTPException(400, "Nome de arquivo inválido.")
     target = DATA / name
     with _lib_lock:
-        if any(Path(str(item.get("file", ""))).name == name for item in read_lib()):
+        # Match the same case-insensitive filename semantics used by deletion.
+        # This prevents cleanup from bypassing a registered reference on Windows
+        # or when metadata casing differs from the physical filename.
+        requested_name = name.casefold()
+        if any(
+            Path(str(item.get("file", ""))).name.casefold() == requested_name
+            for item in read_lib() if item.get("file")
+        ):
             raise HTTPException(409, "O áudio está registrado na biblioteca e não pode ser removido.")
         if target.is_file():
             try:
