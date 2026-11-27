@@ -135,6 +135,39 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(unrelated.exists())
         self.assertTrue(self.audio_file.exists())
 
+    def test_startup_recovers_audio_when_delete_was_interrupted_before_metadata_commit(self):
+        staged = self.data / (".track.wav." + "e" * 32 + ".deleting")
+        self.audio_file.rename(staged)
+
+        recovered = server.recover_staged_deletions()
+
+        self.assertIn(("restored", "track.wav"), recovered)
+        self.assertTrue(self.audio_file.exists())
+        self.assertFalse(staged.exists())
+        self.assertEqual(len(server.read_lib()), 1)
+
+    def test_startup_finishes_delete_when_metadata_commit_already_happened(self):
+        staged = self.data / (".track.wav." + "f" * 32 + ".deleting")
+        self.audio_file.rename(staged)
+        server.write_lib([])
+
+        recovered = server.recover_staged_deletions()
+
+        self.assertIn(("discarded", staged.name), recovered)
+        self.assertFalse(staged.exists())
+        self.assertFalse(self.audio_file.exists())
+
+    def test_startup_preserves_staged_audio_when_library_is_corrupt(self):
+        staged = self.data / (".track.wav." + "1" * 32 + ".deleting")
+        self.audio_file.rename(staged)
+        self.library_file.write_text("{corrupt", encoding="utf-8")
+
+        recovered = server.recover_staged_deletions()
+
+        self.assertEqual(recovered, [])
+        self.assertTrue(staged.exists())
+        self.assertFalse(self.audio_file.exists())
+
     def test_delete_removes_metadata_and_audio(self):
         result = server.delete_track("track-1")
         self.assertEqual(result, {"ok": True})
