@@ -76,3 +76,6 @@
 - Regra adotada para próximos ajustes: traduzir mensagens de erro previsíveis e controladas pela interface; manter o detalhe técnico original em erros inesperados e logs. Evitar substituir mensagens do backend por genéricas, pois isso esconderia a causa real.
 - A auditoria confirma cobertura de timers de geração principal, compositor, transcrição, análise de referência e legendas; validar duração real e visibilidade em execução Windows continua pendente.
 - Próxima revisão: inspeção de mensagens e labels restantes que possam escapar da localização, seguida de build e testes de catálogo antes de publicar a versão.
+
+
+- **Auditoria final de labels da biblioteca:** ação de download agora usa catálogo de idiomas; label de separação no espanhol foi ajustado para redação natural (`Separar voz y pista instrumental`).
