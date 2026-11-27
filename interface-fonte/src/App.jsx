@@ -1167,7 +1167,7 @@ export default function App() {
     for (;;) {
       await sleep(2000);
       const s = await http(`/api/jobs/${jid}`);
-      phase(s.msg || "Separando...");
+      phase(s.msg || (uiLanguage === "en" ? "Separating vocals and instrumental..." : uiLanguage === "es" ? "Separando voz e instrumental..." : "Separando voz e instrumental..."));
       if (s.status === "error") throw new Error(s.msg);
       if (s.status === "done") {
         const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key, language: t.language || form.lang };
@@ -1180,7 +1180,7 @@ export default function App() {
 
   // -------- 1) criar a música
   const createSong = () => {
-    const title = form.title.trim() || "Minha música";
+    const title = form.title.trim() || (uiLanguage === "en" ? "My song" : uiLanguage === "es" ? "Mi canción" : "Minha música");
     return runJob(title, async (phase) => {
       if (!form.instrumentalOnly && !form.lyrics.trim()) throw new Error(uiLanguage === "en" ? "Enter the lyrics (or choose “Instrumental only”)." : uiLanguage === "es" ? "Escribe la letra (o elige “Solo instrumental”)." : "Escreva a letra (ou escolha “Só instrumental”).");
       if (!form.style.trim()) throw new Error(uiLanguage === "en" ? "Describe the music style. You can also click the style buttons." : uiLanguage === "es" ? "Describe el estilo musical. También puedes usar los botones de estilos." : "Descreva o estilo da música. Dá para clicar nos botões de estilo.");
@@ -1228,14 +1228,14 @@ export default function App() {
   const separateTrack = (t) =>
     runJob(`${uiLanguage === "en" ? "Separating" : uiLanguage === "es" ? "Separando" : "Separando"}: ${t.title}`, (phase) =>
       separateInto(t, {
-        voz: `${t.title} (voz)`,
-        instrumental: t.kind === "banda" ? `${t.title} (só a banda)` : `${t.title} (instrumental)`,
+        voz: `${t.title} (${uiLanguage === "en" ? "vocals" : uiLanguage === "es" ? "voz" : "voz"})`,
+        instrumental: t.kind === "banda" ? `${t.title} (${uiLanguage === "en" ? "band only" : uiLanguage === "es" ? "solo banda" : "só a banda"})` : `${t.title} (instrumental)`,
       }, phase));
 
   // -------- 3) cantar por cima: criar a banda para a voz do usuário
   const singOver = (parent, o) => {
     setVoiceFor(null);
-    return runJob(`Banda para: ${parent.title}`, async (phase) => {
+    return runJob(`${uiLanguage === "en" ? "Band for" : uiLanguage === "es" ? "Banda para" : "Banda para"}: ${parent.title}`, async (phase) => {
       phase(uiLanguage === "en" ? "Preparing your voice..." : uiLanguage === "es" ? "Preparando tu voz..." : "Preparando a sua voz...");
       const { blob, seconds } = await toWavBlob(o.file);
       if (seconds < 10) throw new Error(uiLanguage === "en" ? "Your voice recording must be at least 10 seconds long." : uiLanguage === "es" ? "La grabación de tu voz debe durar al menos 10 segundos." : "O áudio da sua voz precisa ter pelo menos 10 segundos.");
@@ -1263,15 +1263,15 @@ export default function App() {
       const id = await submitTask(params, blob);
       phase(uiLanguage === "en" ? "Creating the band for your voice..." : uiLanguage === "es" ? "Creando la banda para tu voz..." : "Criando a banda para a sua voz...");
       const items = await waitResult(id);
-      phase("Guardando...");
+      phase(uiLanguage === "en" ? "Saving audio..." : uiLanguage === "es" ? "Guardando audio..." : "Salvando áudio...");
       await saveItems(items, () => {
-        return { kind: "banda", title: `${parent.title} - com a minha voz`, lyrics: parent.lyrics, language: parent.language || form.lang, style: params.prompt, bpm: params.bpm ?? parent.bpm, key: params.key_scale || parent.key, parent: parent.id };
+        return { kind: "banda", title: `${parent.title} - ${uiLanguage === "en" ? "with my voice" : uiLanguage === "es" ? "con mi voz" : "com a minha voz"}`, lyrics: parent.lyrics, language: parent.language || form.lang, style: params.prompt, bpm: params.bpm ?? parent.bpm, key: params.key_scale || parent.key, parent: parent.id };
       });
       if (o.autoSep) {
         // pega a faixa recém-criada (a mais nova da biblioteca)
         const fresh = await http("/api/library");
         const t = fresh.find((x) => x.kind === "banda" && x.parent === parent.id);
-        if (t) await separateInto(t, { voz: `${t.title} (voz)`, instrumental: `${parent.title} - só a banda` }, phase);
+        if (t) await separateInto(t, { voz: `${t.title} (voz)`, instrumental: `${parent.title} - ${uiLanguage === "en" ? "band only" : uiLanguage === "es" ? "solo banda" : "só a banda"}` }, phase);
       }
     });
   };
