@@ -56,3 +56,5 @@ As versões e datas abaixo descrevem a evolução do projeto. Consulte também o
 
 ## [2.0.0]
 - Versão anterior publicada no repositório principal. Consulte a tag/release correspondente para o histórico e os arquivos daquela versão.
+
+- Localizadas mensagens de confirmação de remoção de API Key e validações de gravação/transcrição Whisper nos três idiomas.
