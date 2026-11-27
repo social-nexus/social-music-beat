@@ -1,5 +1,8 @@
 # Social Music Beat
 
+> **Desenvolvimento da versão 3.1.0:** branch [`release/3.1.0`](https://github.com/social-nexus/social-music-beat/tree/release/3.1.0), baseada na tag estável [`v3.0.0`](https://github.com/social-nexus/social-music-beat/tree/v3.0.0). Esta branch ainda está em desenvolvimento e não representa uma release pronta para uso.
+
+
 > ⚠️ **ATENÇÃO: LEIA ANTES DE CRIAR E PUBLICAR MÚSICAS COM IA**
 >
 > Usar IA para gerar uma música **não garante, por si só, direitos autorais, exclusividade ou permissão para uso comercial**. Antes de publicar, confira a licença do modelo/serviço, os direitos sobre letras, melodias, vozes, samples e gravações utilizados e as regras atuais do YouTube, distribuidoras e demais plataformas. Evite imitar artistas ou usar material de terceiros sem autorização.
