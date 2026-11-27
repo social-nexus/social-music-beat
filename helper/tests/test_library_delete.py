@@ -691,6 +691,13 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         server.LIB_FILE.unlink()
         self.assertEqual(server.read_lib(), [])
 
+    def test_read_library_invalid_utf8_is_fail_closed(self):
+        original = b"\\xff\\xfe\\xfa"
+        self.library_file.write_bytes(original)
+        with self.assertRaises(server.RuntimeError):
+            server.read_lib()
+        self.assertEqual(self.library_file.read_bytes(), original)
+
     def test_read_library_corruption_is_fail_closed(self):
         original = b'{"broken":'
         server.LIB_FILE.write_bytes(original)
