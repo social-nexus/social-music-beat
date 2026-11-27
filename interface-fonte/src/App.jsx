@@ -1267,7 +1267,7 @@ export default function App() {
       try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
       return;
     }
-    // Older recovery records lack an operation timestamp; restart the timer rather than using the track's creation date.
+    // Reject malformed persisted recovery data; older valid records without a timestamp restart the timer safely.
     runJob(pending.titles.voz, (phase) => separateInto(pending.track, pending.titles, phase, pending), pending.operationStartedAt ?? Date.now());
   }, []);
 
