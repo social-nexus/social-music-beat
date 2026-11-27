@@ -9,6 +9,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
@@ -551,11 +552,17 @@ def _persist_audio_content(content: bytes, extension: str) -> str:
 async def save_audio(payload: dict):
     """Baixa o áudio gerado pelo ACE-Step e guarda na pasta musicas."""
     src = str(payload.get("url", ""))
-    i = src.find("/v1/audio")
-    if i < 0:
+    try:
+        parsed = urlsplit(src)
+    except ValueError:
         raise HTTPException(400, "Endereço de áudio inválido.")
+    if parsed.path != "/v1/audio":
+        raise HTTPException(400, "Endereço de áudio inválido.")
+    endpoint = f"{ACE}/v1/audio"
+    if parsed.query:
+        endpoint = f"{endpoint}?{parsed.query}"
     async with httpx.AsyncClient(timeout=300.0) as c:
-        r = await c.get(f"{ACE}{src[i:]}")
+        r = await c.get(endpoint)
     if r.status_code != 200:
         raise HTTPException(502, "Não consegui baixar o áudio gerado.")
     return {"file": _persist_audio_content(r.content, sniff_ext(r.content))}
