@@ -487,14 +487,14 @@ async def ace_proxy(path: str, request: Request):
     return Response(r.content, status_code=r.status_code, media_type=r.headers.get("content-type"))
 
 
-def sniff_ext(data: bytes) -> str:
-    if data[:4] == b"RIFF":
+def sniff_ext(data: bytes) -> str | None:
+    if data[:4] == b"RIFF" and data[8:12] == b"WAVE":
         return "wav"
     if data[:4] == b"fLaC":
         return "flac"
-    if data[:3] == b"ID3" or data[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"):
+    if data[:3] == b"ID3" or data[:2] in (b"\\xff\\xfb", b"\\xff\\xf3", b"\\xff\\xf2"):
         return "mp3"
-    return "wav"
+    return None
 
 
 @app.post("/api/audio/cleanup")
@@ -572,7 +572,10 @@ async def save_audio(payload: dict):
         raise HTTPException(502, "Não consegui baixar o áudio gerado.")
     if not r.content:
         raise HTTPException(502, "O motor de áudio retornou um arquivo vazio.")
-    return {"file": _persist_audio_content(r.content, sniff_ext(r.content))}
+    extension = sniff_ext(r.content)
+    if extension is None:
+        raise HTTPException(502, "O motor de áudio retornou um formato de áudio não reconhecido.")
+    return {"file": _persist_audio_content(r.content, extension)}
 
 
 # ---------------------------------------------------------------- separação (Demucs)
