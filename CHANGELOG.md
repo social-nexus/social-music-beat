@@ -1,6 +1,9 @@
 # Histórico de alterações
 
-## [3.1.0] — Em desenvolvimento
+## [3.1.0]
+- Catálogos PT-BR/EN/ES extraídos para módulo próprio, com teste automatizado de paridade de chaves, idiomas obrigatórios e fallback.
+- Correção de compilação durante a refatoração de i18n: removida declaração duplicada de `uiText`.
+ — Em desenvolvimento
 
 ### Implementado até agora
 - Branch de desenvolvimento criada diretamente da tag estável `v3.0.0`, sem alterar a versão estável.
