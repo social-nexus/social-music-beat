@@ -1408,7 +1408,7 @@ export default function App() {
               {tracks.length === 0 && !job && (
                 <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-zinc-500">
                   <Music className="mx-auto mb-3" />
-                  Suas músicas aparecem aqui. Preencha a letra e o estilo e clique em Criar.
+                  {tx("emptyLibrary")}
                 </div>
               )}
 
