@@ -88,4 +88,4 @@ As versões e datas abaixo descrevem a evolução do projeto. Consulte também o
 
 
 ### Exclusão com restauração em falha
-- Exclusão da Biblioteca agora restaura faixa e player em caso de erro de servidor, com aviso localizado.
+- Falhas ao excluir recarregam a Biblioteca para sincronizar estado real do servidor; se essa recarga falhar, restaura-se a faixa/player localmente.

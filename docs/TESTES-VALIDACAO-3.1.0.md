@@ -88,6 +88,6 @@ Anotar sistema operacional, GPU/VRAM, modelo, idioma selecionado, operação, du
 
 ## Exclusão resiliente na Biblioteca (27/11/2026)
 
-- A faixa removida de forma otimista é restaurada caso a exclusão no servidor falhe.
-- O player também é restaurado se a faixa excluída estava selecionada.
-- Mensagem de falha de exclusão localizada e coberta por teste de catálogo.
+- Em caso de falha, a Biblioteca é recarregada do servidor para evitar divergência entre UI e disco.
+- Se a atualização da Biblioteca também falhar, a faixa e o player são restaurados localmente.
+- Mensagem localizada e coberta por teste de catálogo.

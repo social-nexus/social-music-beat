@@ -1297,8 +1297,14 @@ export default function App() {
     try {
       await http(`/api/library/${t.id}`, { method: "DELETE" });
     } catch {
-      setTracks((prev) => prev.some((x) => x.id === t.id) ? prev : [t, ...prev]);
-      if (previousPlayer) setPlayer(previousPlayer);
+      try {
+        const currentLibrary = await http("/api/library");
+        setTracks(currentLibrary);
+        if (previousPlayer && currentLibrary.some((x) => x.id === t.id)) setPlayer(previousPlayer);
+      } catch {
+        setTracks((prev) => prev.some((x) => x.id === t.id) ? prev : [t, ...prev]);
+        if (previousPlayer) setPlayer(previousPlayer);
+      }
       setErr(tx("errDeleteTrack"));
     }
   };
