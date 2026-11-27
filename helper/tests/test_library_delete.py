@@ -435,6 +435,22 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(result, {"ok": True})
         self.assertEqual(server.read_lib()[:2], items)
 
+    def test_batch_upsert_is_idempotent_for_retried_recovery_commit(self):
+        first = [
+            {"id": "stable-voice", "file": "voice.wav", "kind": "voz"},
+            {"id": "stable-inst", "file": "inst.wav", "kind": "instrumental"},
+        ]
+        retry = [
+            {**first[0], "title": "Recovered vocals"},
+            {**first[1], "title": "Recovered instrumental"},
+        ]
+        server.upsert_tracks_batch({"items": first})
+        server.upsert_tracks_batch({"items": retry})
+        library = server.read_lib()
+        self.assertEqual(len(library), 2)
+        self.assertEqual({item["id"] for item in library}, {"stable-voice", "stable-inst"})
+        self.assertEqual(library[:2], retry)
+
     def test_read_library_missing_file_is_empty(self):
         server.LIB_FILE.unlink()
         self.assertEqual(server.read_lib(), [])
