@@ -27,6 +27,7 @@
 - Criada a branch `release/3.1.0` diretamente do commit apontado pela tag `v3.0.0`.
 - Adicionada preferência de idioma da interface com persistência local, com opções Português do Brasil, English e Español.
 - Camada central de textos ampliada para português do Brasil, inglês e espanhol, cobrindo navegação, criação musical, ajuda, compositor IA, seleção/instalação de modelos, configuração de provedores, janelas de voz e legendas, mensagens de validação e análise melódica.
+- Categorias musicais e nomes dos 55 estilos predefinidos também localizados para inglês e espanhol, sem alterar os prompts técnicos enviados ao ACE-Step.
 - Timer do compositor de letras: o relógio agora cobre geração de letras, instalação/download/ativação do modelo, análise da referência melódica e transcrição Whisper, além de permanecer visível no painel de status enquanto a operação estiver ativa.
 - Timer próprio para geração de legendas SRT/LRC, com tempo durante o processamento e duração final após concluir ou falhar.
 - Prompt multilíngue Qwen/Gemma/API reforçado com instruções explícitas para escrever título, valores descritivos e letra no idioma escolhido (português brasileiro, inglês ou espanhol), mantendo tags estruturais em inglês.
