@@ -123,8 +123,8 @@ _SEPARATION_STAGING_RE = re.compile(
 )
 _LIBRARY_STAGING_RE = re.compile(r"\.biblioteca\.json\.[0-9a-f]{32}\.tmp")
 _JOBS_STAGING_RE = re.compile(r"\.separation_jobs\.json\.[0-9a-f]{32}\.tmp")
-_AUDIO_STAGING_RE = re.compile(r"\.\d+_[0-9a-f]{6}\.[A-Za-z0-9]+\.[0-9a-f]{32}\.tmp")
-_AUDIO_FINAL_RE = re.compile(r"\d+_[0-9a-f]{6}\.(?:wav|flac|mp3)")
+_AUDIO_STAGING_RE = re.compile(r"\.\d+_[0-9a-f]{6,32}\.[A-Za-z0-9]+\.[0-9a-f]{32}\.tmp")
+_AUDIO_FINAL_RE = re.compile(r"\d+_[0-9a-f]{6,32}\.(?:wav|flac|mp3)")
 _DELETE_STAGING_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.deleting")
 _SEPARATION_BACKUP_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.backup")
 
@@ -478,7 +478,7 @@ def cleanup_unregistered_audio(payload: dict):
 def _persist_audio_content(content: bytes, extension: str) -> str:
     """Write downloaded audio to a temporary file and atomically publish it."""
     safe_ext = extension if extension and extension.isalnum() else "wav"
-    name = f"{int(time.time())}_{uuid.uuid4().hex[:6]}.{safe_ext}"
+    name = f"{int(time.time())}_{uuid.uuid4().hex[:12]}.{safe_ext}"
     target = DATA / name
     staged = DATA / f".{name}.{uuid.uuid4().hex}.tmp"
     try:
