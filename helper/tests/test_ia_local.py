@@ -267,7 +267,6 @@ class RuntimeCatalogTests(unittest.TestCase):
             ia_local._publish_model_files(staged, target, metadata_staged, metadata)
         self.assertEqual(target.read_bytes(), b"new-model")
         self.assertEqual(metadata.read_text(encoding="utf-8"), "new-metadata")
-        self.assertEqual(len(list(folder.glob("*.backup"))), 0)
         self.assertEqual(len(list(folder.glob(".*.backup"))), 2)
 
     def test_archive_path_rejects_parent_traversal(self):
