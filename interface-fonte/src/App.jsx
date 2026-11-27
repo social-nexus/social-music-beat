@@ -816,8 +816,8 @@ function CompositorPanel({ onUseLyrics }) {
       )}
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
-        <div><h2 className="font-bold">1. Escolha como a IA vai funcionar</h2><p className="mt-1 text-xs text-zinc-400">A opção local é gratuita. APIs externas usam sua própria conta e podem gerar cobranças pelo provedor.</p></div>
-        <label className="block text-xs font-semibold text-zinc-300">Modo de IA
+        <div><h2 className="font-bold">{t("aiModeTitle")}</h2><p className="mt-1 text-xs text-zinc-400">{t("aiModeHelp")}</p></div>
+        <label className="block text-xs font-semibold text-zinc-300">{t("aiModeLabel")}
           <select className={inputCls + " mt-1"} value={provider} onChange={(e) => { setProvider(e.target.value); const p = providerConfig.providers.find((x) => x.id === e.target.value); setProviderModel(p?.models?.[0] || ""); }}>
             <option value="local">Local — Gemma / Qwen</option>
             {providerConfig.providers.map((p) => <option key={p.id} value={p.id}>{p.name} {p.configured ? "— chave cadastrada" : "— configurar chave"}</option>)}
@@ -846,10 +846,10 @@ function CompositorPanel({ onUseLyrics }) {
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
-        <h2 className="font-bold">2. Motor de IA local (opcional)</h2>
+        <h2 className="font-bold">{t("localEngineTitle")}</h2>
         {compatibleRuntimes.length ? (
           <>
-            <label className="block text-xs font-semibold text-zinc-300">Pacote compatível com este computador</label>
+            <label className="block text-xs font-semibold text-zinc-300">{t("localEngineHelp")}</label>
             <select className={inputCls} value={runtime} onChange={(e) => setRuntime(e.target.value)}>
               {compatibleRuntimes.map((r) => <option key={r.id} value={r.id}>{r.label} {r.installed ? "— instalado" : "— " + (r.size_bytes / 1024 / 1024).toFixed(0) + " MB"}</option>)}
             </select>
@@ -871,8 +871,8 @@ function CompositorPanel({ onUseLyrics }) {
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
-        <h2 className="font-bold">3. Modelo local (Gemma / Qwen)</h2>
-        <label className="block text-xs font-semibold text-zinc-300">Modelo do catálogo</label>
+        <h2 className="font-bold">{t("localModelTitle")}</h2>
+        <label className="block text-xs font-semibold text-zinc-300">{t("modelCatalog")}</label>
         <select className={inputCls} value={model} onChange={(e) => setModel(e.target.value)}>
           {catalog.models.map((m) => <option key={m.id} value={m.id}>{m.name} {m.installed ? "— instalado" : "— aprox. " + m.approx_size_gb + " GB"}</option>)}
           {catalog.installed_models.filter((m) => !catalog.models.some((c) => c.id === m.id)).map((m) => <option key={m.id} value={m.id}>{m.name} — importado</option>)}
@@ -900,7 +900,7 @@ function CompositorPanel({ onUseLyrics }) {
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
-        <div><h2 className="font-bold">4. Assistente de composição</h2><p className="mt-1 text-xs text-zinc-400">Escolha o que deseja fazer. A composição será processada pelo modo de IA selecionado acima.</p></div>
+        <div><h2 className="font-bold">{t("composerStepTitle")}</h2><p className="mt-1 text-xs text-zinc-400">{t("composerStepHelp")}</p></div>
         <div className="grid gap-2 sm:grid-cols-3">
           {[{id:"full",title:"Música completa",desc:"Começar uma letra do zero."},{id:"continue",title:"Continuar composição",desc:"Preservar sua letra e desenvolver o restante."},{id:"chorus",title:"Criar somente refrão",desc:"Escrever um refrão para sua composição."}].map((item)=>(
             <button key={item.id} type="button" onClick={()=>{setCompositionMode(item.id);setResult("");setError("");}}
@@ -916,16 +916,16 @@ function CompositorPanel({ onUseLyrics }) {
         </div>}
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
           <div>
-            <p className="text-sm font-bold text-white">Minha voz como referência (opcional)</p>
+            <p className="text-sm font-bold text-white">{t("melodyRefTitle")}</p>
             <p className="mt-1 text-xs leading-relaxed text-zinc-400">Cante sua ideia, mesmo com palavras incompletas, sílabas inventadas ou apenas cantarolando. A ferramenta estima fraseado e movimento melódico para ajudar a encaixar a letra.</p>
           </div>
           <label className="block text-xs font-semibold text-zinc-300">O trecho gravado representa:
             <select className={inputCls + " mt-1"} value={melodyRole} onChange={(e) => setMelodyRole(e.target.value)}>
-              <option value="missing">A melodia da parte que ainda falta criar</option>
-              <option value="existing">Uma parte da letra que já escrevi/cantei</option>
+              <option value="missing">{t("melodyMissing")}</option>
+              <option value="existing">{t("melodyExisting")}</option>
             </select>
           </label>
-          <label className="block text-xs font-semibold text-zinc-300">Palavras que cantei (opcional)
+          <label className="block text-xs font-semibold text-zinc-300">{t("melodyWords")}
             <textarea rows={3} className={inputCls + " mt-1"} value={melodyWords} onChange={(e) => setMelodyWords(e.target.value)} placeholder="A letra reconhecida aparecerá aqui. Você também pode corrigir ou escrever manualmente."/>
           </label>
           <div className="flex flex-wrap items-center gap-2">
@@ -961,11 +961,11 @@ function CompositorPanel({ onUseLyrics }) {
           <textarea rows={2} className={inputCls} value={theme} onChange={(e)=>setTheme(e.target.value)} placeholder={compositionMode==="full"?"Ex.: um pai ensinando o filho a pescar e lembrando da própria infância":"Ex.: deixe o refrão mais emocionante, simples e fácil de memorizar"}/>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-xs font-semibold text-zinc-300">Gênero musical<input className={inputCls+" mt-1"} value={genre} onChange={(e)=>setGenre(e.target.value)}/></label>
-          <label className="text-xs font-semibold text-zinc-300">Clima / sentimento<input className={inputCls+" mt-1"} value={mood} onChange={(e)=>setMood(e.target.value)}/></label>
+          <label className="text-xs font-semibold text-zinc-300">{t("genre")}<input className={inputCls+" mt-1"} value={genre} onChange={(e)=>setGenre(e.target.value)}/></label>
+          <label className="text-xs font-semibold text-zinc-300">{t("mood")}<input className={inputCls+" mt-1"} value={mood} onChange={(e)=>setMood(e.target.value)}/></label>
           <label className="text-xs font-semibold text-zinc-300">Voz<select className={inputCls+" mt-1"} value={voice} onChange={(e)=>setVoice(e.target.value)}><option>indiferente</option><option>masculina</option><option>feminina</option><option>dueto</option></select></label>
           <label className="text-xs font-semibold text-zinc-300">Idioma<select className={inputCls+" mt-1"} value={language} onChange={(e)=>setLanguage(e.target.value)}><option>português do Brasil</option><option>inglês</option><option>espanhol</option></select></label>
-          {compositionMode!=="chorus"&&<label className="text-xs font-semibold text-zinc-300">Duração aproximada<select className={inputCls+" mt-1"} value={duration} onChange={(e)=>setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>}
+          {compositionMode!=="chorus"&&<label className="text-xs font-semibold text-zinc-300">{t("approximateDuration")}<select className={inputCls+" mt-1"} value={duration} onChange={(e)=>setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>}
         </div>
         <button disabled={busy||(provider==="local"&&(!status.runtime_running||!status.active_model))||(provider!=="local"&&(!providerModel||!providerConfig.providers.find((p)=>p.id===provider)?.configured))||(compositionMode==="full"?!theme.trim():!sourceLyrics.trim())} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
           {busy?<Loader2 size={18} className="animate-spin"/>:<Sparkles size={18}/>}
@@ -973,7 +973,7 @@ function CompositorPanel({ onUseLyrics }) {
         </button>
         {result&&<div className="space-y-3"><label className="block text-xs font-semibold text-zinc-300">{compositionMode==="chorus"?"Refrão gerado — você pode editar":"Resultado — você pode editar antes de usar"}</label>
           <textarea rows={18} className={inputCls} value={result} onChange={(e)=>setResult(e.target.value)}/>
-          <button onClick={()=>onUseLyrics(result)} className="w-full rounded-xl bg-white px-4 py-3 font-black text-black">Usar esta letra na criação musical</button>
+          <button onClick={()=>onUseLyrics(result)} className="w-full rounded-xl bg-white px-4 py-3 font-black text-black">{t("useLyrics")}</button>
         </div>}
       </section>
     </div>
