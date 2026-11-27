@@ -874,7 +874,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
           <>
             <label className="block text-xs font-semibold text-zinc-300">{tx("compatiblePackage")}</label>
             <select className={inputCls} value={runtime} onChange={(e) => setRuntime(e.target.value)}>
-              {compatibleRuntimes.map((r) => <option key={r.id} value={r.id}>{r.label} {r.installed ? `— ${tx("installed")}` : `— ${(r.size_bytes / 1024 / 1024).toFixed(0)} MB`}</option>)
+              {compatibleRuntimes.map((r) => <option key={r.id} value={r.id}>{r.label} {r.installed ? `— ${tx("installed")}` : `— ${(r.size_bytes / 1024 / 1024).toFixed(0)} MB`}</option>)}
             </select>
             <div className="flex flex-wrap items-center gap-3">
               <button disabled={busy || !runtime || runtimeInstalled} onClick={installRuntime} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black disabled:opacity-40">
