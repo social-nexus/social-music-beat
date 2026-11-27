@@ -862,7 +862,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
         await sleep(1200);
         const job = await http("/api/legenda/transcrever/" + started.job);
         setTranscriptionMessage(job.msg || tx("msgWhisperListen"));
-        if (job.status === "erro") throw new Error(job.msg || "Não foi possível transcrever o áudio.");
+        if (job.status === "erro") throw new Error(job.msg || tx("errWhisperJobFailed"));
         if (job.status === "pronto") {
           if (!job.transcript?.trim()) throw new Error(tx("msgWhisperNoWords"));
           setMelodyWords(job.transcript.trim());

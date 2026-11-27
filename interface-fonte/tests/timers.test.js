@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 
 const app = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const checks = [
+  ["Whisper failure fallback uses selected UI locale", /if \(job\.status === "erro"\) throw new Error\(job\.msg \|\| tx\("errWhisperJobFailed"\)\)/],
   ["music task start error uses selected UI locale", /async function submitTask\(params, file, uiLanguage = "pt"\)[\s\S]*?uiText\(uiLanguage, "errTaskStart"\)/],
   ["AI job fallback errors and progress messages are localized", /setMessage\(j\.message \|\| tx\("working"\)\)[\s\S]*?tx\("errOperationFailed"\)/],
   ["timer uses mm:ss formatting", /const mmss = \(s\) => .*Math\.floor\(s \/ 60\).*Math\.floor\(s % 60\)/s],
