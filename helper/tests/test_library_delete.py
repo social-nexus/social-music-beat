@@ -37,6 +37,26 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             server.jobs.clear()
         server.write_lib([{"id": "track-1", "file": "track.wav", "title": "Test track"}])
 
+    def test_startup_recovery_removes_only_stale_app_staging_files(self):
+        old_stem = self.data / (".1234567890_abcdef_voz." + "a" * 32 + ".tmp.wav")
+        old_library = self.data / (".biblioteca.json." + "b" * 32 + ".tmp")
+        fresh_stem = self.data / (".1234567890_abcdef_instrumental." + "c" * 32 + ".tmp.wav")
+        unrelated = self.data / ".user-data.tmp.wav"
+        for path in (old_stem, old_library, fresh_stem, unrelated):
+            path.write_bytes(b"temporary")
+        old_time = time.time() - server._STALE_STAGING_SECONDS - 10
+        os.utime(old_stem, (old_time, old_time))
+        os.utime(old_library, (old_time, old_time))
+
+        removed = server.cleanup_stale_staging_files()
+
+        self.assertCountEqual(removed, [old_stem.name, old_library.name])
+        self.assertFalse(old_stem.exists())
+        self.assertFalse(old_library.exists())
+        self.assertTrue(fresh_stem.exists())
+        self.assertTrue(unrelated.exists())
+        self.assertTrue(self.audio_file.exists())
+
     def test_delete_removes_metadata_and_audio(self):
         result = server.delete_track("track-1")
         self.assertEqual(result, {"ok": True})
