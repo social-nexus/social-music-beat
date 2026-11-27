@@ -803,7 +803,7 @@ function CompositorPanel({ onUseLyrics }) {
         <p className="mt-1 text-sm text-zinc-400">Use Gemma/Qwen no computador ou conecte sua própria API. Ao escolher um provedor externo, os dados da composição serão enviados a esse serviço.</p>
       </div>
 
-      {(error || message) && (
+      {busy && busySince > 0 && <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-3 py-2 text-xs text-sky-200">Operação em andamento · Tempo decorrido: <span className="font-mono">{mmss(Math.floor((Date.now() - busySince) / 1000))}</span></div>}\n\n      {(error || message) && (
         <div className={error ? "rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200" : "rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-sm text-sky-200"}>
           {error || message}
           {busy && busySince > 0 && <div className="mt-2 font-mono text-xs opacity-80">Tempo decorrido: {mmss(Math.floor((Date.now() - busySince) / 1000))}</div>}
