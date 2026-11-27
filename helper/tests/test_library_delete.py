@@ -1048,6 +1048,25 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(raised.exception.status_code, 502)
         persist.assert_not_called()
 
+    def test_save_audio_empty_response_returns_502_without_persisting(self):
+        import asyncio
+        response = mock.Mock(status_code=200, content=b"")
+        request = mock.AsyncMock(return_value=response)
+        client = mock.Mock()
+        client.get = request
+        class ClientContext:
+            async def __aenter__(self):
+                return client
+            async def __aexit__(self, *args):
+                return False
+        with mock.patch.object(server.httpx, "AsyncClient", return_value=ClientContext()):
+            with mock.patch.object(server, "_persist_audio_content") as persist:
+                with self.assertRaises(server.HTTPException) as raised:
+                    asyncio.run(server.save_audio({"url": "/v1/audio?filename=sample.wav"}))
+        self.assertEqual(raised.exception.status_code, 502)
+        self.assertIn("arquivo vazio", raised.exception.detail)
+        persist.assert_not_called()
+
     def test_library_batch_rejects_duplicate_or_invalid_ids_without_mutation(self):
         original = [{"id": "existing", "file": "track.wav", "title": "Original"}]
         server.write_lib(original)
