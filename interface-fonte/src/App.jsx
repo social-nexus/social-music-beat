@@ -82,6 +82,75 @@ const STYLES = [
 
 const STYLE_CATEGORIES = ["Infantil", "Pop e Rock", "Brasil", "Urbano", "Romântico", "Dança", "Internacional", "Instrumental"];
 
+const STYLE_CATEGORY_LABELS = {
+  "Infantil": { en: "Children's", es: "Infantil" },
+  "Pop e Rock": { en: "Pop & Rock", es: "Pop y Rock" },
+  "Brasil": { en: "Brazilian", es: "Brasil" },
+  "Urbano": { en: "Urban", es: "Urbano" },
+  "Romântico": { en: "Romantic", es: "Romántico" },
+  "Dança": { en: "Dance", es: "Baile" },
+  "Internacional": { en: "International", es: "Internacional" },
+  "Instrumental": { en: "Instrumental", es: "Instrumental" }
+};
+
+const STYLE_LABELS = {
+  "Pop infantil dançante": { en: "Dance kids' pop", es: "Pop infantil bailable" },
+  "Festa infantil": { en: "Kids' party", es: "Fiesta infantil" },
+  "Marchinha divertida": { en: "Fun march", es: "Marcha divertida" },
+  "Cantiga moderna": { en: "Modern nursery rhyme", es: "Canción infantil moderna" },
+  "Desenho animado": { en: "Cartoon soundtrack", es: "Banda sonora de dibujos" },
+  "Pop rock infantil": { en: "Kids' pop rock", es: "Pop rock infantil" },
+  "Ukulele alegre": { en: "Cheerful ukulele", es: "Ukelele alegre" },
+  "Ska infantil": { en: "Kids' ska", es: "Ska infantil" },
+  "Pop dançante": { en: "Dance pop", es: "Pop bailable" },
+  "Pop rock animado": { en: "Upbeat pop rock", es: "Pop rock animado" },
+  "Pop acústico": { en: "Acoustic pop", es: "Pop acústico" },
+  "Rock clássico": { en: "Classic rock", es: "Rock clásico" },
+  "Indie pop": { en: "Indie pop", es: "Indie pop" },
+  "Punk pop": { en: "Pop punk", es: "Pop punk" },
+  "Hard rock": { en: "Hard rock", es: "Hard rock" },
+  "Samba": { en: "Samba", es: "Samba" },
+  "Pagode": { en: "Pagode", es: "Pagode" },
+  "Samba-enredo": { en: "Carnival samba", es: "Samba de carnaval" },
+  "Forró pé de serra": { en: "Traditional forró", es: "Forró tradicional" },
+  "Forró eletrônico": { en: "Electronic forró", es: "Forró electrónico" },
+  "Piseiro": { en: "Piseiro", es: "Piseiro" },
+  "Sertanejo universitário": { en: "Modern sertanejo", es: "Sertanejo moderno" },
+  "Sertanejo raiz": { en: "Traditional sertanejo", es: "Sertanejo tradicional" },
+  "Axé": { en: "Axé", es: "Axé" },
+  "MPB animada": { en: "Upbeat Brazilian popular music", es: "MPB animada" },
+  "Bossa nova": { en: "Bossa nova", es: "Bossa nova" },
+  "Funk carioca": { en: "Brazilian funk", es: "Funk brasileño" },
+  "Hip-hop": { en: "Hip-hop", es: "Hip-hop" },
+  "Trap": { en: "Trap", es: "Trap" },
+  "R&B": { en: "R&B", es: "R&B" },
+  "Soul": { en: "Soul", es: "Soul" },
+  "Reggae": { en: "Reggae", es: "Reggae" },
+  "Ska": { en: "Ska", es: "Ska" },
+  "Balada pop": { en: "Pop ballad", es: "Balada pop" },
+  "Balada rock": { en: "Rock ballad", es: "Balada rock" },
+  "Romântico acústico": { en: "Acoustic romantic", es: "Romántico acústico" },
+  "Bolero": { en: "Bolero", es: "Bolero" },
+  "Bachata": { en: "Bachata", es: "Bachata" },
+  "Disco": { en: "Disco", es: "Disco" },
+  "Funk / groove": { en: "Funk / groove", es: "Funk / groove" },
+  "House": { en: "House", es: "House" },
+  "EDM festival": { en: "Festival EDM", es: "EDM de festival" },
+  "Salsa": { en: "Salsa", es: "Salsa" },
+  "Cumbia": { en: "Cumbia", es: "Cumbia" },
+  "Merengue": { en: "Merengue", es: "Merengue" },
+  "Country": { en: "Country", es: "Country" },
+  "Blues": { en: "Blues", es: "Blues" },
+  "Jazz swing": { en: "Swing jazz", es: "Jazz swing" },
+  "Flamenco pop": { en: "Pop flamenco", es: "Flamenco pop" },
+  "Afrobeat": { en: "Afrobeat", es: "Afrobeat" },
+  "Orquestral épico": { en: "Epic orchestral", es: "Orquestal épico" },
+  "Piano emocional": { en: "Emotional piano", es: "Piano emocional" },
+  "Lo-fi chill": { en: "Lo-fi chill", es: "Lo-fi relajante" },
+  "Synthwave": { en: "Synthwave", es: "Synthwave" },
+  "Trilha de aventura": { en: "Adventure soundtrack", es: "Banda sonora de aventura" }
+};
+
 const KEYS = ["", "C Major", "G Major", "D Major", "A Major", "E Major", "F Major", "A minor", "E minor", "D minor", "B minor", "F# minor", "C minor"];
 
 const INSTRUMENTS = [
