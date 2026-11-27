@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 const app = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const checks = [
-  ["timer uses mm:ss formatting", /const mmss = \(s\) => .*Math\.floor\(s \/ 60\).*Math\.floor\(s % 60\)/s],
+  ["music task start error uses selected UI locale", /async function submitTask\(params, file, uiLanguage = "pt"\)[\s\S]*?uiText\(uiLanguage, "errTaskStart"\)/],\n  ["AI job fallback errors and progress messages are localized", /setMessage\(j\.message \|\| tx\("working"\)\)[\s\S]*?tx\("errOperationFailed"\)/],\n  ["timer uses mm:ss formatting", /const mmss = \(s\) => .*Math\.floor\(s \/ 60\).*Math\.floor\(s % 60\)/s],
   ["main operations use a 1-second elapsed tick", /setInterval\(\(\) => setTick\(\(n\) => n \+ 1\), 1000\)/],
   ["operation timer starts at runJob entry and supports recovery timestamp", /const startedAt = Number\.isFinite\(startedAtOverride\) \? startedAtOverride : Date\.now\(\);\s*setLastJob\(null\);\s*setJob\(\{ title, phase: tx\("phaseStarting"\), startedAt \}\)/],
   ["operation duration is saved on completion and clamped", /setLastJob\(\{ title, elapsed: Math\.max\(0, Math\.floor\(\(Date\.now\(\) - startedAt\) \/ 1000\)\), failed \}\)/],

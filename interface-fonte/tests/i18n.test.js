@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { UI_TEXT, localeCoverage, uiText } from "../src/i18n.js";
 
 const requiredLocales = ["pt", "en", "es"];
-const requiredKeys = ["errAudioPlayback", "errAudioConvert"];
+const requiredKeys = ["errAudioPlayback", "errAudioConvert", "errOperationFailed"];
 let failed = false;
 const source = readFileSync(new URL("../src/i18n.js", import.meta.url), "utf8");
 

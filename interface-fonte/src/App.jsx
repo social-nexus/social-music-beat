@@ -193,7 +193,7 @@ const jsonPost = (url, body) =>
   http(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 // Envia uma tarefa ao ACE-Step. Com arquivo: tudo vai dentro de "param_obj" (aceita listas).
-async function submitTask(params, file) {
+async function submitTask(params, file, uiLanguage = "pt") {
   let res;
   if (file) {
     const fd = new FormData();
@@ -204,7 +204,7 @@ async function submitTask(params, file) {
     res = await jsonPost("/ace/release_task", params);
   }
   const id = res?.data?.task_id;
-  if (!id) throw new Error(res?.error || "Não consegui iniciar a criação.");
+  if (!id) throw new Error(res?.error || uiText(uiLanguage, "errTaskStart"));
   return id;
 }
 
@@ -724,9 +724,9 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   const waitJob = async (id, doneMessage) => {
     for (;;) {
       const j = await http("/api/ai/jobs/" + id);
-      setMessage(j.message || "Processando…");
+      setMessage(j.message || tx("working"));
       if (j.status === "done") { setMessage(doneMessage); return; }
-      if (j.status === "error") throw new Error(j.message || "A operação falhou.");
+      if (j.status === "error") throw new Error(j.message || tx("errOperationFailed"));
       await sleep(1200);
     }
   };
@@ -1297,7 +1297,7 @@ export default function App() {
       if (form.bpm) params.bpm = Number(form.bpm);
       if (form.key) params.key_scale = form.key;
       phase(tx("phaseSendMusic"));
-      const id = await submitTask(params);
+      const id = await submitTask(params, undefined, uiLanguage);
       phase(tx("phaseCreateMusic"));
       const items = await waitResult(id, uiLanguage);
       phase(tx("phaseSaving"));
@@ -1353,7 +1353,7 @@ export default function App() {
       if (o.bpm) params.bpm = Number(o.bpm);
       if (o.key) params.key_scale = o.key;
       phase(uiLanguage === "en" ? "Sending... (the engine switches models on first use and may take a few minutes)" : uiLanguage === "es" ? "Enviando... (la primera vez el motor cambia de modelo y puede tardar unos minutos)" : "Enviando... (na primeira vez o motor troca de modelo: pode levar alguns minutos)");
-      const id = await submitTask(params, blob);
+      const id = await submitTask(params, blob, uiLanguage);
       phase(uiLanguage === "en" ? "Creating the band for your voice..." : uiLanguage === "es" ? "Creando la banda para tu voz..." : "Criando a banda para a sua voz...");
       const items = await waitResult(id, uiLanguage);
       phase(uiLanguage === "en" ? "Saving audio..." : uiLanguage === "es" ? "Guardando audio..." : "Salvando áudio...");
