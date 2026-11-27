@@ -157,6 +157,17 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertFalse(staged.exists())
         self.assertFalse(self.audio_file.exists())
 
+    def test_startup_preserves_staged_audio_when_referenced_path_was_recreated(self):
+        staged = self.data / (".track.wav." + "3" * 32 + ".deleting")
+        staged.write_bytes(b"original staged audio")
+        self.audio_file.write_bytes(b"new file at same path")
+
+        recovered = server.recover_staged_deletions()
+
+        self.assertIn(("preserved_conflict", staged.name), recovered)
+        self.assertEqual(staged.read_bytes(), b"original staged audio")
+        self.assertEqual(self.audio_file.read_bytes(), b"new file at same path")
+
     def test_startup_preserves_staged_audio_when_library_metadata_is_missing(self):
         staged = self.data / (".track.wav." + "2" * 32 + ".deleting")
         self.audio_file.rename(staged)
