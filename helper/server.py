@@ -374,18 +374,24 @@ def _commit_separation_outputs(staged_paths, final_paths):
         for staged, final in zip(staged_paths, final_paths):
             os.replace(staged, final)
             promoted.append(final)
-    except OSError:
+    except OSError as commit_error:
         # Best-effort rollback; leave backup files in place if restoration fails.
+        rollback_errors = []
         for final in reversed(promoted):
             try:
                 final.unlink(missing_ok=True)
-            except OSError:
-                pass
+            except OSError as rollback_error:
+                rollback_errors.append(f"removing {final.name}: {rollback_error}")
         for final, backup in reversed(backups):
             try:
                 os.replace(backup, final)
-            except OSError:
-                pass
+            except OSError as rollback_error:
+                rollback_errors.append(f"restoring {final.name}: {rollback_error}; backup retained at {backup.name}")
+        if rollback_errors:
+            raise RuntimeError(
+                f"Separation commit failed ({commit_error}); rollback incomplete: "
+                + "; ".join(rollback_errors)
+            ) from commit_error
         raise
     else:
         # Pair committed. Backup cleanup failure is non-fatal.
