@@ -808,6 +808,18 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(result, {"ok": True})
         self.assertFalse(generated.exists())
 
+    def test_cleanup_fails_closed_when_library_is_missing(self):
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"audio that must be preserved")
+        self.library_file.unlink(missing_ok=True)
+
+        with self.assertRaises(server.HTTPException) as raised:
+            server.cleanup_unregistered_audio({"file": generated.name})
+
+        self.assertEqual(raised.exception.status_code, 503)
+        self.assertTrue(generated.exists())
+        self.assertEqual(generated.read_bytes(), b"audio that must be preserved")
+
     def test_cleanup_fails_closed_when_library_is_corrupt(self):
         generated = self.data / "1234567890_abcdef.wav"
         generated.write_bytes(b"audio that must be preserved")
