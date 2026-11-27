@@ -1,7 +1,7 @@
 # Histórico de alterações
 
 ## [3.1.0]
-- Tradução para inglês e espanhol de mensagens de estado do compositor, runtime, gestão de chaves, análise musical e importação de modelos.
+- Tradução para inglês e espanhol de mensagens de estado do compositor, runtime, gestão de chaves, análise musical, importação de modelos e confirmação do resultado da composição, incluindo nome do modelo usado.
 - Correção de inconsistências de catálogo: adicionadas chaves de instrumentos/faixas que faltavam nos idiomas e normalizada a paridade PT/EN/ES.
 - Teste de i18n agora também detecta chaves duplicadas no código-fonte.
 
