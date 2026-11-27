@@ -2,6 +2,19 @@
 
 As versões e datas abaixo descrevem a evolução do projeto. Consulte também o README, os avisos de terceiros e as licenças dos modelos antes de instalar ou usar componentes opcionais.
 
+## [3.1.0] — Em desenvolvimento
+
+### Novidades
+- Interface em Português do Brasil, Inglês e Espanhol, com preferência de idioma persistente.
+- Timers para geração musical e operações demoradas, incluindo análise/transcrição de melodia, separação de áudio, composição assistida, geração de banda e legendas.
+- Exibição de tempo total e tempo por etapa quando aplicável.
+- Tradução ampliada de opções, avisos, placeholders, ferramentas e telas de criação.
+
+### Correções e revisão
+- Correção de valores internos das opções de idioma da música para manter compatibilidade com o motor.
+- Revisão de chaves duplicadas e consistência entre os três idiomas.
+- Testes automatizados multiplataforma executados na branch de desenvolvimento.
+
 ## [3.0.0] — Grande atualização: compositor com IA e novos fluxos de instalação
 
 ### Novidades
