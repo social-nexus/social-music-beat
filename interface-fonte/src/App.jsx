@@ -783,7 +783,7 @@ function CompositorPanel({ onUseLyrics }) {
       const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
       setResult(r.lyrics);
       const labels = { full: t("songFullCreated"), continue: t("compositionContinued"), chorus: t("chorusCreated") };
-      setMessage((labels[compositionMode] || t("compositionDone")) + " com " + r.model + ".");
+      setMessage((labels[compositionMode] || t("compositionDone")) + t("modelUsedSuffix") + r.model + ".");
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   };
