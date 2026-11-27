@@ -221,6 +221,9 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
     def test_startup_keeps_separation_backup_when_restore_fails(self):
         backup = self.data / (".track.wav." + "c" * 32 + ".backup")
         backup.write_bytes(b"recoverable previous output")
+        # setUp creates the normal audio file; remove it so recovery attempts
+        # os.replace and the simulated I/O failure path is actually exercised.
+        self.audio_file.unlink()
 
         with mock.patch.object(server.os, "replace", side_effect=OSError("simulated restore failure")):
             recovered = server.recover_separation_backups()
