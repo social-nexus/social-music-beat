@@ -60,3 +60,6 @@
 - O idioma da música deve ser uma escolha independente do idioma visual.
 - Cronômetros devem medir tempo real decorrido, sem simular porcentagens de progresso.
 - Preservar a biblioteca de músicas, configurações, modelos e caminhos de armazenamento existentes.
+
+
+- **Auditoria multilíngue (em andamento):** confirmação de remoção de API Key, aviso de gravação incompatível com navegador e mensagens de início/falha de transcrição Whisper agora usam catálogo PT-BR/EN/ES.
