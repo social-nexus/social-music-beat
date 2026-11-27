@@ -218,6 +218,24 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(self.audio_file.read_bytes(), b"new file at same path")
         self.assertEqual(backup.read_bytes(), b"previous output")
 
+    def test_startup_runs_separation_backup_recovery_before_stale_cleanup(self):
+        calls = []
+        with mock.patch.object(server, "recover_staged_deletions", side_effect=lambda: calls.append("deletions")):
+            with mock.patch.object(server, "recover_separation_backups", side_effect=lambda: calls.append("separation")):
+                with mock.patch.object(server, "cleanup_stale_staging_files", side_effect=lambda: calls.append("cleanup")):
+                    server.recover_stale_staging_files()
+        self.assertEqual(calls, ["deletions", "separation", "cleanup"])
+
+    def test_separation_backup_recovery_ignores_unrecognized_backup_names(self):
+        unrelated = self.data / ".manual-copy.backup"
+        unrelated.write_bytes(b"keep this file")
+
+        recovered = server.recover_separation_backups()
+
+        self.assertEqual(recovered, [])
+        self.assertTrue(unrelated.exists())
+        self.assertEqual(unrelated.read_bytes(), b"keep this file")
+
     def test_delete_removes_metadata_and_audio(self):
         result = server.delete_track("track-1")
         self.assertEqual(result, {"ok": True})
