@@ -1172,5 +1172,32 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(generated.exists())
 
 
+    def test_sniff_ext_recognizes_supported_audio_signatures(self):
+        samples = (
+            (b"RIFF\\x00\\x00\\x00\\x00WAVEaudio", "wav"),
+            (b"fLaC\\x00\\x00\\x00\\x22", "flac"),
+            (b"ID3\\x04\\x00\\x00\\x00\\x00\\x00\\x00", "mp3"),
+            (b"\\xff\\xfb\\x90\\x64audio-frame", "mp3"),
+            (b"\\xff\\xf3\\x90\\x64audio-frame", "mp3"),
+            (b"\\xff\\xf2\\x90\\x64audio-frame", "mp3"),
+        )
+        for payload, expected in samples:
+            with self.subTest(expected=expected, payload=payload[:4]):
+                self.assertEqual(server.sniff_ext(payload), expected)
+
+    def test_sniff_ext_rejects_unknown_and_truncated_signatures(self):
+        samples = (
+            b"",
+            b"RIFF",
+            b"RIFF\\x00\\x00\\x00\\x00NOPE",
+            b"fLa",
+            b"\\xff",
+            b"<html>not audio</html>",
+        )
+        for payload in samples:
+            with self.subTest(payload=payload):
+                self.assertIsNone(server.sniff_ext(payload))
+
+
 if __name__ == "__main__":
     unittest.main()
