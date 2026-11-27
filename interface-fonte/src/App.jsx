@@ -305,6 +305,7 @@ function LegendaModal({ track, tracks, onClose }) {
     setMsg("");
     if (!letra.trim()) { setMsg("A letra está vazia."); return; }
     if (modo === "whisper" && !whisper) { setMsg("O Whisper não está instalado. Rode o instalar.bat de novo (ele instala o Whisper) e abra o programa outra vez."); return; }
+    setCaptionStartedAt(Date.now());
     setOcupado(true);
     try {
       let jid;
