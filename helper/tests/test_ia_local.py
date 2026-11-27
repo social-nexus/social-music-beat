@@ -145,6 +145,77 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertFalse(staged.exists())
         self.assertFalse(any(root.glob(".runtime.backup-*")))
 
+    def test_model_download_hash_failure_preserves_existing_model(self):
+        model_id = "qwen3-4b-q4km"
+        meta = ia_local.MODEL_CATALOG[model_id]
+        target_dir = Path(TEMP_DATA) / "model-preserve-test"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / meta["filename"]
+        target.write_bytes(b"previous-valid-model")
+        digest = "a" * 64
+
+        def fake_download(url, dest, size, jid):
+            dest.write_bytes(b"new-but-invalid-model")
+
+        with mock.patch.object(ia_local, "MODELS_DIR", target_dir.parent), \
+             mock.patch.object(ia_local, "_hf_file_digest", return_value=(digest, 23)), \
+             mock.patch.object(ia_local, "_download", side_effect=fake_download), \
+             mock.patch.object(ia_local, "_update_job") as update:
+            ia_local._download_model_worker("job-model-hash", model_id)
+
+        self.assertEqual(target.read_bytes(), b"previous-valid-model")
+        self.assertEqual(update.call_args.kwargs["status"], "error")
+        self.assertIn("download temporário descartado", update.call_args.kwargs["message"])
+        self.assertEqual(list(target_dir.glob("*.download")), [])
+        self.assertEqual(list(target_dir.glob("*.download.part")), [])
+
+    def test_model_download_transport_failure_preserves_existing_model(self):
+        model_id = "gemma3-4b-it-q4km"
+        meta = ia_local.MODEL_CATALOG[model_id]
+        target_dir = Path(TEMP_DATA) / "model-transport-test"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / meta["filename"]
+        target.write_bytes(b"previous-model")
+
+        def fail_download(url, dest, size, jid):
+            dest.with_suffix(dest.suffix + ".part").write_bytes(b"partial")
+            raise OSError("connection interrupted")
+
+        with mock.patch.object(ia_local, "MODELS_DIR", target_dir.parent), \
+             mock.patch.object(ia_local, "_hf_file_digest", return_value=("b" * 64, 100)), \
+             mock.patch.object(ia_local, "_download", side_effect=fail_download), \
+             mock.patch.object(ia_local, "_update_job") as update:
+            ia_local._download_model_worker("job-model-network", model_id)
+
+        self.assertEqual(target.read_bytes(), b"previous-model")
+        self.assertEqual(update.call_args.kwargs["status"], "error")
+        self.assertEqual(list(target_dir.glob("*.download*")), [])
+
+    def test_model_download_success_atomically_replaces_previous_file(self):
+        model_id = "qwen3-4b-q4km"
+        meta = ia_local.MODEL_CATALOG[model_id]
+        target_dir = Path(TEMP_DATA) / "model-success-test"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / meta["filename"]
+        target.write_bytes(b"old-model")
+        new_content = b"verified-new-model"
+        import hashlib
+        digest = hashlib.sha256(new_content).hexdigest()
+
+        def fake_download(url, dest, size, jid):
+            dest.write_bytes(new_content)
+
+        with mock.patch.object(ia_local, "MODELS_DIR", target_dir.parent), \
+             mock.patch.object(ia_local, "_hf_file_digest", return_value=(digest, len(new_content))), \
+             mock.patch.object(ia_local, "_download", side_effect=fake_download), \
+             mock.patch.object(ia_local, "_update_job") as update:
+            ia_local._download_model_worker("job-model-success", model_id)
+
+        self.assertEqual(target.read_bytes(), new_content)
+        self.assertTrue((target_dir / "model.json").is_file())
+        self.assertEqual(update.call_args.kwargs["status"], "done")
+        self.assertEqual(list(target_dir.glob("*.download*")), [])
+
     def test_archive_path_rejects_parent_traversal(self):
         root = Path(TEMP_DATA) / "extract"
         with self.assertRaises(ValueError):

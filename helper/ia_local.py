@@ -377,6 +377,8 @@ def _hf_file_digest(repo: str, filename: str) -> tuple[str, int]:
     return digest, size
 
 def _download_model_worker(jid: str, model_id: str):
+    staged = None
+    metadata_staged = None
     try:
         meta = MODEL_CATALOG[model_id]
         _update_job(jid, status="verifying", message="Consultando hash e tamanho no Hugging Face…")
@@ -384,19 +386,30 @@ def _download_model_worker(jid: str, model_id: str):
         target_dir = MODELS_DIR / model_id
         target_dir.mkdir(parents=True, exist_ok=True)
         target = target_dir / meta["filename"]
+        staged = target.with_name(f".{target.name}.{uuid.uuid4().hex}.download")
+        metadata = target_dir / "model.json"
+        metadata_staged = target_dir / f".model.{uuid.uuid4().hex}.json.tmp"
         url = f"https://huggingface.co/{meta['repo']}/resolve/main/{meta['filename']}"
-        _download(url, target, size, jid)
+        _download(url, staged, size, jid)
         _update_job(jid, status="verifying", progress=99, message="Validando SHA-256 do modelo…")
-        if _sha256(target).lower() != digest.lower():
-            target.unlink(missing_ok=True)
-            raise ValueError("Hash SHA-256 do modelo não confere; arquivo removido.")
-        (target_dir / "model.json").write_text(json.dumps({
+        if _sha256(staged).lower() != digest.lower():
+            raise ValueError("Hash SHA-256 do modelo não confere; download temporário descartado.")
+        metadata_staged.write_text(json.dumps({
             "model_id": model_id, "repo": meta["repo"], "filename": meta["filename"],
             "sha256": digest, "license": meta["license"], "installed_at": int(time.time())
         }, indent=2), encoding="utf-8")
+        # Só publica o modelo depois de validar o arquivo completo.
+        os.replace(staged, target)
+        os.replace(metadata_staged, metadata)
         _update_job(jid, status="done", progress=100, message="Modelo baixado e verificado.")
     except Exception as exc:
         _update_job(jid, status="error", message=str(exc)[:350])
+    finally:
+        if staged is not None:
+            staged.unlink(missing_ok=True)
+            staged.with_suffix(staged.suffix + ".part").unlink(missing_ok=True)
+        if metadata_staged is not None:
+            metadata_staged.unlink(missing_ok=True)
 
 def _installed_models():
     found = []
