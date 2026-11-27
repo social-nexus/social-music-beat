@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { UI_TEXT, localeCoverage, uiText } from "../src/i18n.js";
 
 const requiredLocales = ["pt", "en", "es"];
-const requiredKeys = ["errAudioPlayback", "errAudioConvert", "errOperationFailed", "errWhisperJobFailed"];
+const requiredKeys = ["errAudioPlayback", "errAudioConvert", "errOperationFailed", "errWhisperJobFailed", "msgStoppingEngine"];
 let failed = false;
 const source = readFileSync(new URL("../src/i18n.js", import.meta.url), "utf8");
 
@@ -182,6 +182,15 @@ for (const locale of requiredLocales) {
       failed = true;
       console.error(`Locale ${locale}: expected timer label ${key}="${expected}", got "${uiText(locale, key)}"`);
     }
+  }
+}
+
+
+const localizedRuntimeStopProgress = { pt: "Encerrando o motor de IA…", en: "Stopping the AI engine…", es: "Deteniendo el motor de IA…" };
+for (const locale of requiredLocales) {
+  if (uiText(locale, "msgStoppingEngine") !== localizedRuntimeStopProgress[locale]) {
+    failed = true;
+    console.error(`Locale ${locale}: runtime-stop progress message mismatch`);
   }
 }
 
