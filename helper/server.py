@@ -477,7 +477,12 @@ def cleanup_unregistered_audio(payload: dict):
 
 def _persist_audio_content(content: bytes, extension: str) -> str:
     """Write downloaded audio to a temporary file and atomically publish it."""
-    safe_ext = extension if extension and extension.isalnum() else "wav"
+    # Keep published names within the formats accepted by the library and
+    # cleanup endpoints; never let an unexpected extension create an orphan
+    # file that the app cannot safely recognize later.
+    safe_ext = extension.casefold() if isinstance(extension, str) else "wav"
+    if safe_ext not in {"wav", "flac", "mp3"}:
+        safe_ext = "wav"
     name = f"{int(time.time())}_{uuid.uuid4().hex[:12]}.{safe_ext}"
     target = DATA / name
     staged = DATA / f".{name}.{uuid.uuid4().hex}.tmp"
