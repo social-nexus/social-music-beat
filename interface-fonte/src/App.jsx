@@ -348,34 +348,34 @@ function LegendaModal({ track, tracks, onClose }) {
       <div className="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl bg-[#14141a] border border-white/10 p-6 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold">Legenda da música</h2>
+            <h2 className="text-lg font-bold">{t("captionTitle")}</h2>
             <p className="text-xs text-zinc-400 mt-1">Gera o arquivo .srt (vídeo) e o .lrc (letra sincronizada) de “{track.title}”.</p>
           </div>
           <button onClick={onClose} className="text-zinc-500 hover:text-white"><X size={20} /></button>
         </div>
 
         <div className="rounded-xl border border-white/10 p-3 text-xs text-zinc-300">
-          <div className="font-semibold text-white mb-1">Áudio usado</div>
+          <div className="font-semibold text-white mb-1">{t("captionAudio")}</div>
           {outro ? `Seu arquivo: ${outro.name}` : `${fonte.title}${voz ? " (voz separada, melhor resultado)" : " (música inteira)"}`}
           {!outro && !voz && (
             <div className="mt-1 text-amber-300">Sem a voz separada o resultado costuma ser pior. Feche esta janela e use “Separar voz e instrumental” antes.</div>
           )}
           <div className="mt-2">
-            <button onClick={() => inputRef.current.click()} className="underline text-pink-300">Usar a minha gravação cantando</button>
-            {outro && <button onClick={() => setOutro(null)} className="ml-3 underline text-zinc-400">voltar ao áudio da música</button>}
+            <button onClick={() => inputRef.current.click()} className="underline text-pink-300">{t("captionUpload")}</button>
+            {outro && <button onClick={() => setOutro(null)} className="ml-3 underline text-zinc-400">{t("captionReturn")}</button>}
             <input ref={inputRef} type="file" accept="audio/*" className="hidden" onChange={(e) => setOutro(e.target.files[0] || null)} />
           </div>
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-zinc-300 mb-2">Letra (uma linha cantada por linha; as marcações [Verse] são ignoradas)</p>
+          <p className="text-xs font-semibold text-zinc-300 mb-2">{t("captionLyricsHelp")}</p>
           <textarea rows={7} className={inputCls} value={letra} onChange={(e) => setLetra(e.target.value)} />
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-xs">
           <select className={inputCls} value={modo} onChange={(e) => setModo(e.target.value)}>
-            <option value="rapido">Rápido: usa as pausas do canto</option>
-            <option value="whisper">Preciso: Whisper ouve a voz</option>
+            <option value="rapido">{t("captionQuick")}</option>
+            <option value="whisper">{t("captionPrecise")}</option>
           </select>
           <label className="flex items-center gap-2 text-zinc-300">
             Caracteres por legenda
@@ -398,7 +398,7 @@ function LegendaModal({ track, tracks, onClose }) {
           disabled={ocupado}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3 font-bold text-white disabled:opacity-50"
         >
-          {ocupado ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} {ocupado ? "Trabalhando..." : "Gerar legenda"}
+          {ocupado ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} {ocupado ? t("captionWorking") : t("captionGenerate")}
         </button>
         {ocupado && captionStartedAt > 0 && <div className="rounded-lg border border-sky-500/20 bg-sky-500/5 p-2 text-xs text-sky-200">{t("elapsed")}: <span className="font-mono">{mmss(Math.floor((Date.now() - captionStartedAt) / 1000))}</span></div>}
         {msg && <div className={`rounded-lg border p-3 text-xs break-words ${ocupado ? "border-white/10 text-zinc-300" : "border-red-500/30 bg-red-500/10 text-red-200"}`}>{msg}</div>}
@@ -412,9 +412,9 @@ function LegendaModal({ track, tracks, onClose }) {
             {res.avisos.map((a, i) => <div key={i} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-200">{a}</div>)}
             <textarea readOnly rows={8} className={`${inputCls} font-mono text-xs`} value={res.srt} />
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => baixar(res.srt, "srt")} className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-black">Baixar .srt</button>
-              <button onClick={() => baixar(res.lrc, "lrc")} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">Baixar .lrc</button>
-              <button onClick={() => navigator.clipboard.writeText(res.srt).catch(() => {})} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">Copiar</button>
+              <button onClick={() => baixar(res.srt, "srt")} className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-black">{t("captionDownloadSrt")}</button>
+              <button onClick={() => baixar(res.lrc, "lrc")} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">{t("captionDownloadLrc")}</button>
+              <button onClick={() => navigator.clipboard.writeText(res.srt).catch(() => {})} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">{t("captionCopy")}</button>
             </div>
           </div>
         )}
