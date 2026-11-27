@@ -52,6 +52,21 @@ for (const locale of requiredLocales) {
   }
 }
 
+
+const localizedAuditLabels = {
+  pt: {"deleteFileConfirm":"Isso apaga o arquivo.","captionLines":"linhas","captionMode":"modo","wordsMatched":"das palavras casaram","alignmentQuality":"qualidade do encaixe","bandOnly":"só a banda"},
+  en: {"deleteFileConfirm":"This deletes the file.","captionLines":"lines","captionMode":"mode","wordsMatched":"of words matched","alignmentQuality":"alignment quality","bandOnly":"band only"},
+  es: {"deleteFileConfirm":"Esto elimina el archivo.","captionLines":"líneas","captionMode":"modo","wordsMatched":"de las palabras coincidieron","alignmentQuality":"calidad de sincronización","bandOnly":"solo banda"},
+};
+for (const locale of requiredLocales) {
+  for (const [key, expected] of Object.entries(localizedAuditLabels[locale])) {
+    if (uiText(locale, key) !== expected) {
+      failed = true;
+      console.error(`Locale ${locale}: expected ${key}="${expected}", got "${uiText(locale, key)}"`);
+    }
+  }
+}
+
 // Verify the library actions that were recently audited remain localized.
 const localizedLibraryLabels = {
   pt: { download: "Baixar", separate: "Separar voz e instrumental" },

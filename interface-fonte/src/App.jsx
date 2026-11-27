@@ -488,8 +488,8 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
         {res && (
           <div className="space-y-3">
             <div className="text-xs text-zinc-400">
-              {res.info.legendas} {language === "en" ? "lines" : language === "es" ? "líneas" : "linhas"} • {language === "en" ? "mode" : language === "es" ? "modo" : "modo"} {res.info.modo === "whisper" ? tx("whisperMode") : tx("fastMode")} •{" "}
-              {res.info.modo === "whisper" ? `${Math.round(res.info.confianca * 100)}% ${language === "en" ? "of words matched" : language === "es" ? "de las palabras coincidieron" : "das palavras casaram"}` : `${language === "en" ? "alignment quality" : language === "es" ? "calidad de sincronización" : "qualidade do encaixe"} ${Math.round(res.info.confianca * 100)}%`}
+              {res.info.legendas} {tx("captionLines")} • {tx("captionMode")} {res.info.modo === "whisper" ? tx("whisperMode") : tx("fastMode")} •{" "}
+              {res.info.modo === "whisper" ? `${Math.round(res.info.confianca * 100)}% ${tx("wordsMatched")}` : `${tx("alignmentQuality")} ${Math.round(res.info.confianca * 100)}%`}
             </div>
             {res.avisos.map((a, i) => <div key={i} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-200">{a}</div>)}
             <textarea readOnly rows={8} className={`${inputCls} font-mono text-xs`} value={res.srt} />
@@ -1237,7 +1237,7 @@ export default function App() {
     runJob(`${uiLanguage === "en" ? "Separating" : uiLanguage === "es" ? "Separando" : "Separando"}: ${t.title}`, (phase) =>
       separateInto(t, {
         voz: `${t.title} (${uiLanguage === "en" ? "vocals" : uiLanguage === "es" ? "voz" : "voz"})`,
-        instrumental: t.kind === "banda" ? `${t.title} (${uiLanguage === "en" ? "band only" : uiLanguage === "es" ? "solo banda" : "só a banda"})` : `${t.title} (instrumental)`,
+        instrumental: t.kind === "banda" ? `${t.title} (${tx("bandOnly")})` : `${t.title} (instrumental)`,
       }, phase));
 
   // -------- 3) cantar por cima: criar a banda para a voz do usuário
@@ -1285,7 +1285,7 @@ export default function App() {
   };
 
   const removeTrack = async (t) => {
-    if (!window.confirm(`${tx("deleteConfirm")} “${t.title}”? ${uiLanguage === "en" ? "This deletes the file." : uiLanguage === "es" ? "Esto elimina el archivo." : "Isso apaga o arquivo."}`)) return;
+    if (!window.confirm(`${tx("deleteConfirm")} “${t.title}”? ${tx("deleteFileConfirm")}`)) return;
     setTracks((prev) => prev.filter((x) => x.id !== t.id));
     if (player?.id === t.id) setPlayer(null);
     await http(`/api/library/${t.id}`, { method: "DELETE" }).catch(() => {});

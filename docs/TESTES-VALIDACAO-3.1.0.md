@@ -45,3 +45,11 @@ Executar uma geração curta em cada idioma vocal (pt, en, es), usando letra pr�
 
 ## Registro de teste
 Anotar sistema operacional, GPU/VRAM, modelo, idioma selecionado, operação, duração, resultado e eventual erro. Não publicar a versão final até completar testes locais essenciais em Windows.
+
+
+## Auditoria de strings localizadas (27/11/2026)
+
+- Localizados os termos de resultado de legendas (linhas, modo, palavras correspondidas e qualidade de sincronização).
+- Localizada a confirmação de exclusão de arquivo na Biblioteca.
+- Localizada a etiqueta usada para a separação automática da banda.
+- Os novos textos foram adicionados às verificações de paridade e valores explícitos de PT-BR, EN e ES.

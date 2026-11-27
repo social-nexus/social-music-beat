@@ -62,3 +62,8 @@ As versões e datas abaixo descrevem a evolução do projeto. Consulte também o
 - Versão anterior publicada no repositório principal. Consulte a tag/release correspondente para o histórico e os arquivos daquela versão.
 
 - Localizadas mensagens de confirmação de remoção de API Key e validações de gravação/transcrição Whisper nos três idiomas.
+
+
+### Auditoria de interface — legendas e Biblioteca
+- Tradução centralizada dos metadados de legendas, confirmação de exclusão e etiqueta de separação da banda em PT-BR, inglês e espanhol.
+- Testes de i18n ampliados para garantir os valores exatos em cada idioma.
