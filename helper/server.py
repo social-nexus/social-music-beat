@@ -122,6 +122,7 @@ _SEPARATION_STAGING_RE = re.compile(
     r"\.\d+_[0-9a-f]{6}_(?:voz|instrumental)\.[0-9a-f]{32}\.tmp\.wav"
 )
 _LIBRARY_STAGING_RE = re.compile(r"\.biblioteca\.json\.[0-9a-f]{32}\.tmp")
+_AUDIO_STAGING_RE = re.compile(r"\.\d+_[0-9a-f]{6}\.[A-Za-z0-9]+\.[0-9a-f]{32}\.tmp")
 _DELETE_STAGING_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.deleting")
 
 
@@ -131,7 +132,8 @@ def cleanup_stale_staging_files(now=None):
     removed = []
     for path in DATA.iterdir():
         if not (_SEPARATION_STAGING_RE.fullmatch(path.name)
-                or _LIBRARY_STAGING_RE.fullmatch(path.name)):
+                or _LIBRARY_STAGING_RE.fullmatch(path.name)
+                or _AUDIO_STAGING_RE.fullmatch(path.name)):
             continue
         try:
             if not path.is_file() or now - path.stat().st_mtime <= _STALE_STAGING_SECONDS:
