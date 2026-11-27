@@ -6,7 +6,9 @@
 - Branch de desenvolvimento criada diretamente da tag estável `v3.0.0`, sem alterar a versão estável.
 - Preferência persistente de idioma da interface iniciada: Português do Brasil, English e Español.
 - Primeiras traduções aplicadas à navegação, avisos do motor, títulos principais, estado vazio da biblioteca e seletor de idioma da música.
-- Cronômetro do compositor de letras durante a geração.
+- Cronômetro do compositor durante geração, instalação/download/ativação de modelos, análise de referência melódica e transcrição Whisper.
+- Reforço dos prompts multilíngues para Qwen/Gemma e APIs: título, descrições e letra seguem o idioma escolhido, mantendo tags estruturais em inglês.
+- Testes de regressão para português do Brasil, inglês e espanhol.
 - Cronômetro das operações de áudio visível também em dispositivos móveis e ao navegar entre abas; o tempo final permanece na tela após a conclusão.
 - Versão do pacote da interface atualizada para `3.1.0`.
 
