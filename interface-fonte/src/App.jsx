@@ -1154,11 +1154,15 @@ export default function App() {
   // Salva o que o motor gerou e cria as faixas na biblioteca
   const saveItems = async (items, make) => {
     const prepared = [];
+    const downloadedFiles = [];
     try {
       for (const it of items) {
         if (!it.file) continue;
         const saved = await jsonPost("/api/save", { url: it.file });
         if (!saved?.file) throw new Error(tx("errNoAudio"));
+        // Track the persisted file immediately: metadata construction can still
+        // throw before the item is appended to the prepared list.
+        downloadedFiles.push(saved.file);
         prepared.push({ id: uid(), file: saved.file, createdAt: Date.now(), ...make(it, prepared.length + 1, items.length) });
       }
       if (!prepared.length) throw new Error(tx("errNoAudio"));
@@ -1166,8 +1170,8 @@ export default function App() {
       await jsonPost("/api/library/batch", { items: prepared });
       setTracks((prev) => [...prepared, ...prev.filter((item) => !prepared.some((saved) => saved.id === item.id))]);
     } catch (saveError) {
-      // Remove every audio file downloaded by this operation if the batch did not commit.
-      await Promise.all(prepared.map((item) => jsonPost("/api/audio/cleanup", { file: item.file }).catch(() => null)));
+      // Clean every downloaded file, including one whose metadata construction failed.
+      await Promise.all(downloadedFiles.map((file) => jsonPost("/api/audio/cleanup", { file }).catch(() => null)));
       throw saveError;
     }
   };
