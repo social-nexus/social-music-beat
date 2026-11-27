@@ -5,7 +5,7 @@
 ### Implementado até agora
 - Branch de desenvolvimento criada diretamente da tag estável `v3.0.0`, sem alterar a versão estável.
 - Preferência persistente de idioma da interface iniciada: Português do Brasil, English e Español.
-- Primeiras traduções aplicadas à navegação, avisos do motor, títulos principais, estado vazio da biblioteca e seletor de idioma da música.
+- Tradução ampliada para as três línguas na criação musical, ajuda, compositor IA, configuração de provedores/modelos, modais Cantar por cima e Legendas, validações locais e análise melódica.
 - Cronômetro do compositor durante geração, instalação/download/ativação de modelos, análise de referência melódica e transcrição Whisper.
 - Reforço dos prompts multilíngues para Qwen/Gemma e APIs: título, descrições e letra seguem o idioma escolhido, mantendo tags estruturais em inglês.
 - Cabeçalhos do resultado (título, estilo, configurações e letra) localizados para português, inglês e espanhol.
@@ -15,7 +15,7 @@
 - Versão do pacote da interface atualizada para `3.1.0`.
 
 ### Em andamento
-- Tradução integral de todas as telas, modais, mensagens, erros e instruções.
+- Revisão final de textos dinâmicos vindos do backend/provedores, acessibilidade e extração dos catálogos de idioma para arquivos próprios.
 - Revisão e testes multilíngues dos prompts Qwen/Gemma e dos parâmetros de idioma vocal do ACE-Step.
 - Testes automatizados e validação de geração real antes da publicação.
 
