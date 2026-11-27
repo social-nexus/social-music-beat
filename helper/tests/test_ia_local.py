@@ -196,6 +196,11 @@ class MultilingualLyricsTests(unittest.TestCase):
             ia_local._language_directive("francês")
 
     def test_language_directive_keeps_structural_tags_in_english(self):
-        for language in ("português do Brasil", "inglês", "espanhol"):
+        expected = {
+            "português do Brasil": "tags estruturais",
+            "inglês": "song-structure tags",
+            "espanhol": "etiquetas estructurales",
+        }
+        for language, phrase in expected.items():
             with self.subTest(language=language):
-                self.assertIn("tags estruturais", ia_local._language_directive(language)) if language == "português do Brasil" else self.assertIn("song-structure tags", ia_local._language_directive(language)) if language == "inglês" else self.assertIn("etiquetas estructurales", ia_local._language_directive(language))
+                self.assertIn(phrase, ia_local._language_directive(language))
