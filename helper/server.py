@@ -2,6 +2,7 @@
 Serve a interface, guarda a biblioteca de músicas, faz a ponte com o motor ACE-Step
 e separa voz e instrumental (Demucs, na CPU, para não disputar a placa de vídeo)."""
 import json
+import math
 import os
 import re
 import threading
@@ -461,13 +462,20 @@ def recover_separation_jobs():
         if status not in ("running", "done", "error"):
             continue
         task = dict(info)
+        created_at = task.get("created_at")
+        if not isinstance(created_at, (int, float)) or not math.isfinite(created_at):
+            task["created_at"] = now
         if status == "running":
             task.update(
                 status="error",
                 msg="A separação foi interrompida porque o Social Music Beat foi fechado ou reiniciado. Inicie a separação novamente.",
                 finished_at=now,
             )
-        elif status == "done":
+        else:
+            finished_at = task.get("finished_at")
+            if not isinstance(finished_at, (int, float)) or not math.isfinite(finished_at):
+                task["finished_at"] = now
+        if status == "done":
             result = task.get("result")
             if not isinstance(result, dict) or any(
                 not isinstance(result.get(key), str)
@@ -488,9 +496,17 @@ def recover_separation_jobs():
 
 
 def _prune_jobs_locked(now):
-    finished = [(jid, info) for jid, info in jobs.items() if info.get("finished_at")]
-    for jid, info in finished:
-        if now - info["finished_at"] > _JOBS_TTL_SECONDS:
+    finished = []
+    for jid, info in list(jobs.items()):
+        timestamp = info.get("finished_at")
+        if timestamp is None:
+            continue
+        if not isinstance(timestamp, (int, float)) or not math.isfinite(timestamp):
+            # Invalid persisted/runtime metadata must not break startup or polling.
+            info["finished_at"] = now
+            timestamp = now
+        finished.append((jid, info))
+        if now - timestamp > _JOBS_TTL_SECONDS:
             jobs.pop(jid, None)
     finished = sorted(
         ((jid, info) for jid, info in jobs.items() if info.get("finished_at")),
