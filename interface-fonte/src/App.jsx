@@ -1134,18 +1134,18 @@ export default function App() {
     return () => clearInterval(t);
   }, [job]);
 
-  const runJob = async (title, fn) => {
+  const runJob = async (title, fn, startedAtOverride = null) => {
     if (jobLockRef.current) return;
     jobLockRef.current = true;
     setErr("");
-    const startedAt = Date.now();
+    const startedAt = Number.isFinite(startedAtOverride) ? startedAtOverride : Date.now();
     setLastJob(null);
     setJob({ title, phase: tx("phaseStarting"), startedAt });
     const phase = (p) => setJob((j) => (j ? { ...j, phase: p } : j));
     let failed = false;
     try { await fn(phase); } catch (e) { failed = true; setErr(String(e.message || e)); }
     finally {
-      setLastJob({ title, elapsed: Math.floor((Date.now() - startedAt) / 1000), failed });
+      setLastJob({ title, elapsed: Math.max(0, Math.floor((Date.now() - startedAt) / 1000)), failed });
       setJob(null);
       jobLockRef.current = false;
     }
@@ -1185,6 +1185,7 @@ export default function App() {
         jobId: jid, track: t, titles,
         ids: { voz: uid(), instrumental: uid() },
         createdAt: Date.now(),
+        operationStartedAt: Date.now(),
       };
       // Keep only the minimum local reference needed to resume this one UI job.
       try { localStorage.setItem(SEPARATION_RECOVERY_KEY, JSON.stringify(pending)); } catch { /* Storage may be disabled; polling still works in this tab. */ }
@@ -1253,7 +1254,7 @@ export default function App() {
       try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
     }
     if (!pending?.jobId || !pending?.track?.file || !pending?.titles?.voz || !pending?.titles?.instrumental) return;
-    runJob(pending.titles.voz, (phase) => separateInto(pending.track, pending.titles, phase, pending));
+    runJob(pending.titles.voz, (phase) => separateInto(pending.track, pending.titles, phase, pending), pending.operationStartedAt ?? pending.createdAt);
   }, []);
 
   // -------- 1) criar a música
@@ -1375,7 +1376,7 @@ export default function App() {
   };
 
   const busy = !!job;
-  const elapsed = job ? Math.floor((Date.now() - job.startedAt) / 1000) : 0;
+  const elapsed = job ? Math.max(0, Math.floor((Date.now() - job.startedAt) / 1000)) : 0;
 
   return (
     <div className="min-h-screen bg-[#0c0c10] text-zinc-100 flex">
