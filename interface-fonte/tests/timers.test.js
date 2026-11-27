@@ -18,6 +18,9 @@ const checks = [
   ["sing-over progress phases include English and Spanish", /uiLanguage === "en" \? "Preparing your voice\.\.\." : uiLanguage === "es" \? "Preparando tu voz\.\.\." : "Preparando a sua voz\.\.\."/],
   ["melody recording keeps composer timer active", /const operationBusy = busy \|\| providerBusy \|\| melodyBusy \|\| transcriptionBusy \|\| recording/],
   ["audio conversion always closes context and localizes decoding errors", /async function toWavBlob\(file, maxSec = 600, uiLanguage = "pt"\)[\s\S]*?finally \{[\s\S]*?await ctx\.close\(\)[\s\S]*?uiText\(uiLanguage, "errAudioConvert"\)/],
+  ["caption conversion passes its UI language", /toWavBlob\(outro, 600, language\)/],
+  ["melody reference conversion passes its UI language and duration cap", /toWavBlob\(melodyFile, 30, uiLanguage\)/],
+  ["sing-over conversion passes its UI language", /toWavBlob\(o\.file, 600, uiLanguage\)/],
   ["ACE task errors use the selected interface language", /async function waitResult\(id, uiLanguage = "pt"\)[\s\S]*?uiText\(uiLanguage, "errAceFailure"\)[\s\S]*?uiText\(uiLanguage, "errUnexpectedTaskStatus"\)/],
   ["both ACE task polling call sites pass interface language", /waitResult\(id, uiLanguage\)[\s\S]*waitResult\(id, uiLanguage\)/],
 ];
