@@ -492,7 +492,7 @@ def sniff_ext(data: bytes) -> str | None:
         return "wav"
     if data[:4] == b"fLaC":
         return "flac"
-    if data[:3] == b"ID3" or data[:2] in (b"\\xff\\xfb", b"\\xff\\xf3", b"\\xff\\xf2"):
+    if data[:3] == b"ID3" or data[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"):
         return "mp3"
     return None
 
