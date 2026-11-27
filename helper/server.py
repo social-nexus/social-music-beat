@@ -150,6 +150,35 @@ def cleanup_stale_staging_files(now=None):
     return removed
 
 
+def cleanup_orphaned_audio_files(now=None):
+    """Remove abandoned generated audio only after 24h and with trusted metadata."""
+    if not LIB_FILE.is_file():
+        return []
+    try:
+        with _lib_lock:
+            referenced = {
+                Path(str(item.get("file", ""))).name.casefold()
+                for item in read_lib() if item.get("file")
+            }
+    except (OSError, RuntimeError):
+        # Missing or corrupt metadata must never be interpreted as an empty library.
+        return []
+
+    now = time.time() if now is None else now
+    removed = []
+    for path in DATA.iterdir():
+        if not _AUDIO_FINAL_RE.fullmatch(path.name) or path.name.casefold() in referenced:
+            continue
+        try:
+            if not path.is_file() or now - path.stat().st_mtime <= _STALE_STAGING_SECONDS:
+                continue
+            path.unlink()
+            removed.append(path.name)
+        except OSError:
+            continue
+    return removed
+
+
 def recover_separation_backups():
     """Restore previous separation outputs left behind by an interrupted pair commit."""
     recovered = []
@@ -179,6 +208,7 @@ def recover_stale_staging_files():
     recover_staged_deletions()
     recover_separation_backups()
     cleanup_stale_staging_files()
+    cleanup_orphaned_audio_files()
 
 
 @app.on_event("startup")
