@@ -1176,10 +1176,11 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         samples = (
             (b"RIFF\x00\x00\x00\x00WAVEaudio", "wav"),
             (b"fLaC\x00\x00\x00\x22", "flac"),
-            (b"ID3\x04\x00\x00\x00\x00\x00\x00", "mp3"),
+            (b"ID3\x04\x00\x00\x00\x00\x00\x00\xff\xfb\x90\x64audio-frame", "mp3"),
             (b"\xff\xfb\x90\x64audio-frame", "mp3"),
             (b"\xff\xf3\x90\x64audio-frame", "mp3"),
             (b"\xff\xf2\x90\x64audio-frame", "mp3"),
+            (b"\xff\xe3\x90\x64audio-frame", "mp3"),
         )
         for payload, expected in samples:
             with self.subTest(expected=expected, payload=payload[:4]):
@@ -1192,6 +1193,8 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             b"RIFF\x00\x00\x00\x00NOPE",
             b"fLa",
             b"\xff",
+            b"ID3",
+            b"ID3\x04\x00\x00\x00\x00\x00\x00",
             b"<html>not audio</html>",
         )
         for payload in samples:
