@@ -118,22 +118,23 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
     def test_startup_recovery_removes_only_stale_app_staging_files(self):
         old_stem = self.data / (".1234567890_abcdef_voz." + "a" * 32 + ".tmp.wav")
         old_library = self.data / (".biblioteca.json." + "b" * 32 + ".tmp")
+        old_jobs = self.data / (".separation_jobs.json." + "f" * 32 + ".tmp")
         old_audio = self.data / (".1234567890_abcdef.wav." + "d" * 32 + ".tmp")
         fresh_audio = self.data / (".1234567890_abcdef.mp3." + "e" * 32 + ".tmp")
         fresh_stem = self.data / (".1234567890_abcdef_instrumental." + "c" * 32 + ".tmp.wav")
         unrelated = self.data / ".user-data.tmp.wav"
-        for path in (old_stem, old_library, old_audio, fresh_audio, fresh_stem, unrelated):
+        for path in (old_stem, old_library, old_jobs, old_audio, fresh_audio, fresh_stem, unrelated):
             path.write_bytes(b"temporary")
         old_time = time.time() - server._STALE_STAGING_SECONDS - 10
-        os.utime(old_stem, (old_time, old_time))
-        os.utime(old_library, (old_time, old_time))
-        os.utime(old_audio, (old_time, old_time))
+        for path in (old_stem, old_library, old_jobs, old_audio):
+            os.utime(path, (old_time, old_time))
 
         removed = server.cleanup_stale_staging_files()
 
-        self.assertCountEqual(removed, [old_stem.name, old_library.name, old_audio.name])
+        self.assertCountEqual(removed, [old_stem.name, old_library.name, old_jobs.name, old_audio.name])
         self.assertFalse(old_stem.exists())
         self.assertFalse(old_library.exists())
+        self.assertFalse(old_jobs.exists())
         self.assertFalse(old_audio.exists())
         self.assertTrue(fresh_audio.exists())
         self.assertTrue(fresh_stem.exists())
