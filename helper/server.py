@@ -243,7 +243,7 @@ def read_lib():
         return []
     try:
         items = json.loads(LIB_FILE.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise RuntimeError("A biblioteca está ilegível ou corrompida; o arquivo original foi preservado.") from exc
     if not isinstance(items, list):
         raise RuntimeError("Formato inválido da biblioteca; o arquivo original foi preservado.")
