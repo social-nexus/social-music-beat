@@ -201,7 +201,8 @@ function Seg({ value, onChange, options }) {
 
 const inputCls = "w-full rounded-xl bg-zinc-900/70 border border-white/10 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-pink-500/60";
 
-function VoiceModal({ track, onClose, onGo }) {\n  const { t } = useLocale();
+function VoiceModal({ track, onClose, onGo }) {
+  const { t } = useLocale();
   const [file, setFile] = useState(null);
   const [picked, setPicked] = useState(["drums", "bass", "guitar", "keyboard"]);
   const [style, setStyle] = useState(track.style || "");
@@ -218,8 +219,7 @@ function VoiceModal({ track, onClose, onGo }) {\n  const { t } = useLocale();
           <div>
             <h2 className="text-lg font-bold">{t("voiceOverTitle")}</h2>
             <p className="text-xs text-zinc-400 mt-1">
-              Você cantou em cima do instrumental de “{track.title}”? Envie só a sua voz (sem a música de fundo) e o
-              programa cria uma banda nova que acompanha o seu jeito de cantar.
+{t("voiceOverIntro").replace("{title}", track.title)}
             </p>
           </div>
           <button onClick={onClose} className="text-zinc-500 hover:text-white"><X size={20} /></button>
