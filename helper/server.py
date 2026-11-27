@@ -3,6 +3,7 @@ Serve a interface, guarda a biblioteca de músicas, faz a ponte com o motor ACE-
 e separa voz e instrumental (Demucs, na CPU, para não disputar a placa de vídeo)."""
 import json
 import os
+import re
 import threading
 import time
 import uuid
@@ -113,6 +114,37 @@ class LocalRequestSecurityMiddleware:
 
 app = FastAPI()
 app.add_middleware(LocalRequestSecurityMiddleware)
+
+
+_STALE_STAGING_SECONDS = 24 * 60 * 60
+_SEPARATION_STAGING_RE = re.compile(
+    r"\\.\\d+_[0-9a-f]{6}_(?:voz|instrumental)\\.[0-9a-f]{32}\\.tmp\\.wav"
+)
+_LIBRARY_STAGING_RE = re.compile(r"\\.biblioteca\\.json\\.[0-9a-f]{32}\\.tmp")
+
+
+def cleanup_stale_staging_files(now=None):
+    """Remove only this app's abandoned staging files after a full day."""
+    now = time.time() if now is None else now
+    removed = []
+    for path in DATA.iterdir():
+        if not (_SEPARATION_STAGING_RE.fullmatch(path.name)
+                or _LIBRARY_STAGING_RE.fullmatch(path.name)):
+            continue
+        try:
+            if not path.is_file() or now - path.stat().st_mtime <= _STALE_STAGING_SECONDS:
+                continue
+            path.unlink()
+            removed.append(path.name)
+        except OSError:
+            # Startup recovery is best-effort; one locked file must not stop the app.
+            continue
+    return removed
+
+
+@app.on_event("startup")
+def recover_stale_staging_files():
+    cleanup_stale_staging_files()
 
 from legenda import router as legenda_router  # noqa: E402
 
