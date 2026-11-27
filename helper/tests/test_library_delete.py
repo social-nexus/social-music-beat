@@ -577,7 +577,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             with self.subTest(extension=extension):
                 result = server._persist_audio_content(b"audio", extension)
                 name = Path(result).name
-                self.assertRegex(name, r"^\\d+_[0-9a-f]{12}\\.(wav|flac|mp3)$")
+                self.assertRegex(name, r"^\d+_[0-9a-f]{12}\.(wav|flac|mp3)$")
                 self.assertTrue((self.data / name).is_file())
 
     def test_audio_persist_publishes_complete_file(self):
