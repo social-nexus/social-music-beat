@@ -772,7 +772,10 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
       if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
       await refresh();
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      // Runtime/model operations return backend-localized details; keep the UI locale consistent.
+      setError(tx("errOperationFailed"));
+    }
     finally { setBusy(false); }
   };
 
@@ -782,7 +785,10 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       const r = await jsonPost("/api/ai/models/download", { model_id: model, accept_license: gemmaAccepted });
       if (r.job_id) await waitJob(r.job_id, "Modelo instalado e verificado.");
       await refresh();
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      // Runtime/model operations return backend-localized details; keep the UI locale consistent.
+      setError(tx("errOperationFailed"));
+    }
     finally { setBusy(false); }
   };
 
@@ -792,7 +798,10 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       await jsonPost("/api/ai/models/activate", { model_id: model, variant: runtime, gpu_layers: Number(gpuLayers) });
       await refresh();
       setMessage(tx("msgModelReady"));
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      // Runtime/model operations return backend-localized details; keep the UI locale consistent.
+      setError(tx("errOperationFailed"));
+    }
     finally { setBusy(false); }
   };
 
@@ -903,7 +912,10 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       await http("/api/ai/models/import", { method: "POST", body: fd });
       await refresh();
       setMessage(tx("msgGgufImported"));
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      // Runtime/model operations return backend-localized details; keep the UI locale consistent.
+      setError(tx("errOperationFailed"));
+    }
     finally { setBusy(false); }
   };
 
