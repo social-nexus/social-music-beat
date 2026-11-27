@@ -398,6 +398,28 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(raised.exception.status_code, 409)
         self.assertTrue(self.audio_file.exists())
 
+    def test_delete_is_blocked_while_source_separation_is_running(self):
+        server.jobs.clear()
+        server.jobs["active-job"] = {
+            "status": "running",
+            "source_file": "track.wav",
+            "created_at": time.time(),
+        }
+        with self.assertRaises(server.HTTPException) as raised:
+            server.delete_track("track-1")
+        self.assertEqual(raised.exception.status_code, 409)
+        self.assertEqual(len(server.read_lib()), 1)
+        self.assertTrue(self.audio_file.exists())
+
+    def test_separation_job_registers_source_filename(self):
+        server.jobs.clear()
+        with mock.patch.object(server.threading, "Thread") as thread_factory:
+            result = server.separate({"file": "track.wav"})
+        job = server.job_status(result["job"])
+        self.assertEqual(job["source_file"], "track.wav")
+        self.assertEqual(job["status"], "running")
+        thread_factory.assert_called_once()
+
     def test_delete_unknown_id_is_noop(self):
         result = server.delete_track("missing")
         self.assertEqual(result, {"ok": True})
