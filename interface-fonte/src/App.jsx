@@ -1098,6 +1098,7 @@ export default function App() {
   const [tracks, setTracks] = useState([]);
   const [online, setOnline] = useState(false);
   const [job, setJob] = useState(null);
+  const jobLockRef = useRef(false);
   const [lastJob, setLastJob] = useState(null);
   const [, setTick] = useState(0);
   const [err, setErr] = useState("");
@@ -1137,6 +1138,8 @@ export default function App() {
   }, []);
 
   const runJob = async (title, fn) => {
+    if (jobLockRef.current) return;
+    jobLockRef.current = true;
     setErr("");
     const startedAt = Date.now();
     setLastJob(null);
@@ -1147,6 +1150,7 @@ export default function App() {
     finally {
       setLastJob({ title, elapsed: Math.floor((Date.now() - startedAt) / 1000), failed });
       setJob(null);
+      jobLockRef.current = false;
     }
   };
 
@@ -1176,13 +1180,14 @@ export default function App() {
             ? tx("phaseSepQueued")
             : (backendPhase || tx("phaseSepFallback"));
       phase(localizedPhase);
-      if (s.status === "error") throw new Error(s.msg);
+      if (s.status === "error") throw new Error(s.msg || tx("errUnexpectedJobStatus"));
       if (s.status === "done") {
         const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key, language: t.language || form.lang };
         await addTrack({ ...base, id: uid(), kind: "voz", title: titles.voz, file: s.result.voz });
         await addTrack({ ...base, id: uid(), kind: "instrumental", title: titles.instrumental, file: s.result.instrumental });
         return;
       }
+      if (s.status !== "running") throw new Error(tx("errUnexpectedJobStatus"));
     }
   };
 

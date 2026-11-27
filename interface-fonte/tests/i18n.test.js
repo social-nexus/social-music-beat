@@ -112,6 +112,15 @@ for (const locale of requiredLocales) {
   }
 }
 
+
+const localizedUnexpectedStatus = { pt: "A tarefa retornou um estado desconhecido. Verifique o servidor e tente novamente.", en: "The task returned an unknown status. Check the server and try again.", es: "La tarea devolvió un estado desconocido. Comprueba el servidor e inténtalo de nuevo." };
+for (const locale of requiredLocales) {
+  if (uiText(locale, "errUnexpectedJobStatus") !== localizedUnexpectedStatus[locale]) {
+    failed = true;
+    console.error(`Locale ${locale}: unexpected job-status message mismatch`);
+  }
+}
+
 // Verify the library actions that were recently audited remain localized.
 const localizedLibraryLabels = {
   pt: { download: "Baixar", separate: "Separar voz e instrumental" },

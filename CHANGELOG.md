@@ -81,3 +81,7 @@ As versões e datas abaixo descrevem a evolução do projeto. Consulte também o
 
 ### Fases de geração centralizadas
 - Status da geração musical e separação de áudio agora usam catálogo único de traduções, com testes explícitos em três idiomas.
+
+
+### Estados inesperados de tarefas
+- Prevenção de tarefas globais simultâneas e encerramento explícito de polling com status desconhecido.

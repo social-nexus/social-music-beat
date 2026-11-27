@@ -76,3 +76,11 @@ Anotar sistema operacional, GPU/VRAM, modelo, idioma selecionado, operação, du
 - Centralizadas as fases de início, envio, geração, salvamento e separação de áudio.
 - Validações de letra e estilo obrigatórios reutilizam as traduções já catalogadas.
 - Testes explícitos cobrem as fases e validações em PT-BR, EN e ES.
+
+
+## Auditoria de estados de tarefa (27/11/2026)
+
+- `runJob` agora impede iniciar operações globais duplicadas com uma trava de referência imediata.
+- A trava é liberada no `finally`, inclusive em erro.
+- Polling da separação reconhece explicitamente estados `running`, `done` e `error`; estado inesperado encerra com aviso localizado, em vez de loop infinito.
+- Teste de i18n verifica o aviso de estado inesperado em PT-BR, EN e ES.
