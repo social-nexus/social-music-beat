@@ -381,9 +381,10 @@ class ModelImportAtomicityTests(unittest.IsolatedAsyncioTestCase):
     async def test_import_swap_failure_cleans_staging_without_publishing_model(self):
         root = Path(TEMP_DATA) / "model-import-swap-failure"
         root.mkdir(parents=True, exist_ok=True)
-        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
-             mock.patch.object(ia_local.os, "replace", side_effect=OSError("simulated publish failure")):
-            with self.assertRaisesRegex(OSError, "simulated publish failure"):
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with mock.patch.object(ia_local.os, "replace", side_effect=OSError("simulated publish failure")):
+                with self.assertRaisesRegex(OSError, "simulated publish failure"):
+                    await ia_local.import_model(await self._request(), await self._upload())
                 await ia_local.import_model(await self._request(), await self._upload())
         self.assertEqual(list(root.glob("imported-*")), [])
         self.assertEqual(list(root.glob(".*.staging")), [])
