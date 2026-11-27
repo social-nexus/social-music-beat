@@ -11,4 +11,4 @@ export const localeCoverage = () => {
   return Object.fromEntries(Object.entries(UI_TEXT).map(([locale, values]) => [
     locale, { missing: baseKeys.filter((key) => !(key in values)), extra: Object.keys(values).filter((key) => !(key in UI_TEXT.pt)) }
   ]));
-, instrumentalLabel: "Solo instrumental", oneVersion: "1 versión", twoVersions: "2 versiones (usa más memoria)", styleCategoryHint: "Elige una categoría para explorar diferentes ritmos."};
+
