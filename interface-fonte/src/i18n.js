@@ -12,3 +12,4 @@ export const localeCoverage = () => {
     locale, { missing: baseKeys.filter((key) => !(key in values)), extra: Object.keys(values).filter((key) => !(key in UI_TEXT.pt)) }
   ]));
 
+};
