@@ -118,9 +118,9 @@ app.add_middleware(LocalRequestSecurityMiddleware)
 
 _STALE_STAGING_SECONDS = 24 * 60 * 60
 _SEPARATION_STAGING_RE = re.compile(
-    r"\\.\\d+_[0-9a-f]{6}_(?:voz|instrumental)\\.[0-9a-f]{32}\\.tmp\\.wav"
+    r"\.\d+_[0-9a-f]{6}_(?:voz|instrumental)\.[0-9a-f]{32}\.tmp\.wav"
 )
-_LIBRARY_STAGING_RE = re.compile(r"\\.biblioteca\\.json\\.[0-9a-f]{32}\\.tmp")
+_LIBRARY_STAGING_RE = re.compile(r"\.biblioteca\.json\.[0-9a-f]{32}\.tmp")
 
 
 def cleanup_stale_staging_files(now=None):
