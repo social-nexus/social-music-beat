@@ -1167,7 +1167,15 @@ export default function App() {
     for (;;) {
       await sleep(2000);
       const s = await http(`/api/jobs/${jid}`);
-      phase(s.msg || (uiLanguage === "en" ? "Separating vocals and instrumental..." : uiLanguage === "es" ? "Separando voz e instrumental..." : "Separando voz e instrumental..."));
+      const backendPhase = s.msg || "";
+      const localizedPhase = backendPhase.includes("Carregando o separador")
+        ? (uiLanguage === "en" ? "Loading the audio separator (first use may download a small file)..." : uiLanguage === "es" ? "Cargando el separador de audio (la primera vez puede descargar un archivo pequeño)..." : backendPhase)
+        : backendPhase.includes("Separando voz e instrumental")
+          ? (uiLanguage === "en" ? "Separating vocals and instrumental. This may take a few minutes..." : uiLanguage === "es" ? "Separando voz e instrumental. Puede tardar unos minutos..." : backendPhase)
+          : backendPhase.includes("Na fila")
+            ? (uiLanguage === "en" ? "Queued..." : uiLanguage === "es" ? "En cola..." : backendPhase)
+            : (backendPhase || (uiLanguage === "en" ? "Separating vocals and instrumental..." : uiLanguage === "es" ? "Separando voz e instrumental..." : "Separando voz e instrumental..."));
+      phase(localizedPhase);
       if (s.status === "error") throw new Error(s.msg);
       if (s.status === "done") {
         const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key, language: t.language || form.lang };
