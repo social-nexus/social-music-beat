@@ -88,24 +88,32 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(instrumental.exists())
 
     def test_recovery_normalizes_invalid_job_timestamps(self):
-        jid = "c" * 32
         jobs_file = self.data / server._JOBS_FILE_NAME
         jobs_file.write_text(json.dumps({
-            jid: {
+            "c" * 32: {
                 "status": "error",
                 "msg": "previous error",
                 "created_at": "not-a-timestamp",
                 "finished_at": "yesterday",
-            }
+            },
+            "d" * 32: {
+                "status": "error",
+                "msg": "oversized integer",
+                "created_at": 10 ** 10000,
+                "finished_at": True,
+            },
         }), encoding="utf-8")
 
         server.recover_separation_jobs()
 
-        recovered = server.job_status(jid)
-        self.assertEqual(recovered["status"], "error")
-        self.assertIsInstance(recovered["created_at"], (int, float))
-        self.assertIsInstance(recovered["finished_at"], (int, float))
-        self.assertGreater(recovered["finished_at"], 0)
+        for jid in ("c" * 32, "d" * 32):
+            with self.subTest(job_id=jid):
+                recovered = server.job_status(jid)
+                self.assertEqual(recovered["status"], "error")
+                self.assertIsInstance(recovered["created_at"], (int, float))
+                self.assertIsInstance(recovered["finished_at"], (int, float))
+                self.assertFalse(isinstance(recovered["created_at"], bool))
+                self.assertFalse(isinstance(recovered["finished_at"], bool))
 
     def test_startup_recovery_removes_only_stale_app_staging_files(self):
         old_stem = self.data / (".1234567890_abcdef_voz." + "a" * 32 + ".tmp.wav")
