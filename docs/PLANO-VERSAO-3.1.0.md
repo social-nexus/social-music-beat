@@ -46,7 +46,7 @@
 ## Próximas etapas
 
 1. **Concluído:** catálogo da interface extraído para `src/i18n.js`; PT-BR, EN e ES usam o mesmo conjunto de chaves, com teste de consistência e fallback.
-2. Auditar mensagens dinâmicas retornadas pelo backend e textos de provedores/modelos; traduzir apenas mensagens reconhecidas e preservar mensagens desconhecidas para diagnóstico.
+2. **Em andamento:** mensagens de estado da interface para cofre de API, conexão, runtime local, download/carregamento de modelos, análise de referência musical, gravação e importação GGUF foram localizadas e traduzidas; teste agora detecta chaves duplicadas no código fonte.
 3. Revisar e testar idiomas musicais em todos os fluxos ACE-step, inclusive criação de banda com voz do usuário.
 4. Validar em execução real Qwen, Gemma e provedores API nos três idiomas; conferir preservação de letras originais ao continuar composição.
 5. Adicionar testes automatizados para preferência de idioma, persistência, cronômetros e payloads de idioma.
