@@ -1008,6 +1008,44 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                 self.assertNotIn("invalid upstream", raised.exception.detail.lower())
                 client.request.assert_awaited_once()
 
+    def test_ace_proxy_preserves_upstream_http_errors_and_content_type(self):
+        import asyncio
+
+        upstream = types.SimpleNamespace(
+            status_code=422,
+            content=b'{"detail":"invalid generation parameters"}',
+            headers={"content-type": "application/json; charset=utf-8"},
+        )
+        client = mock.Mock()
+        client.request = mock.AsyncMock(return_value=upstream)
+
+        class ClientContext:
+            async def __aenter__(self):
+                return client
+
+            async def __aexit__(self, *args):
+                return False
+
+        request = types.SimpleNamespace(
+            headers={"content-type": "application/json"},
+            method="POST",
+            query_params={"job_id": "abc"},
+            body=mock.AsyncMock(return_value=b'{"prompt":""}'),
+        )
+        with mock.patch.object(server.httpx, "AsyncClient", return_value=ClientContext()):
+            response = asyncio.run(server.ace_proxy("v1/text2music", request))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.body, upstream.content)
+        self.assertEqual(response.media_type, "application/json; charset=utf-8")
+        client.request.assert_awaited_once_with(
+            "POST",
+            f"{server.ACE}/v1/text2music",
+            params={"job_id": "abc"},
+            content=b'{"prompt":""}',
+            headers={"content-type": "application/json"},
+        )
+
     def test_save_audio_rejects_source_without_ace_audio_endpoint(self):
         import asyncio
         with self.assertRaises(server.HTTPException) as raised:
