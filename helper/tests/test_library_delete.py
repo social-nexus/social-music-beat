@@ -95,11 +95,12 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             if Path(dst).suffix == ".wav" and Path(src).suffix == ".tmp":
                 raise OSError("simulated promotion error")
             return original_replace(src, dst)
+        existing_audio = set(self.data.glob("*.wav"))
         with mock.patch.object(server.os, "replace", side_effect=fail_audio_promote):
             with self.assertRaises(server.HTTPException) as raised:
                 server._persist_audio_content(b"payload", "wav")
         self.assertEqual(raised.exception.status_code, 500)
-        self.assertFalse(any(self.data.glob("*.wav")))
+        self.assertEqual(set(self.data.glob("*.wav")), existing_audio)
         self.assertFalse(any(self.data.glob("*.tmp")))
 
     def test_batch_upsert_persists_all_tracks_atomically(self):
