@@ -1227,7 +1227,10 @@ export default function App() {
       phase(localizedPhase);
       if (s.status === "error") {
         try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
-        throw new Error((s.msg || "").toLowerCase().includes("interrompida") ? tx("errSepInterrupted") : (s.msg || tx("errUnexpectedJobStatus")));
+        const backendError = (s.msg || "").toLowerCase();
+        throw new Error(backendError.includes("interrompida") || backendError.includes("interrupted")
+          ? tx("errSepInterrupted")
+          : tx("errUnexpectedJobStatus"));
       }
       if (s.status === "done") {
         if (!s.result?.voz || !s.result?.instrumental) {
