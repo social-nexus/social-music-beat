@@ -5,7 +5,7 @@
 ### Implementado até agora
 - Branch de desenvolvimento criada diretamente da tag estável `v3.0.0`, sem alterar a versão estável.
 - Preferência persistente de idioma da interface iniciada: Português do Brasil, English e Español.
-- Tradução ampliada para as três línguas na criação musical, ajuda, compositor IA, configuração de provedores/modelos, modais Cantar por cima e Legendas, validações locais e análise melódica.
+- Tradução ampliada para as três línguas na criação musical, ajuda, compositor IA, configuração de provedores/modelos, modais Cantar por cima e Legendas, validações locais, análise melódica, categorias musicais e nomes dos 55 estilos predefinidos.
 - Cronômetro do compositor durante geração, instalação/download/ativação de modelos, análise de referência melódica e transcrição Whisper.
 - Cronômetro de geração de legendas SRT/LRC, com tempo decorrido e duração final após conclusão ou falha.
 - Reforço dos prompts multilíngues para Qwen/Gemma e APIs: título, descrições e letra seguem o idioma escolhido, mantendo tags estruturais em inglês.
