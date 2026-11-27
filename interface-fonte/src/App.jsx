@@ -1117,7 +1117,10 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
 export default function App() {
   const [tab, setTab] = useState("criar");
   const [uiLanguage, setUiLanguage] = useState(() => {
-    try { return localStorage.getItem("socialMusicBeat.language") || "pt"; } catch { return "pt"; }
+    try {
+      const savedLanguage = localStorage.getItem("socialMusicBeat.language");
+      return ["pt", "en", "es"].includes(savedLanguage) ? savedLanguage : "pt";
+    } catch { return "pt"; }
   });
   const tx = (key) => uiText(uiLanguage, key);
   useEffect(() => {
