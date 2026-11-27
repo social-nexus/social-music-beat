@@ -26,7 +26,7 @@
 
 - Criada a branch `release/3.1.0` diretamente do commit apontado pela tag `v3.0.0`.
 - Adicionada preferência de idioma da interface com persistência local, com opções Português do Brasil, English e Español.
-- Iniciada a camada central de textos traduzidos e traduzidos os elementos principais de navegação, aviso de motor, cabeçalhos e estados vazios.
+- Camada central de textos ampliada para português do Brasil, inglês e espanhol, cobrindo navegação, criação musical, ajuda, compositor IA, seleção/instalação de modelos, configuração de provedores, janelas de voz e legendas, mensagens de validação e análise melódica.
 - Timer do compositor de letras: o relógio agora cobre geração de letras, instalação/download/ativação do modelo, análise da referência melódica e transcrição Whisper, além de permanecer visível no painel de status enquanto a operação estiver ativa.
 - Prompt multilíngue Qwen/Gemma/API reforçado com instruções explícitas para escrever título, valores descritivos e letra no idioma escolhido (português brasileiro, inglês ou espanhol), mantendo tags estruturais em inglês.
 - Cabeçalhos do resultado da composição (título, estilo, configurações e letra) agora acompanham o idioma escolhido.
@@ -37,9 +37,9 @@
 
 ## Próximas etapas
 
-1. Completar a tradução de todos os textos da interface, incluindo modais, validações, mensagens de erro, acessibilidade, ajuda e compositor.
+1. Fazer revisão final de cobertura de tradução, especialmente mensagens retornadas pelo backend, textos dinâmicos de provedores/modelos e acessibilidade; extrair o catálogo para arquivos de idioma próprios.
 2. Centralizar as traduções em arquivos próprios para facilitar manutenção e futuras línguas.
-3. Tornar os rótulos e fases dos cronômetros multilíngues e revisar a medição em falhas/cancelamentos.
+3. Concluir a localização de fases e mensagens de operações, inclusive as mensagens de erro retornadas pelos serviços.
 4. Revisar e testar os idiomas musicais em todos os fluxos do ACE-Step, inclusive criação de banda com voz do usuário.
 5. Validar em execução real Qwen3, Gemma 3 e provedores API nos três idiomas; conferir preservação de letras originais ao continuar uma composição.
 6. Adicionar testes automatizados para preferência de idioma, persistência, cronômetros e payloads de idioma.
