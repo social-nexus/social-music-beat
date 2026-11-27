@@ -1,6 +1,7 @@
 # Histórico de alterações
 
 ## [3.1.0]
+- Display localized playback errors when audio files cannot load in the library player.
 - Synchronize separation-job registry access and use full UUIDs to prevent concurrent status races and ID collisions.
 - Bound the separation job registry: expired completed jobs are pruned after one hour and the completed-job history is capped at 200.
 - Fail closed on malformed library metadata instead of silently treating corruption as an empty library; validate batch IDs as non-empty strings.

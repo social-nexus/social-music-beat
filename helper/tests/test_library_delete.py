@@ -98,6 +98,32 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertIn("active", server.jobs)
         self.assertEqual(sum(1 for item in server.jobs.values() if item.get("finished_at")), server._JOBS_MAX_COMPLETED)
 
+    def test_job_registry_concurrent_updates_and_pruning(self):
+        server.jobs.clear()
+        job_ids = [f"parallel-{i}" for i in range(6)]
+        with server._jobs_registry_lock:
+            for jid in job_ids:
+                server.jobs[jid] = {"status": "running", "msg": "queued", "created_at": time.time()}
+        failures = []
+        def worker(jid):
+            try:
+                for i in range(80):
+                    server._update_job(jid, progress=i)
+                    snapshot = server.job_status(jid)
+                    self.assertEqual(snapshot["status"], "running")
+                    server._prune_jobs()
+            except Exception as exc:
+                failures.append(exc)
+        threads = [threading.Thread(target=worker, args=(jid,)) for jid in job_ids]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=3)
+            self.assertFalse(thread.is_alive())
+        self.assertEqual(failures, [])
+        for jid in job_ids:
+            self.assertEqual(server.job_status(jid)["progress"], 79)
+
     def test_separation_job_ids_are_full_uuid_and_registered(self):
         server.jobs.clear()
         with mock.patch.object(server.threading, "Thread") as thread_factory:
