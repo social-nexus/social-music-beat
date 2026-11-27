@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { UI_TEXT, localeCoverage, uiText } from "../src/i18n.js";
 
 const requiredLocales = ["pt", "en", "es"];
-const requiredKeys = ["errAudioPlayback"];
+const requiredKeys = ["errAudioPlayback", "errAudioConvert"];
 let failed = false;
 const source = readFileSync(new URL("../src/i18n.js", import.meta.url), "utf8");
 
@@ -116,6 +116,18 @@ for (const locale of requiredLocales) {
   }
 }
 
+
+const localizedAudioConversionErrors = {
+  pt: "Não foi possível abrir ou converter esse arquivo de áudio. Tente WAV ou MP3.",
+  en: "Could not decode or convert this audio file. Try WAV or MP3.",
+  es: "No se pudo abrir o convertir este archivo de audio. Prueba WAV o MP3.",
+};
+for (const locale of requiredLocales) {
+  if (uiText(locale, "errAudioConvert") !== localizedAudioConversionErrors[locale]) {
+    failed = true;
+    console.error(`Locale ${locale}: audio-conversion error message mismatch`);
+  }
+}
 
 const localizedUnexpectedStatus = { pt: "A tarefa retornou um estado desconhecido. Verifique o servidor e tente novamente.", en: "The task returned an unknown status. Check the server and try again.", es: "La tarea devolvió un estado desconocido. Comprueba el servidor e inténtalo de nuevo." };
 for (const locale of requiredLocales) {
