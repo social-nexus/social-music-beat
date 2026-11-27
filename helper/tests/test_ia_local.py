@@ -244,6 +244,32 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertFalse(staged.exists())
         self.assertTrue(metadata_staged.exists())
 
+    def test_backup_cleanup_failure_does_not_fail_successful_publish(self):
+        root = Path(TEMP_DATA) / "model-backup-cleanup-failure"
+        folder = root / "qwen3-4b-q4km"
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / ia_local.MODEL_CATALOG["qwen3-4b-q4km"]["filename"]
+        metadata = folder / "model.json"
+        target.write_bytes(b"old-model")
+        metadata.write_text("old-metadata", encoding="utf-8")
+        staged = folder / ".new-model.download"
+        metadata_staged = folder / ".new-metadata.json.tmp"
+        staged.write_bytes(b"new-model")
+        metadata_staged.write_text("new-metadata", encoding="utf-8")
+        real_unlink = Path.unlink
+
+        def fail_backup_cleanup(path, missing_ok=False):
+            if path.name.endswith(".backup"):
+                raise OSError("backup cleanup unavailable")
+            return real_unlink(path, missing_ok=missing_ok)
+
+        with mock.patch.object(Path, "unlink", fail_backup_cleanup):
+            ia_local._publish_model_files(staged, target, metadata_staged, metadata)
+        self.assertEqual(target.read_bytes(), b"new-model")
+        self.assertEqual(metadata.read_text(encoding="utf-8"), "new-metadata")
+        self.assertEqual(len(list(folder.glob("*.backup"))), 0)
+        self.assertEqual(len(list(folder.glob(".*.backup"))), 2)
+
     def test_archive_path_rejects_parent_traversal(self):
         root = Path(TEMP_DATA) / "extract"
         with self.assertRaises(ValueError):
