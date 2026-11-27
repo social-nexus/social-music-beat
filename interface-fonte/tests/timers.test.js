@@ -13,6 +13,7 @@ const checks = [
   ["separation operation title is localized in all three languages", /uiLanguage === "en" \? "Separating" : uiLanguage === "es" \? "Separando" : "Separando"/],
   ["sing-over operation title is localized in all three languages", /uiLanguage === "en" \? "Band for" : uiLanguage === "es" \? "Banda para" : "Banda para"/],
   ["sing-over progress phases include English and Spanish", /uiLanguage === "en" \? "Preparing your voice\.\.\." : uiLanguage === "es" \? "Preparando tu voz\.\.\." : "Preparando a sua voz\.\.\."/],
+  ["melody recording keeps composer timer active", /const operationBusy = busy \|\| providerBusy \|\| melodyBusy \|\| transcriptionBusy \|\| recording/],
 ];
 
 let failed = false;
