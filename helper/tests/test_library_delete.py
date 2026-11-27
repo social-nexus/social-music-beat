@@ -420,6 +420,21 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(job["status"], "running")
         thread_factory.assert_called_once()
 
+    def test_separation_thread_start_failure_marks_job_failed(self):
+        server.jobs.clear()
+        worker = mock.Mock()
+        worker.start.side_effect = RuntimeError("thread startup failed")
+        with mock.patch.object(server.threading, "Thread", return_value=worker):
+            result = server.separate({"file": "track.wav"})
+        job = server.job_status(result["job"])
+        self.assertEqual(job["status"], "error")
+        self.assertIn("thread startup failed", job["msg"])
+        self.assertIsNotNone(job.get("finished_at"))
+        self.assertFalse(any(
+            info.get("status") == "running" and info.get("source_file") == "track.wav"
+            for info in server.jobs.values()
+        ))
+
     def test_delete_unknown_id_is_noop(self):
         result = server.delete_track("missing")
         self.assertEqual(result, {"ok": True})
