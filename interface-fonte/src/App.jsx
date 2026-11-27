@@ -696,7 +696,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     } else if (!operationBusy && operationStartedAt) {
       setOperationStartedAt(null);
     }
-  }, [busy, providerBusy, melodyBusy, transcriptionBusy, operationStartedAt]);
+  }, [busy, providerBusy, melodyBusy, transcriptionBusy, recording, operationStartedAt]);
 
   useEffect(() => () => {
     if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);

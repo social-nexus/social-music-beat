@@ -17,6 +17,7 @@ const checks = [
   ["sing-over operation title is localized in all three languages", /uiLanguage === "en" \? "Band for" : uiLanguage === "es" \? "Banda para" : "Banda para"/],
   ["sing-over progress phases include English and Spanish", /uiLanguage === "en" \? "Preparing your voice\.\.\." : uiLanguage === "es" \? "Preparando tu voz\.\.\." : "Preparando a sua voz\.\.\."/],
   ["melody recording keeps composer timer active", /const operationBusy = busy \|\| providerBusy \|\| melodyBusy \|\| transcriptionBusy \|\| recording/],
+  ["composer elapsed timer updates when recording state changes", /operationBusy = busy[\\s\\S]*?\\}, \\[busy, providerBusy, melodyBusy, transcriptionBusy, recording, operationStartedAt\\]/],
   ["audio conversion always closes context and localizes decoding errors", /async function toWavBlob\(file, maxSec = 600, uiLanguage = "pt"\)[\s\S]*?finally \{[\s\S]*?await ctx\.close\(\)[\s\S]*?uiText\(uiLanguage, "errAudioConvert"\)/],
   ["caption conversion passes its UI language", /toWavBlob\(outro, 600, language\)/],
   ["melody reference conversion passes its UI language and duration cap", /toWavBlob\(melodyFile, 30, uiLanguage\)/],
