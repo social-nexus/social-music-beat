@@ -1049,7 +1049,7 @@ export default function App() {
       const { file } = await jsonPost("/api/save", { url: it.file });
       await addTrack({ id: uid(), file, createdAt: Date.now(), ...make(it, n, items.length) });
     }
-    if (!n) throw new Error("O motor não devolveu nenhum áudio.");
+    if (!n) throw new Error(t("noAudioReturned"));
   };
 
   const separateInto = async (t, titles, phase) => {
@@ -1070,10 +1070,10 @@ export default function App() {
 
   // -------- 1) criar a música
   const createSong = () => {
-    const title = form.title.trim() || "Minha música";
+    const title = form.title.trim() || t("titlePlaceholder");
     return runJob(title, async (phase) => {
-      if (!form.instrumentalOnly && !form.lyrics.trim()) throw new Error("Escreva a letra (ou escolha “Só instrumental”).");
-      if (!form.style.trim()) throw new Error("Descreva o estilo da música. Dá para clicar nos botões de estilo.");
+      if (!form.instrumentalOnly && !form.lyrics.trim()) throw new Error(t("createLyricsRequired"));
+      if (!form.style.trim()) throw new Error(t("styleRequired"));
       const voice = form.instrumentalOnly ? "" : form.voiceKind === "female" ? "female vocals" : form.voiceKind === "male" ? "male vocals" : "";
       const caption = [form.style.trim(), voice].filter(Boolean).join(", ");
       const params = {
@@ -1127,7 +1127,7 @@ export default function App() {
     return runJob(`Banda para: ${parent.title}`, async (phase) => {
       phase("Preparando a sua voz...");
       const { blob, seconds } = await toWavBlob(o.file);
-      if (seconds < 10) throw new Error("O áudio da sua voz precisa ter pelo menos 10 segundos.");
+      if (seconds < 10) throw new Error(t("voiceAudioMin"));
       const params = {
         prompt: o.style.trim() || parent.style || "band accompaniment",
         lyrics: parent.lyrics || "",
@@ -1166,7 +1166,7 @@ export default function App() {
   };
 
   const removeTrack = async (t) => {
-    if (!window.confirm(`Excluir “${t.title}”? Isso apaga o arquivo.`)) return;
+    if (!window.confirm(t("deleteTrackConfirm").replace("{title}", t.title))) return;
     setTracks((prev) => prev.filter((x) => x.id !== t.id));
     if (player?.id === t.id) setPlayer(null);
     await http(`/api/library/${t.id}`, { method: "DELETE" }).catch(() => {});
