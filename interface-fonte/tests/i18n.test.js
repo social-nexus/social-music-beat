@@ -67,6 +67,21 @@ for (const locale of requiredLocales) {
   }
 }
 
+
+const localizedGenerationErrors = {
+  pt: {"errTaskStart":"Não consegui iniciar a criação.","errAceFailure":"A criação falhou. Olhe a janela preta do ACE-Step para ver o motivo.","errNoAudio":"O motor não retornou nenhum áudio.","errLyricsRequiredCreate":"Escreva a letra (ou escolha “Só instrumental”).","errStyleRequiredCreate":"Descreva o estilo da música. Dá para clicar nos botões de estilo."},
+  en: {"errTaskStart":"Could not start music generation.","errAceFailure":"Generation failed. Check the ACE-step console window for details.","errNoAudio":"The engine did not return any audio.","errLyricsRequiredCreate":"Enter the lyrics (or choose “Instrumental only”).","errStyleRequiredCreate":"Describe the music style. You can also click the style buttons."},
+  es: {"errTaskStart":"No se pudo iniciar la creación de música.","errAceFailure":"La creación falló. Consulta la ventana de ACE-step para ver el motivo.","errNoAudio":"El motor no devolvió ningún audio.","errLyricsRequiredCreate":"Escribe la letra (o elige “Solo instrumental”).","errStyleRequiredCreate":"Describe el estilo musical. También puedes usar los botones de estilos."},
+};
+for (const locale of requiredLocales) {
+  for (const [key, expected] of Object.entries(localizedGenerationErrors[locale])) {
+    if (uiText(locale, key) !== expected) {
+      failed = true;
+      console.error(`Locale ${locale}: expected ${key}="${expected}", got "${uiText(locale, key)}"`);
+    }
+  }
+}
+
 // Verify the library actions that were recently audited remain localized.
 const localizedLibraryLabels = {
   pt: { download: "Baixar", separate: "Separar voz e instrumental" },

@@ -53,3 +53,11 @@ Anotar sistema operacional, GPU/VRAM, modelo, idioma selecionado, operação, du
 - Localizada a confirmação de exclusão de arquivo na Biblioteca.
 - Localizada a etiqueta usada para a separação automática da banda.
 - Os novos textos foram adicionados às verificações de paridade e valores explícitos de PT-BR, EN e ES.
+
+
+## Auditoria de erros genéricos de geração (27/11/2026)
+
+- Localizados os avisos de início de tarefa, falha do ACE-Step e ausência de áudio retornado.
+- Localizadas validações de letra obrigatória e estilo musical.
+- Erros técnicos retornados pelo backend continuam preservados quando disponíveis, para diagnóstico.
+- Testes de i18n validam os cinco textos nos três idiomas.

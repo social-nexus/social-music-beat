@@ -67,3 +67,8 @@ As versões e datas abaixo descrevem a evolução do projeto. Consulte também o
 ### Auditoria de interface — legendas e Biblioteca
 - Tradução centralizada dos metadados de legendas, confirmação de exclusão e etiqueta de separação da banda em PT-BR, inglês e espanhol.
 - Testes de i18n ampliados para garantir os valores exatos em cada idioma.
+
+
+### Erros genéricos de geração localizados
+- Mensagens de falha de criação, ausência de áudio e validações de letra/estilo centralizadas para PT-BR, inglês e espanhol.
+- Diagnósticos técnicos do backend continuam sendo exibidos sem tradução destrutiva.
