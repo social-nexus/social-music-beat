@@ -246,8 +246,21 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         os.utime(old, (old_time, old_time))
         os.utime(referenced, (old_time, old_time))
 
-        removed = server.cleanup_orphaned_audio_files()
+        original_unlink = Path.unlink
+        lock_was_available = []
 
+        def inspect_cleanup_lock(path, *args, **kwargs):
+            if path == old:
+                acquired = server._lib_lock.acquire(blocking=False)
+                lock_was_available.append(acquired)
+                if acquired:
+                    server._lib_lock.release()
+            return original_unlink(path, *args, **kwargs)
+
+        with mock.patch.object(Path, "unlink", new=inspect_cleanup_lock):
+            removed = server.cleanup_orphaned_audio_files()
+
+        self.assertEqual(lock_was_available, [False], "library lock must cover the unlink")
         self.assertEqual(removed, [old.name])
         self.assertFalse(old.exists())
         self.assertTrue(fresh.exists())
