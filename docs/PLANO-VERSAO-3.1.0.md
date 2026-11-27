@@ -45,8 +45,8 @@
 
 ## Próximas etapas
 
-1. Revisar cobertura de tradução, especialmente mensagens retornadas pelo backend, textos dinâmicos de provedores/modelos e acessibilidade; extrair o catálogo para arquivos de idioma próprios com validação de chaves.
-2. Concluir localização de fases e mensagens de operações, inclusive mensagens de erro dos serviços; traduzir mensagens reconhecidas e preservar mensagens desconhecidas para diagnóstico.
+1. **Concluído:** catálogo da interface extraído para `src/i18n.js`; PT-BR, EN e ES usam o mesmo conjunto de chaves, com teste de consistência e fallback.
+2. Auditar mensagens dinâmicas retornadas pelo backend e textos de provedores/modelos; traduzir apenas mensagens reconhecidas e preservar mensagens desconhecidas para diagnóstico.
 3. Revisar e testar idiomas musicais em todos os fluxos ACE-step, inclusive criação de banda com voz do usuário.
 4. Validar em execução real Qwen, Gemma e provedores API nos três idiomas; conferir preservação de letras originais ao continuar composição.
 5. Adicionar testes automatizados para preferência de idioma, persistência, cronômetros e payloads de idioma.
