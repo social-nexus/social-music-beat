@@ -10,6 +10,9 @@ const checks = [
   ["caption generation timer ticks while running", /setInterval\(\(\) => setElapsedTick\(\(n\) => n \+ 1\), 1000\)/],
   ["caption operation records final elapsed time", /setLastElapsed\(Math\.floor\(\(Date\.now\(\) - operationStartedAt\) \/ 1000\)\)/],
   ["separation jobs use elapsed time from their start", /const elapsed = job \? Math\.floor\(\(Date\.now\(\) - job\.startedAt\) \/ 1000\) : 0/],
+  ["separation operation title is localized in all three languages", /uiLanguage === "en" \? "Separating" : uiLanguage === "es" \? "Separando" : "Separando"/],
+  ["sing-over operation title is localized in all three languages", /uiLanguage === "en" \? "Band for" : uiLanguage === "es" \? "Banda para" : "Banda para"/],
+  ["sing-over progress phases include English and Spanish", /uiLanguage === "en" \? "Preparing your voice\.\.\." : uiLanguage === "es" \? "Preparando tu voz\.\.\." : "Preparando a sua voz\.\.\."/],
 ];
 
 let failed = false;
