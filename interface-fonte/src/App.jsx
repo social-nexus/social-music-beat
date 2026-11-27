@@ -1593,7 +1593,7 @@ export default function App() {
                           <Mic size={14} /> {tx("singOver")}
                         </button>
                       )}
-                      <button onClick={() => removeTrack(t)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title={tx("delete")}>
+                      <button disabled={busy} onClick={() => removeTrack(t)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-30" title={tx("delete")}>
                         <Trash2 size={15} />
                       </button>
                     </div>
