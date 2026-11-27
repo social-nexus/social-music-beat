@@ -261,7 +261,7 @@ function VoiceModal({ track, onClose, onGo }) {
 
         <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
           <input type="checkbox" checked={autoSep} onChange={(e) => setAutoSep(e.target.checked)} />
-          Depois, separar também só a banda (sem a voz). Demora alguns minutos a mais.
+          {t("voiceAutoSeparate")}
         </label>
 
         <button
@@ -269,7 +269,7 @@ function VoiceModal({ track, onClose, onGo }) {
           onClick={() => onGo({ file, instruments: picked, style, bpm, key, autoSep })}
           className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3 font-bold text-white disabled:opacity-40"
         >
-          Criar a banda para a minha voz
+          {t("voiceCreateBand")}
         </button>
         <p className="text-[11px] text-zinc-500">
           {t("voiceFirstTime")}
@@ -303,8 +303,8 @@ function LegendaModal({ track, tracks, onClose }) {
   const gerar = async () => {
     setRes(null);
     setMsg("");
-    if (!letra.trim()) { setMsg("A letra está vazia."); return; }
-    if (modo === "whisper" && !whisper) { setMsg("O Whisper não está instalado. Rode o instalar.bat de novo (ele instala o Whisper) e abra o programa outra vez."); return; }
+    if (!letra.trim()) { setMsg(t("captionEmptyLyrics")); return; }
+    if (modo === "whisper" && !whisper) { setMsg(t("captionWhisperRequired")); return; }
     setCaptionStartedAt(Date.now());
     setOcupado(true);
     try {
@@ -349,14 +349,14 @@ function LegendaModal({ track, tracks, onClose }) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold">{t("captionTitle")}</h2>
-            <p className="text-xs text-zinc-400 mt-1">Gera o arquivo .srt (vídeo) e o .lrc (letra sincronizada) de “{track.title}”.</p>
+            <p className="text-xs text-zinc-400 mt-1">{t("captionDescription").replace("{title}", track.title)}</p>
           </div>
           <button onClick={onClose} className="text-zinc-500 hover:text-white"><X size={20} /></button>
         </div>
 
         <div className="rounded-xl border border-white/10 p-3 text-xs text-zinc-300">
           <div className="font-semibold text-white mb-1">{t("captionAudio")}</div>
-          {outro ? `Seu arquivo: ${outro.name}` : `${fonte.title}${voz ? " (voz separada, melhor resultado)" : " (música inteira)"}`}
+          {outro ? t("captionFileLabel").replace("{name}", outro.name) : `${fonte.title}${voz ? t("captionSeparatedVoice") : t("captionFullSong")}`}
           {!outro && !voz && (
             <div className="mt-1 text-amber-300">{t("voiceSeparatedWarning")}</div>
           )}
@@ -378,7 +378,7 @@ function LegendaModal({ track, tracks, onClose }) {
             <option value="whisper">{t("captionPrecise")}</option>
           </select>
           <label className="flex items-center gap-2 text-zinc-300">
-            Caracteres por legenda
+            {t("captionChars")}
             <input type="number" min={15} max={120} value={maxc} onChange={(e) => setMaxc(e.target.value)} className="w-16 rounded-lg bg-zinc-900 border border-white/10 px-2 py-1.5" />
           </label>
           {modo === "whisper" && (
@@ -389,8 +389,8 @@ function LegendaModal({ track, tracks, onClose }) {
           )}
         </div>
         <p className="text-[11px] text-zinc-500">
-          Rápido funciona melhor quando o cantor respira ou pausa entre as linhas. Cantar é mais difícil de alinhar do que falar, então confira o resultado.
-          {modo === "whisper" && (whisper ? " Whisper instalado." : " Whisper ainda não instalado: rode o instalar.bat de novo.")}
+          {t("captionQuickInfo")}
+          {modo === "whisper" && (whisper ? ` ${t("captionWhisperInstalled")}` : ` ${t("captionWhisperMissing")}`)}
         </p>
 
         <button
