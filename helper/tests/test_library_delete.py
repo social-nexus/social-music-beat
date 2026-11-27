@@ -106,7 +106,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(jobs_file.read_bytes(), original)
 
     def test_startup_recovery_handles_directory_scan_errors(self):
-        with mock.patch.object(server.DATA, "iterdir", side_effect=PermissionError("denied")):
+        with mock.patch.object(Path, "iterdir", autospec=True, side_effect=PermissionError("denied")):
             self.assertEqual(server.recover_staged_deletions(), [])
             self.assertEqual(server.recover_separation_backups(), [])
             self.assertEqual(server.cleanup_stale_staging_files())
