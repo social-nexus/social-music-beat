@@ -539,7 +539,8 @@ async function analyzeMelodyReference(file) {
   }
 }
 
-function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
+function CompositorPanel({ onUseLyrics }) {
+  const { t } = useLocale();
   const [catalog, setCatalog] = useState({ runtimes: [], models: [], installed_models: [] });
   const [status, setStatus] = useState({});
   const [providerConfig, setProviderConfig] = useState({ providers: [], secure_storage_available: false });
@@ -558,7 +559,9 @@ function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
   const [melodyRole, setMelodyRole] = useState("missing");
   const [melodyWords, setMelodyWords] = useState("");
   const [melodyBusy, setMelodyBusy] = useState(false);
+  const [melodyStartedAt, setMelodyStartedAt] = useState(0);
   const [transcriptionBusy, setTranscriptionBusy] = useState(false);
+  const [transcriptionStartedAt, setTranscriptionStartedAt] = useState(0);
   const [transcriptionModel, setTranscriptionModel] = useState("small");
   const [transcriptionMessage, setTranscriptionMessage] = useState("");
   const [recording, setRecording] = useState(false);
@@ -581,7 +584,7 @@ function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => { if (!busy) return undefined; const timer = window.setInterval(() => setTimerTick((n) => n + 1), 1000); return () => window.clearInterval(timer); }, [busy]);
+  useEffect(() => { if (!busy && !melodyBusy && !transcriptionBusy) return undefined; const timer = window.setInterval(() => setTimerTick((n) => n + 1), 1000); return () => window.clearInterval(timer); }, [busy, melodyBusy, transcriptionBusy]);
 
   useEffect(() => () => {
     if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
@@ -683,7 +686,7 @@ function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
     if (!file) return;
     if (!file.type.startsWith("audio/")) { setError("Escolha um arquivo de áudio."); return; }
     if (file.size > 25 * 1024 * 1024) { setError("O arquivo deve ter no máximo 25 MB."); return; }
-    setMelodyBusy(true); setError(""); setMessage("Analisando a referência musical no navegador…");
+    setMelodyStartedAt(Date.now()); setMelodyBusy(true); setError(""); setMessage("Analisando a referência musical no navegador…");
     try {
       const analysis = await analyzeMelodyReference(file);
       setMelodyFile(file);
@@ -732,7 +735,7 @@ function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
 
   const transcribeMelodyReference = async () => {
     if (!melodyFile) { setError("Grave ou importe uma referência de áudio primeiro."); return; }
-    setTranscriptionBusy(true); setTranscriptionMessage("Preparando o áudio para o Whisper…"); setError("");
+    setTranscriptionStartedAt(Date.now()); setTranscriptionBusy(true); setTranscriptionMessage("Preparando o áudio para o Whisper…"); setError("");
     try {
       const { blob } = await toWavBlob(melodyFile, 30);
       const fd = new FormData();
@@ -806,7 +809,7 @@ function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
       {busy && busySince > 0 && <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-3 py-2 text-xs text-sky-200">{t("operationElapsed")}: <span className="font-mono">{mmss(Math.floor((Date.now() - busySince) / 1000))}</span></div>}\n\n      {(error || message) && (
         <div className={error ? "rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200" : "rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-sm text-sky-200"}>
           {error || message}
-          {busy && busySince > 0 && <div className="mt-2 font-mono text-xs opacity-80">Tempo decorrido: {mmss(Math.floor((Date.now() - busySince) / 1000))}</div>}
+          {busy && busySince > 0 && <div className="mt-2 font-mono text-xs opacity-80">{t("elapsed")}: {mmss(Math.floor((Date.now() - busySince) / 1000))}</div>}
         </div>
       )}
 
@@ -931,7 +934,7 @@ function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
               </select>
             </label>
             <button type="button" disabled={!melodyFile || melodyBusy || transcriptionBusy || recording} onClick={transcribeMelodyReference} className="self-end rounded-lg bg-pink-500/15 border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-100 disabled:opacity-40">
-              {transcriptionBusy ? <><Loader2 size={14} className="inline animate-spin mr-1"/> Transcrevendo…</> : "Transcrever letra do áudio"}
+              {transcriptionBusy ? <><Loader2 size={14} className="inline animate-spin mr-1"/> Transcrevendo… <span className="font-mono">{mmss(Math.floor((Date.now() - transcriptionStartedAt) / 1000))}</span></> : "Transcrever letra do áudio"}
             </button>
           </div>
           {transcriptionMessage && <p className="text-[11px] text-sky-200">{transcriptionMessage}</p>}
@@ -945,7 +948,7 @@ function CompositorPanel({ onUseLyrics }) {\n  const { t } = useLocale();
             {melodyFile && <button type="button" onClick={clearMelodyReference} className="rounded-lg border border-white/15 px-3 py-2 text-xs text-zinc-300">Remover referência</button>}
             <input ref={melodyInputRef} type="file" accept="audio/*" className="hidden" onChange={(e)=>loadMelodyReference(e.target.files?.[0])}/>
           </div>
-          {melodyBusy && <div className="flex items-center gap-2 text-xs text-zinc-300"><Loader2 size={14} className="animate-spin"/> Analisando áudio localmente…</div>}
+          {melodyBusy && <div className="flex items-center gap-2 text-xs text-zinc-300"><Loader2 size={14} className="animate-spin"/> Analisando áudio localmente… <span className="font-mono">{mmss(Math.floor((Date.now() - melodyStartedAt) / 1000))}</span></div>}
           {melodyAnalysis && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
             <p className="text-xs font-semibold text-emerald-200">Referência pronta: {melodyFile?.name || "gravação"}</p>
             <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">{melodyAnalysis.summary}</p>
@@ -1159,7 +1162,8 @@ export default function App() {
   };
 
   const busy = !!job;
-  const elapsed = job ? Math.floor((Date.now() - job.startedAt) / 1000) : 0;\n  const phaseElapsed = job ? Math.floor((Date.now() - (job.phaseStartedAt || job.startedAt)) / 1000) : 0;
+  const elapsed = job ? Math.floor((Date.now() - job.startedAt) / 1000) : 0;
+  const phaseElapsed = job ? Math.floor((Date.now() - (job.phaseStartedAt || job.startedAt)) / 1000) : 0;
 
   return (
     <div className="min-h-screen bg-[#0c0c10] text-zinc-100 flex">
