@@ -543,7 +543,18 @@ def separate(payload: dict):
                 "created_at": time.time(),
                 "source_file": name,
             }
-    threading.Thread(target=run_separation, args=(jid, src), daemon=True).start()
+    try:
+        worker = threading.Thread(target=run_separation, args=(jid, src), daemon=True)
+        worker.start()
+    except Exception as exc:
+        # Do not leave a phantom running job: it would block source deletion
+        # indefinitely and keep the UI polling a worker that never started.
+        _update_job(
+            jid,
+            status="error",
+            msg=f"Não foi possível iniciar a separação: {type(exc).__name__}: {exc}"[:400],
+            finished_at=time.time(),
+        )
     return {"job": jid}
 
 
