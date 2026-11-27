@@ -41,7 +41,9 @@ const checks = [
   ["runtime stop action clears stale errors and shows localized progress and failure", /status\.runtime_running && <button[\s\S]*?setMessage\(tx\("msgStoppingEngine"\)\);[\s\S]*?setMessage\(tx\("msgEngineStopped"\)\);[\s\S]*?setError\(tx\("errOperationFailed"\)\);/],
   ["generic operation failures use selected locale rather than raw backend error", /try \{ await fn\(phase\); \} catch \(e\) \{ failed = true; setErr\(tx\("errOperationFailed"\)\); \}/],
   ["AI lyric composition failures use localized generic error", /const generate = async \(\) =>[\s\S]*?\/api\/ai\/generate-lyrics[\s\S]*?catch \(e\) \{\s*\/\/ Provider failures may contain backend-language details; show the selected UI locale\.\s*setError\(tx\("errOperationFailed"\)\);/],
+,
 
+  ["persisted interface language is restricted to supported locales", /const savedLanguage = localStorage\.getItem\("socialMusicBeat\.language"\);\s*return \["pt", "en", "es"\]\.includes\(savedLanguage\) \? savedLanguage : "pt";/],
 ];
 
 let failed = false;
