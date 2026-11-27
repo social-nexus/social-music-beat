@@ -157,6 +157,17 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertFalse(staged.exists())
         self.assertFalse(self.audio_file.exists())
 
+    def test_startup_preserves_staged_audio_when_library_metadata_is_missing(self):
+        staged = self.data / (".track.wav." + "2" * 32 + ".deleting")
+        self.audio_file.rename(staged)
+        self.library_file.unlink()
+
+        recovered = server.recover_staged_deletions()
+
+        self.assertEqual(recovered, [])
+        self.assertTrue(staged.exists())
+        self.assertFalse(self.audio_file.exists())
+
     def test_startup_preserves_staged_audio_when_library_is_corrupt(self):
         staged = self.data / (".track.wav." + "1" * 32 + ".deleting")
         self.audio_file.rename(staged)
