@@ -1340,7 +1340,7 @@ export default function App() {
       phase(uiLanguage === "en" ? "Sending... (the engine switches models on first use and may take a few minutes)" : uiLanguage === "es" ? "Enviando... (la primera vez el motor cambia de modelo y puede tardar unos minutos)" : "Enviando... (na primeira vez o motor troca de modelo: pode levar alguns minutos)");
       const id = await submitTask(params, blob);
       phase(uiLanguage === "en" ? "Creating the band for your voice..." : uiLanguage === "es" ? "Creando la banda para tu voz..." : "Criando a banda para a sua voz...");
-      const items = await waitResult(id);
+      const items = await waitResult(id, uiLanguage);
       phase(uiLanguage === "en" ? "Saving audio..." : uiLanguage === "es" ? "Guardando audio..." : "Salvando áudio...");
       await saveItems(items, () => {
         return { kind: "banda", title: `${parent.title} - ${uiLanguage === "en" ? "with my voice" : uiLanguage === "es" ? "con mi voz" : "com a minha voz"}`, lyrics: parent.lyrics, language: parent.language || form.lang, style: params.prompt, bpm: params.bpm ?? parent.bpm, key: params.key_scale || parent.key, parent: parent.id };
