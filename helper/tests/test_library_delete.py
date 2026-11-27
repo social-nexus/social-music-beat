@@ -808,6 +808,29 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(result, {"ok": True})
         self.assertFalse(generated.exists())
 
+    def test_cleanup_fails_closed_when_library_is_corrupt(self):
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"audio that must be preserved")
+        self.library_file.write_text("{corrupt", encoding="utf-8")
+
+        with self.assertRaises(RuntimeError):
+            server.cleanup_unregistered_audio({"file": generated.name})
+
+        self.assertTrue(generated.exists())
+        self.assertEqual(generated.read_bytes(), b"audio that must be preserved")
+        self.assertEqual(self.library_file.read_text(encoding="utf-8"), "{corrupt")
+
+    def test_cleanup_fails_closed_when_library_has_invalid_structure(self):
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"audio that must be preserved")
+        self.library_file.write_text(json.dumps([{"id": "ok"}, "invalid"]), encoding="utf-8")
+
+        with self.assertRaises(RuntimeError):
+            server.cleanup_unregistered_audio({"file": generated.name})
+
+        self.assertTrue(generated.exists())
+        self.assertEqual(generated.read_bytes(), b"audio that must be preserved")
+
     def test_cleanup_does_not_remove_library_audio(self):
         generated = self.data / "1234567890_abcdef.wav"
         generated.write_bytes(b"registered audio")
