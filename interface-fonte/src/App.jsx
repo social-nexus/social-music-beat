@@ -1195,8 +1195,18 @@ export default function App() {
       if (s.status === "done") {
         if (!s.result?.voz || !s.result?.instrumental) throw new Error(tx("errUnexpectedJobStatus"));
         const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key, language: t.language || form.lang };
-        await addTrack({ ...base, id: uid(), kind: "voz", title: titles.voz, file: s.result.voz });
-        await addTrack({ ...base, id: uid(), kind: "instrumental", title: titles.instrumental, file: s.result.instrumental });
+        const pair = [
+          { ...base, id: uid(), kind: "voz", title: titles.voz, file: s.result.voz },
+          { ...base, id: uid(), kind: "instrumental", title: titles.instrumental, file: s.result.instrumental },
+        ];
+        try {
+          await jsonPost("/api/library/batch", { items: pair });
+          setTracks((prev) => [...pair, ...prev.filter((item) => !pair.some((saved) => saved.id === item.id))]);
+        } catch (persistError) {
+          // Both generated stems are unregistered when the batch commit fails.
+          await Promise.all(pair.map((item) => jsonPost("/api/audio/cleanup", { file: item.file }).catch(() => null)));
+          throw persistError;
+        }
         return;
       }
       if (s.status !== "running") throw new Error(tx("errUnexpectedJobStatus"));

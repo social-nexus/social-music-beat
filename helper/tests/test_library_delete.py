@@ -83,6 +83,23 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertFalse(staged_vocals.exists())
         self.assertFalse(staged_instrumental.exists())
 
+    def test_batch_upsert_persists_all_tracks_atomically(self):
+        items = [{"id": "voice", "file": "voice.wav"}, {"id": "inst", "file": "inst.wav"}]
+        result = server.upsert_tracks_batch({"items": items})
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(server.read_lib()[:2], items)
+
+    def test_batch_upsert_rejects_duplicate_ids(self):
+        with self.assertRaises(server.HTTPException) as raised:
+            server.upsert_tracks_batch({"items": [{"id": "dup"}, {"id": "dup"}]})
+        self.assertEqual(raised.exception.status_code, 400)
+        self.assertEqual(len(server.read_lib()), 1)
+
+    def test_batch_upsert_invalid_input_keeps_library(self):
+        with self.assertRaises(server.HTTPException):
+            server.upsert_tracks_batch({"items": [{"file": "missing-id.wav"}]})
+        self.assertEqual(len(server.read_lib()), 1)
+
     def test_cleanup_removes_unregistered_audio(self):
         server.write_lib([])
         result = server.cleanup_unregistered_audio({"file": str(self.audio_file)})

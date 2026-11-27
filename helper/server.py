@@ -162,6 +162,26 @@ def upsert_track(item: dict):
     return {"ok": True}
 
 
+@app.post("/api/library/batch")
+def upsert_tracks_batch(payload: dict):
+    """Persist a group of tracks in one atomic library metadata update."""
+    items = payload.get("items")
+    if not isinstance(items, list) or not items:
+        raise HTTPException(400, "Lista de faixas inválida.")
+    if any(not isinstance(item, dict) or not item.get("id") for item in items):
+        raise HTTPException(400, "Todas as faixas precisam de um id.")
+    ids = [item["id"] for item in items]
+    if len(ids) != len(set(ids)):
+        raise HTTPException(400, "IDs de faixas duplicados.")
+    with _lib_lock:
+        existing = read_lib()
+        replace_ids = set(ids)
+        merged = [t for t in existing if t.get("id") not in replace_ids]
+        merged = list(items) + merged
+        write_lib(merged)
+    return {"ok": True}
+
+
 @app.delete("/api/library/{tid}")
 def delete_track(tid: str):
     with _lib_lock:
