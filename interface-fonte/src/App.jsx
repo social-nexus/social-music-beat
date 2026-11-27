@@ -1380,48 +1380,48 @@ export default function App() {
                 </div>
               )}
 
-              {tracks.map((t) => {
-                const playing = player?.id === t.id;
+              {tracks.map((track) => {
+                const playing = player?.id === track.id;
                 return (
-                  <div key={t.id} className={`flex flex-wrap items-center gap-4 rounded-2xl border p-3 ${playing ? "border-pink-500/40 bg-white/5" : "border-white/5 bg-[#111116]"}`}>
+                  <div key={track.id} className={`flex flex-wrap items-center gap-4 rounded-2xl border p-3 ${playing ? "border-pink-500/40 bg-white/5" : "border-white/5 bg-[#111116]"}`}>
                     <button
-                      onClick={() => setPlayer({ id: t.id, title: t.title, url: t.file })}
-                      className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${KIND_COLOR[t.kind] || KIND_COLOR.song}`}
-                      title={t("trackListen")}
+                      onClick={() => setPlayer({ id: track.id, title: track.title, url: track.file })}
+                      className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${KIND_COLOR[track.kind] || KIND_COLOR.song}`}
+                      title={track("trackListen")}
                     >
                       {playing ? <Pause className="text-white" /> : <Play className="text-white" />}
                     </button>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-bold">{t.title}</div>
+                      <div className="truncate font-bold">{track.title}</div>
                       <div className="truncate text-xs text-zinc-400">
-                        {KIND[t.kind] || "Faixa"}{t.bpm ? ` • ${Math.round(t.bpm)} BPM` : ""}{t.key ? ` • ${t.key}` : ""}
+                        {KIND[track.kind] || "Faixa"}{track.bpm ? ` • ${Math.round(track.bpm)} BPM` : ""}{track.key ? ` • ${track.key}` : ""}
                       </div>
-                      {t.style && <div className="truncate text-[11px] text-zinc-600">{t.style}</div>}
+                      {track.style && <div className="truncate text-[11px] text-zinc-600">{track.style}</div>}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <a
-                        href={t.file}
-                        download={`${t.title}.${String(t.file).split(".").pop()}`}
+                        href={track.file}
+                        download={`${track.title}.${String(track.file).split(".").pop()}`}
                         className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10"
                       >
                         <Download size={14} /> Baixar
                       </a>
-                      {(t.kind === "song" || t.kind === "banda") && (
-                        <button disabled={busy} onClick={() => separateTrack(t)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10 disabled:opacity-40">
+                      {(track.kind === "song" || track.kind === "banda") && (
+                        <button disabled={busy} onClick={() => separateTrack(track)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10 disabled:opacity-40">
                           <Scissors size={14} /> Separar voz e instrumental
                         </button>
                       )}
-                      {(t.kind === "song" || t.kind === "banda" || t.kind === "voz") && t.lyrics && (
-                        <button onClick={() => setLegendaFor(t)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">
+                      {(track.kind === "song" || track.kind === "banda" || track.kind === "voz") && track.lyrics && (
+                        <button onClick={() => setLegendaFor(track)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">
                           <FileText size={14} /> Legenda
                         </button>
                       )}
-                      {(t.kind === "song" || t.kind === "instrumental") && (
-                        <button disabled={busy || !online} onClick={() => setVoiceFor(t)} className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-black hover:bg-zinc-200 disabled:opacity-40">
+                      {(track.kind === "song" || track.kind === "instrumental") && (
+                        <button disabled={busy || !online} onClick={() => setVoiceFor(track)} className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-black hover:bg-zinc-200 disabled:opacity-40">
                           <Mic size={14} /> Cantar por cima
                         </button>
                       )}
-                      <button onClick={() => removeTrack(t)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title={t("trackDelete")}>
+                      <button onClick={() => removeTrack(track)} className="rounded-lg p-2 text-zinc-500 hover:text-red-400" title={track("trackDelete")}>
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -1434,7 +1434,7 @@ export default function App() {
       </main>
 
       {/* player fixo, como no Suno */}
-      <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#101015]/95 px-4 py-3 backdrop-blur">
+      <footer className="fixed inset-x-0 bottom-0 z-40 border-track border-white/10 bg-[#101015]/95 px-4 py-3 backdrop-blur">
         {player ? (
           <div className="mx-auto flex max-w-5xl items-center gap-4">
             <div className="hidden w-48 truncate text-sm font-bold sm:block">{player.title}</div>
