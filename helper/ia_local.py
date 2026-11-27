@@ -535,7 +535,7 @@ def download_model(payload: dict, request: Request):
 @router.post("/models/import")
 async def import_model(request: Request, file: UploadFile = File(...)):
     _guard_local_request(request)
-    filename = Path(str(file.filename or "").replace("\\\\", "/")).name
+    filename = Path(str(file.filename or "").replace(chr(92), "/")).name
     if not filename.lower().endswith(".gguf") or filename in ("", ".", ".."):
         raise HTTPException(400, "Selecione um arquivo .gguf.")
     model_id = "imported-" + uuid.uuid4().hex[:10]
