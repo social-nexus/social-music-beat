@@ -26,6 +26,7 @@ const checks = [
   ["caption conversion passes its UI language", /toWavBlob\(outro, 600, language\)/],
   ["melody reference conversion passes its UI language and duration cap", /toWavBlob\(melodyFile, 30, uiLanguage\)/],
   ["sing-over conversion passes its UI language", /toWavBlob\(o\.file, 600, uiLanguage\)/],
+  ["separation job failures are normalized to localized messages, including interruption detection in EN", /const backendError = \(s\.msg \|\| ""\)\.toLowerCase\(\)[\s\S]*?backendError\.includes\("interrupted"\)[\s\S]*?tx\("errUnexpectedJobStatus"\)/],
   ["ACE task errors use the selected interface language", /async function waitResult\(id, uiLanguage = "pt"\)[\s\S]*?uiText\(uiLanguage, "errAceFailure"\)[\s\S]*?uiText\(uiLanguage, "errUnexpectedTaskStatus"\)/],
   ["both ACE task polling call sites pass interface language", /waitResult\(id, uiLanguage\)[\s\S]*waitResult\(id, uiLanguage\)/],
 ];
