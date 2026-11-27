@@ -1169,7 +1169,7 @@ export default function App() {
     setJob({ title, phase: tx("phaseStarting"), startedAt });
     const phase = (p) => setJob((j) => (j ? { ...j, phase: p } : j));
     let failed = false;
-    try { await fn(phase); } catch (e) { failed = true; setErr(String(e.message || e)); }
+    try { await fn(phase); } catch (e) { failed = true; setErr(tx("errOperationFailed")); }
     finally {
       setLastJob({ title, elapsed: Math.max(0, Math.floor((Date.now() - startedAt) / 1000)), failed });
       setJob(null);
