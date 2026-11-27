@@ -201,7 +201,7 @@ function Seg({ value, onChange, options }) {
 
 const inputCls = "w-full rounded-xl bg-zinc-900/70 border border-white/10 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-pink-500/60";
 
-function VoiceModal({ track, onClose, onGo }) {
+function VoiceModal({ track, onClose, onGo }) {\n  const { t } = useLocale();
   const [file, setFile] = useState(null);
   const [picked, setPicked] = useState(["drums", "bass", "guitar", "keyboard"]);
   const [style, setStyle] = useState(track.style || "");
@@ -216,7 +216,7 @@ function VoiceModal({ track, onClose, onGo }) {
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-[#14141a] border border-white/10 p-6 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold">Cantar por cima</h2>
+            <h2 className="text-lg font-bold">{t("voiceOverTitle")}</h2>
             <p className="text-xs text-zinc-400 mt-1">
               Você cantou em cima do instrumental de “{track.title}”? Envie só a sua voz (sem a música de fundo) e o
               programa cria uma banda nova que acompanha o seu jeito de cantar.
@@ -229,12 +229,12 @@ function VoiceModal({ track, onClose, onGo }) {
           onClick={() => inputRef.current.click()}
           className="w-full rounded-xl border border-dashed border-white/20 py-4 text-sm text-zinc-300 hover:border-pink-500/60"
         >
-          {file ? `✔ ${file.name}` : "1. Escolher o arquivo com a minha voz (WAV ou MP3, mínimo 10 segundos)"}
+          {file ? `✔ ${file.name}` : t("voiceChooseFile")}
         </button>
         <input ref={inputRef} type="file" accept="audio/*" className="hidden" onChange={(e) => setFile(e.target.files[0] || null)} />
 
         <div>
-          <p className="text-xs font-semibold text-zinc-300 mb-2">2. Quais instrumentos a banda deve ter?</p>
+          <p className="text-xs font-semibold text-zinc-300 mb-2">{t("voiceInstruments")}</p>
           <div className="flex flex-wrap gap-2">
             {INSTRUMENTS.map((i) => (
               <button
@@ -249,12 +249,12 @@ function VoiceModal({ track, onClose, onGo }) {
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-zinc-300 mb-2">3. Estilo (já vem o da música original)</p>
+          <p className="text-xs font-semibold text-zinc-300 mb-2">{t("voiceStyle")}</p>
           <textarea rows={2} className={inputCls} value={style} onChange={(e) => setStyle(e.target.value)} />
           <div className="grid grid-cols-2 gap-3 mt-3">
-            <input className={inputCls} type="number" placeholder="BPM (opcional)" value={bpm} onChange={(e) => setBpm(e.target.value)} />
+            <input className={inputCls} type="number" placeholder={t("voiceBpm")} value={bpm} onChange={(e) => setBpm(e.target.value)} />
             <select className={inputCls} value={key} onChange={(e) => setKey(e.target.value)}>
-              {KEYS.map((k) => <option key={k} value={k}>{k || "Tom: automático"}</option>)}
+              {KEYS.map((k) => <option key={k} value={k}>{k || t("voiceKeyAuto")}</option>)}
             </select>
           </div>
         </div>
@@ -272,7 +272,7 @@ function VoiceModal({ track, onClose, onGo }) {
           Criar a banda para a minha voz
         </button>
         <p className="text-[11px] text-zinc-500">
-          Na primeira vez o motor carrega um modelo diferente, o que pode levar alguns minutos. Não feche as janelas pretas.
+          {t("voiceFirstTime")}
         </p>
       </div>
     </div>
@@ -383,8 +383,8 @@ function LegendaModal({ track, tracks, onClose }) {
           </label>
           {modo === "whisper" && (
             <select className={inputCls} value={modelo} onChange={(e) => setModelo(e.target.value)}>
-              <option value="base">Whisper base (cerca de 150 MB)</option>
-              <option value="small">Whisper small (cerca de 480 MB)</option>
+              <option value="base">{t("whisperBase")}</option>
+              <option value="small">{t("whisperSmall")}</option>
             </select>
           )}
         </div>
@@ -828,7 +828,7 @@ function CompositorPanel({ onUseLyrics }) {
         <div><h2 className="font-bold">{t("aiModeTitle")}</h2><p className="mt-1 text-xs text-zinc-400">{t("aiModeHelp")}</p></div>
         <label className="block text-xs font-semibold text-zinc-300">{t("aiModeLabel")}
           <select className={inputCls + " mt-1"} value={provider} onChange={(e) => { setProvider(e.target.value); const p = providerConfig.providers.find((x) => x.id === e.target.value); setProviderModel(p?.models?.[0] || ""); }}>
-            <option value="local">Local — Gemma / Qwen</option>
+            <option value="local">{t("aiLocalLabel")}</option>
             {providerConfig.providers.map((p) => <option key={p.id} value={p.id}>{p.name} {p.configured ? "— chave cadastrada" : "— configurar chave"}</option>)}
           </select>
         </label>
@@ -841,14 +841,14 @@ function CompositorPanel({ onUseLyrics }) {
             <p className="text-xs text-zinc-300">{providerConfig.providers.find((p) => p.id === provider)?.configured ? "Uma chave já está cadastrada para este provedor." : "Cadastre sua chave de API para habilitar este provedor."}</p>
             <input type="password" autoComplete="new-password" className={inputCls} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Cole sua chave de API aqui"/>
             <div className="flex flex-wrap gap-2">
-              <button disabled={providerBusy || !apiKey.trim() || !providerConfig.secure_storage_available} onClick={saveProviderKey} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-black disabled:opacity-40">Salvar chave com segurança</button>
-              <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured} onClick={removeProviderKey} className="rounded-lg border border-white/15 px-3 py-2 text-xs">Remover chave</button>
+              <button disabled={providerBusy || !apiKey.trim() || !providerConfig.secure_storage_available} onClick={saveProviderKey} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-black disabled:opacity-40">{t("providerSaveKey")}</button>
+              <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured} onClick={removeProviderKey} className="rounded-lg border border-white/15 px-3 py-2 text-xs">{t("providerRemoveKey")}</button>
             </div>
-            {!providerConfig.secure_storage_available && <p className="text-xs text-amber-200">O cofre seguro de credenciais do sistema não está disponível. A chave não será salva em arquivo de texto.</p>}
+            {!providerConfig.secure_storage_available && <p className="text-xs text-amber-200">{t("providerVaultUnavailable")}</p>}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button disabled={providerBusy || !providerModel} onClick={saveProviderChoice} className="rounded-lg bg-pink-500 px-3 py-2 text-xs font-bold text-white">Usar este provedor</button>
-            <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured || !providerModel} onClick={testProvider} className="rounded-lg border border-white/15 px-3 py-2 text-xs">Testar conexão</button>
+            <button disabled={providerBusy || !providerModel} onClick={saveProviderChoice} className="rounded-lg bg-pink-500 px-3 py-2 text-xs font-bold text-white">{t("providerUse")}</button>
+            <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured || !providerModel} onClick={testProvider} className="rounded-lg border border-white/15 px-3 py-2 text-xs">{t("providerTest")}</button>
           </div>
           <p className="text-[11px] text-zinc-500">A chave é guardada no cofre de credenciais do Windows/macOS/Linux, não no código, no GitHub ou no arquivo de configurações. Confira limites, créditos e preços com o provedor.</p>
         </>}
@@ -902,10 +902,10 @@ function CompositorPanel({ onUseLyrics }) {
             Importar GGUF
             <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
-          <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">Ativar modelo</button>
-          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">Desligar IA</button>}
+          <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">{t("activateModel")}</button>
+          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{t("stopAI")}</button>}
         </div>
-        <p className="text-xs text-zinc-500">Você também pode importar outros GGUF. A licença de arquivos importados não é verificada automaticamente.</p>
+        <p className="text-xs text-zinc-500">{t("importedLicenseNote")}</p>
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
@@ -940,8 +940,8 @@ function CompositorPanel({ onUseLyrics }) {
           <div className="flex flex-wrap items-center gap-2">
             <label className="text-[11px] text-zinc-400">Modelo Whisper
               <select className={inputCls + " mt-1"} value={transcriptionModel} onChange={(e) => setTranscriptionModel(e.target.value)} disabled={transcriptionBusy}>
-                <option value="base">Base — mais leve</option>
-                <option value="small">Small — maior precisão</option>
+                <option value="base">{t("whisperBaseOption")}</option>
+                <option value="small">{t("whisperSmallOption")}</option>
               </select>
             </label>
             <button type="button" disabled={!melodyFile || melodyBusy || transcriptionBusy || recording} onClick={transcribeMelodyReference} className="self-end rounded-lg bg-pink-500/15 border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-100 disabled:opacity-40">
@@ -950,13 +950,13 @@ function CompositorPanel({ onUseLyrics }) {
           </div>
           {transcriptionMessage && <p className="text-[11px] text-sky-200">{transcriptionMessage}</p>}
           <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={melodyBusy || recording} onClick={() => melodyInputRef.current?.click()} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-40">Importar áudio</button>
+            <button type="button" disabled={melodyBusy || recording} onClick={() => melodyInputRef.current?.click()} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-40">{t("importAudio")}</button>
             {!recording ? (
-              <button type="button" disabled={melodyBusy} onClick={startMelodyRecording} className="inline-flex items-center gap-2 rounded-lg border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-200 disabled:opacity-40"><Mic size={14}/> Gravar melodia</button>
+              <button type="button" disabled={melodyBusy} onClick={startMelodyRecording} className="inline-flex items-center gap-2 rounded-lg border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-200 disabled:opacity-40"><Mic size={14}/> {t("recordMelody")}</button>
             ) : (
-              <button type="button" onClick={stopMelodyRecording} className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200"><Pause size={14}/> Parar gravação</button>
+              <button type="button" onClick={stopMelodyRecording} className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200"><Pause size={14}/> {t("stopRecording")}</button>
             )}
-            {melodyFile && <button type="button" onClick={clearMelodyReference} className="rounded-lg border border-white/15 px-3 py-2 text-xs text-zinc-300">Remover referência</button>}
+            {melodyFile && <button type="button" onClick={clearMelodyReference} className="rounded-lg border border-white/15 px-3 py-2 text-xs text-zinc-300">{t("removeReference")}</button>}
             <input ref={melodyInputRef} type="file" accept="audio/*" className="hidden" onChange={(e)=>loadMelodyReference(e.target.files?.[0])}/>
           </div>
           {melodyBusy && <div className="flex items-center gap-2 text-xs text-zinc-300"><Loader2 size={14} className="animate-spin"/> {t("analyzingMelody")} <span className="font-mono">{mmss(Math.floor((Date.now() - melodyStartedAt) / 1000))}</span></div>}
@@ -972,9 +972,9 @@ function CompositorPanel({ onUseLyrics }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-xs font-semibold text-zinc-300">{t("genre")}<input className={inputCls+" mt-1"} value={genre} onChange={(e)=>setGenre(e.target.value)}/></label>
           <label className="text-xs font-semibold text-zinc-300">{t("mood")}<input className={inputCls+" mt-1"} value={mood} onChange={(e)=>setMood(e.target.value)}/></label>
-          <label className="text-xs font-semibold text-zinc-300">Voz<select className={inputCls+" mt-1"} value={voice} onChange={(e)=>setVoice(e.target.value)}><option>indiferente</option><option>masculina</option><option>feminina</option><option>dueto</option></select></label>
-          <label className="text-xs font-semibold text-zinc-300">Idioma<select className={inputCls+" mt-1"} value={language} onChange={(e)=>setLanguage(e.target.value)}><option>português do Brasil</option><option>inglês</option><option>espanhol</option></select></label>
-          {compositionMode!=="chorus"&&<label className="text-xs font-semibold text-zinc-300">{t("approximateDuration")}<select className={inputCls+" mt-1"} value={duration} onChange={(e)=>setDuration(Number(e.target.value))}><option value={60}>1 minuto</option><option value={90}>1 minuto e meio</option><option value={120}>2 minutos</option><option value={150}>2 minutos e meio</option><option value={180}>3 minutos</option><option value={240}>4 minutos</option><option value={300}>5 minutos</option></select></label>}
+          <label className="text-xs font-semibold text-zinc-300">{t("voice")}<select className={inputCls+" mt-1"} value={voice} onChange={(e)=>setVoice(e.target.value)}><option>{t("voiceNeutral")}</option><option>{t("voiceMale")}</option><option>{t("voiceFemale")}</option><option>{t("voiceDuet")}</option></select></label>
+          <label className="text-xs font-semibold text-zinc-300">{t("songLanguage")}<select className={inputCls+" mt-1"} value={language} onChange={(e)=>setLanguage(e.target.value)}><option>{t("songLangPt")}</option><option>{t("songLangEn")}</option><option>{t("songLangEs")}</option></select></label>
+          {compositionMode!=="chorus"&&<label className="text-xs font-semibold text-zinc-300">{t("approximateDuration")}<select className={inputCls+" mt-1"} value={duration} onChange={(e)=>setDuration(Number(e.target.value))}><option value={60}>{t("duration1")}</option><option value={90}>{t("duration15")}</option><option value={120}>{t("duration2")}</option><option value={150}>{t("duration25")}</option><option value={180}>{t("duration3")}</option><option value={240}>{t("duration4")}</option><option value={300}>{t("duration5")}</option></select></label>}
         </div>
         <button disabled={busy||(provider==="local"&&(!status.runtime_running||!status.active_model))||(provider!=="local"&&(!providerModel||!providerConfig.providers.find((p)=>p.id===provider)?.configured))||(compositionMode==="full"?!theme.trim():!sourceLyrics.trim())} onClick={generate} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3.5 font-black text-white disabled:opacity-40">
           {busy?<Loader2 size={18} className="animate-spin"/>:<Sparkles size={18}/>}
@@ -1263,7 +1263,7 @@ export default function App() {
                     value={form.lyrics}
                     onChange={(e) => set("lyrics", e.target.value)}
                   />
-                  <p className="mt-1 text-[11px] text-zinc-500">Dica: marque as partes com [Verse 1], [Chorus], [Bridge] (em inglês). Ajuda o modelo.</p>
+                  <p className="mt-1 text-[11px] text-zinc-500">{t("sectionHint")}</p>
                 </div>
               )}
 
@@ -1441,7 +1441,7 @@ export default function App() {
             <audio key={player.url} src={player.url} controls autoPlay className="h-10 w-full" />
           </div>
         ) : (
-          <div className="text-center text-xs text-zinc-500">Clique em ▶ numa música para ouvir</div>
+          <div className="text-center text-xs text-zinc-500">{t("playerHint")}</div>
         )}
       </footer>
 
