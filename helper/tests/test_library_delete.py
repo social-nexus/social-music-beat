@@ -31,6 +31,10 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         server.DATA = self.data
         server.LIB_FILE = self.library_file
         server._lib_lock = __import__("threading").Lock()
+        # Each test starts with an isolated task registry; otherwise a running
+        # job created by another test can incorrectly block deletion here.
+        with server._jobs_registry_lock:
+            server.jobs.clear()
         server.write_lib([{"id": "track-1", "file": "track.wav", "title": "Test track"}])
 
     def test_delete_removes_metadata_and_audio(self):
