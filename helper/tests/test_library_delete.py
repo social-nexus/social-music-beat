@@ -971,6 +971,43 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                     self.assertEqual(target.read_bytes(), before)
 
 
+    def test_ace_proxy_maps_connection_timeout_and_transport_errors(self):
+        import asyncio
+
+        failures = (
+            (server.httpx.ConnectError("ACE-Step is offline"), 503),
+            (server.httpx.ConnectTimeout("ACE-Step connect timed out"), 504),
+            (server.httpx.ReadTimeout("ACE-Step response timed out"), 504),
+            (server.httpx.RemoteProtocolError("invalid upstream response"), 502),
+        )
+        request = types.SimpleNamespace(
+            headers={"content-type": "application/json"},
+            method="GET",
+            query_params={},
+            body=mock.AsyncMock(return_value=b""),
+        )
+
+        for failure, expected_status in failures:
+            with self.subTest(failure=type(failure).__name__):
+                client = mock.Mock()
+                client.request = mock.AsyncMock(side_effect=failure)
+
+                class ClientContext:
+                    async def __aenter__(self):
+                        return client
+
+                    async def __aexit__(self, *args):
+                        return False
+
+                with mock.patch.object(server.httpx, "AsyncClient", return_value=ClientContext()):
+                    with self.assertRaises(server.HTTPException) as raised:
+                        asyncio.run(server.ace_proxy("v1/text2music", request))
+
+                self.assertEqual(raised.exception.status_code, expected_status)
+                self.assertNotIn("timed out", raised.exception.detail.lower())
+                self.assertNotIn("invalid upstream", raised.exception.detail.lower())
+                client.request.assert_awaited_once()
+
     def test_save_audio_rejects_source_without_ace_audio_endpoint(self):
         import asyncio
         with self.assertRaises(server.HTTPException) as raised:

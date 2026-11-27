@@ -482,8 +482,12 @@ async def ace_proxy(path: str, request: Request):
                 request.method, f"{ACE}/{path}",
                 params=dict(request.query_params), content=await request.body(), headers=headers,
             )
-    except httpx.ConnectError:
-        raise HTTPException(503, "O motor de música (ACE-Step) não está ligado. Abra o iniciar.bat e espere carregar.")
+    except httpx.ConnectError as exc:
+        raise HTTPException(503, "O motor de música (ACE-Step) não está ligado. Abra o iniciar.bat e espere carregar.") from exc
+    except httpx.TimeoutException as exc:
+        raise HTTPException(504, "O motor de música excedeu o tempo de resposta. Tente novamente.") from exc
+    except httpx.RequestError as exc:
+        raise HTTPException(502, "Não foi possível concluir a comunicação com o motor de música.") from exc
     return Response(r.content, status_code=r.status_code, media_type=r.headers.get("content-type"))
 
 
