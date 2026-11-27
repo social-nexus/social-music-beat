@@ -82,6 +82,21 @@ for (const locale of requiredLocales) {
   }
 }
 
+
+const localizedCaptionSetup = {
+  pt: {"captionLyricsEmpty":"A letra está vazia.","whisperUnavailable":"O Whisper não está instalado. Rode o instalar.bat de novo e abra o programa outra vez.","whisperInstalled":"Whisper instalado.","whisperInstallTip":"Whisper ainda não instalado: rode o instalar.bat de novo."},
+  en: {"captionLyricsEmpty":"The lyrics are empty.","whisperUnavailable":"Whisper is not installed. Run instalar.bat again and reopen the app.","whisperInstalled":"Whisper installed.","whisperInstallTip":"Whisper is not installed yet: run instalar.bat again."},
+  es: {"captionLyricsEmpty":"La letra está vacía.","whisperUnavailable":"Whisper no está instalado. Ejecuta instalar.bat otra vez y vuelve a abrir el programa.","whisperInstalled":"Whisper instalado.","whisperInstallTip":"Whisper aún no está instalado: ejecuta instalar.bat otra vez."},
+};
+for (const locale of requiredLocales) {
+  for (const [key, expected] of Object.entries(localizedCaptionSetup[locale])) {
+    if (uiText(locale, key) !== expected) {
+      failed = true;
+      console.error(`Locale ${locale}: expected ${key}="${expected}", got "${uiText(locale, key)}"`);
+    }
+  }
+}
+
 // Verify the library actions that were recently audited remain localized.
 const localizedLibraryLabels = {
   pt: { download: "Baixar", separate: "Separar voz e instrumental" },

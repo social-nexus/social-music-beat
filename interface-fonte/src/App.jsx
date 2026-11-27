@@ -380,8 +380,8 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
   const gerar = async () => {
     setRes(null);
     setMsg("");
-    if (!letra.trim()) { setMsg(language === "en" ? "The lyrics are empty." : language === "es" ? "La letra está vacía." : "A letra está vazia."); return; }
-    if (modo === "whisper" && !whisper) { setMsg(language === "en" ? "Whisper is not installed. Run instalar.bat again and reopen the app." : language === "es" ? "Whisper no está instalado. Ejecuta instalar.bat otra vez y vuelve a abrir el programa." : "O Whisper não está instalado. Rode o instalar.bat de novo e abra o programa outra vez."); return; }
+    if (!letra.trim()) { setMsg(tx("captionLyricsEmpty")); return; }
+    if (modo === "whisper" && !whisper) { setMsg(tx("whisperUnavailable")); return; }
     const operationStartedAt = Date.now();
     setStartedAt(operationStartedAt);
     setLastElapsed(null);
@@ -472,7 +472,7 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
         </div>
         <p className="text-[11px] text-zinc-500">
           {tx("captionTip")}
-          {modo === "whisper" && (whisper ? (language === "en" ? " Whisper installed." : language === "es" ? " Whisper instalado." : " Whisper instalado.") : (language === "en" ? " Whisper is not installed yet: run instalar.bat again." : language === "es" ? " Whisper aún no está instalado: ejecuta instalar.bat otra vez." : " Whisper ainda não instalado: rode o instalar.bat de novo."))}
+          {modo === "whisper" && (whisper ? ` ${tx("whisperInstalled")}` : ` ${tx("whisperInstallTip")}`)}
         </p>
 
         <button
@@ -913,7 +913,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
           {operationStartedAt && (
             <p className="mt-2 flex items-center gap-2 border-t border-white/10 pt-2 font-mono text-xs text-zinc-300">
               <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-pink-400" />
-              {uiLanguage === "en" ? "Elapsed time" : uiLanguage === "es" ? "Tiempo transcurrido" : "Tempo decorrido"}: {mmss(operationElapsed)}
+              {tx("elapsed")}: {mmss(operationElapsed)}
             </p>
           )}
         </div>
@@ -1159,7 +1159,7 @@ export default function App() {
       const { file } = await jsonPost("/api/save", { url: it.file });
       await addTrack({ id: uid(), file, createdAt: Date.now(), ...make(it, n, items.length) });
     }
-    if (!n) throw new Error(uiLanguage === "en" ? "The engine did not return any audio." : uiLanguage === "es" ? "El motor no devolvió ningún audio." : "O motor não devolveu nenhum áudio.");
+    if (!n) throw new Error(tx("errNoAudio"));
   };
 
   const separateInto = async (t, titles, phase) => {
@@ -1279,7 +1279,7 @@ export default function App() {
         // pega a faixa recém-criada (a mais nova da biblioteca)
         const fresh = await http("/api/library");
         const t = fresh.find((x) => x.kind === "banda" && x.parent === parent.id);
-        if (t) await separateInto(t, { voz: `${t.title} (voz)`, instrumental: `${parent.title} - ${uiLanguage === "en" ? "band only" : uiLanguage === "es" ? "solo banda" : "só a banda"}` }, phase);
+        if (t) await separateInto(t, { voz: `${t.title} (voz)`, instrumental: `${parent.title} - ${tx("bandOnly")}` }, phase);
       }
     });
   };

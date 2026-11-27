@@ -72,3 +72,8 @@ As versões e datas abaixo descrevem a evolução do projeto. Consulte também o
 ### Erros genéricos de geração localizados
 - Mensagens de falha de criação, ausência de áudio e validações de letra/estilo centralizadas para PT-BR, inglês e espanhol.
 - Diagnósticos técnicos do backend continuam sendo exibidos sem tradução destrutiva.
+
+
+### Ajustes adicionais de localização
+- Textos de configuração do Whisper, validação de letra vazia e timer do compositor centralizados nos catálogos PT-BR/EN/ES.
+- Mensagens de ausência de áudio e faixa somente banda também reutilizam as traduções centralizadas.

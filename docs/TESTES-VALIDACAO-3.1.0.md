@@ -61,3 +61,11 @@ Anotar sistema operacional, GPU/VRAM, modelo, idioma selecionado, operação, du
 - Localizadas validações de letra obrigatória e estilo musical.
 - Erros técnicos retornados pelo backend continuam preservados quando disponíveis, para diagnóstico.
 - Testes de i18n validam os cinco textos nos três idiomas.
+
+
+## Auditoria de textos de legendas e timer do compositor (27/11/2026)
+
+- Centralizadas as mensagens de letra vazia e Whisper ausente/instalado/dica de instalação.
+- Timer do compositor usa a chave `elapsed` do catálogo em vez de texto condicional local.
+- A criação musical usa a tradução catalogada para ausência de áudio e etiqueta de faixa somente banda.
+- Testes explícitos adicionados para as quatro mensagens de configuração de legendas em todos os idiomas.
