@@ -148,7 +148,7 @@ class RuntimeCatalogTests(unittest.TestCase):
     def test_model_download_hash_failure_preserves_existing_model(self):
         model_id = "qwen3-4b-q4km"
         meta = ia_local.MODEL_CATALOG[model_id]
-        target_dir = Path(TEMP_DATA) / "model-preserve-test"
+        target_dir = Path(TEMP_DATA) / "qwen3-4b-q4km"
         target_dir.mkdir(parents=True, exist_ok=True)
         target = target_dir / meta["filename"]
         target.write_bytes(b"previous-valid-model")
@@ -172,7 +172,7 @@ class RuntimeCatalogTests(unittest.TestCase):
     def test_model_download_transport_failure_preserves_existing_model(self):
         model_id = "gemma3-4b-it-q4km"
         meta = ia_local.MODEL_CATALOG[model_id]
-        target_dir = Path(TEMP_DATA) / "model-transport-test"
+        target_dir = Path(TEMP_DATA) / "gemma3-4b-it-q4km"
         target_dir.mkdir(parents=True, exist_ok=True)
         target = target_dir / meta["filename"]
         target.write_bytes(b"previous-model")
@@ -194,7 +194,7 @@ class RuntimeCatalogTests(unittest.TestCase):
     def test_model_download_success_atomically_replaces_previous_file(self):
         model_id = "qwen3-4b-q4km"
         meta = ia_local.MODEL_CATALOG[model_id]
-        target_dir = Path(TEMP_DATA) / "model-success-test"
+        target_dir = Path(TEMP_DATA) / "qwen3-4b-q4km"
         target_dir.mkdir(parents=True, exist_ok=True)
         target = target_dir / meta["filename"]
         target.write_bytes(b"old-model")
