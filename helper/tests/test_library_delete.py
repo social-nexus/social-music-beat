@@ -1014,6 +1014,20 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(result, {"file": "/musicas/test.wav"})
 
 
+    def test_save_audio_network_failure_returns_502_without_persisting(self):
+        import asyncio
+        with mock.patch.object(
+            server.httpx,
+            "AsyncClient",
+            side_effect=server.httpx.ConnectError("ACE-Step is offline"),
+        ):
+            with mock.patch.object(server, "_persist_audio_content") as persist:
+                with self.assertRaises(server.HTTPException) as raised:
+                    asyncio.run(server.save_audio({"url": "/v1/audio?filename=sample.wav"}))
+        self.assertEqual(raised.exception.status_code, 502)
+        self.assertIn("motor de áudio", raised.exception.detail)
+        persist.assert_not_called()
+
     def test_save_audio_upstream_failure_returns_502_without_persisting(self):
         import asyncio
         response = mock.Mock(status_code=503, content=b"upstream unavailable")
