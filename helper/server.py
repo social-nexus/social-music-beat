@@ -462,6 +462,30 @@ def _commit_separation_outputs(staged_paths, final_paths):
                 pass
 
 
+def _stage_separation_outputs(stem, outputs, samplerate, write_audio):
+    """Stage both stems and remove partial files if either write fails."""
+    staged_paths, final_paths, result = [], [], {}
+    try:
+        for tag, tensor in outputs:
+            fname = f"{stem}_{tag}.wav"
+            final_path = DATA / fname
+            staged_path = DATA / f".{stem}_{tag}.{uuid.uuid4().hex}.tmp.wav"
+            # Track the path before writing because the writer may create a
+            # partial file and then raise.
+            staged_paths.append(staged_path)
+            write_audio(staged_path, tensor, samplerate)
+            final_paths.append(final_path)
+            result[tag] = f"/musicas/{fname}"
+        return staged_paths, final_paths, result
+    except Exception:
+        for staged in staged_paths:
+            try:
+                staged.unlink(missing_ok=True)
+            except OSError:
+                pass
+        raise
+
+
 def separate_file(src: Path, stem: str):
     """Separa em voz e instrumental. Receita igual à do próprio Demucs."""
     import soundfile as sf
@@ -486,16 +510,16 @@ def separate_file(src: Path, stem: str):
     vi = model.sources.index("vocals")
     vocals = sources[vi]
     inst = sum(sources[i] for i in range(len(model.sources)) if i != vi)
-    out = {}
-    staged_paths, final_paths = [], []
-    for tag, tensor in (("voz", vocals), ("instrumental", inst)):
-        fname = f"{stem}_{tag}.wav"
-        final_path = DATA / fname
-        staged_path = DATA / f".{stem}_{tag}.{uuid.uuid4().hex}.tmp.wav"
-        sf.write(str(staged_path), tensor.clamp(-1, 1).T.contiguous().numpy(), model.samplerate, subtype="PCM_16")
-        staged_paths.append(staged_path)
-        final_paths.append(final_path)
-        out[tag] = f"/musicas/{fname}"
+    def write_stem(path, tensor, samplerate):
+        audio = tensor.clamp(-1, 1).T.contiguous().numpy()
+        sf.write(str(path), audio, samplerate, subtype="PCM_16")
+
+    staged_paths, final_paths, out = _stage_separation_outputs(
+        stem,
+        (("voz", vocals), ("instrumental", inst)),
+        model.samplerate,
+        write_stem,
+    )
     _commit_separation_outputs(staged_paths, final_paths)
     return out
 
