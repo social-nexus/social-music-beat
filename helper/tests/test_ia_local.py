@@ -215,7 +215,6 @@ class MultilingualLyricsTests(unittest.TestCase):
             with self.subTest(language=language):
                 header = ia_local._lyrics_header(language)
                 self.assertIn(heading, header)
-                self.assertIn("[Verse 1]", "[Verse 1]")  # Section tags remain English in generated examples.
 
     def test_lyrics_header_rejects_unknown_language(self):
         with self.assertRaises(ValueError):
