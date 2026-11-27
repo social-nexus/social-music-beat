@@ -360,19 +360,46 @@ def load_demucs():
 
 
 def _commit_separation_outputs(staged_paths, final_paths):
-    """Promote both staged stems together; roll back promoted files on failure."""
+    """Promote both stems, preserving any prior output if the pair fails."""
     promoted = []
+    backups = []
     try:
+        # Move old outputs aside first, so a failed second promotion cannot
+        # destroy the previous vocal/instrumental files.
+        for final in final_paths:
+            if final.exists():
+                backup = final.with_name(f".{final.name}.{uuid.uuid4().hex}.backup")
+                os.replace(final, backup)
+                backups.append((final, backup))
         for staged, final in zip(staged_paths, final_paths):
             os.replace(staged, final)
             promoted.append(final)
     except OSError:
-        for final in promoted:
-            final.unlink(missing_ok=True)
+        # Best-effort rollback; leave backup files in place if restoration fails.
+        for final in reversed(promoted):
+            try:
+                final.unlink(missing_ok=True)
+            except OSError:
+                pass
+        for final, backup in reversed(backups):
+            try:
+                os.replace(backup, final)
+            except OSError:
+                pass
         raise
+    else:
+        # Pair committed. Backup cleanup failure is non-fatal.
+        for _, backup in backups:
+            try:
+                backup.unlink(missing_ok=True)
+            except OSError:
+                pass
     finally:
         for staged in staged_paths:
-            staged.unlink(missing_ok=True)
+            try:
+                staged.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def separate_file(src: Path, stem: str):
