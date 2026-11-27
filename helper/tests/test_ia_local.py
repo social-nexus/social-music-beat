@@ -91,6 +91,19 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertEqual(dest.read_bytes(), b"DATA")
         dest.unlink(missing_ok=True)
 
+    def test_background_worker_start_failure_marks_job_as_error(self):
+        for kind, target, args in (
+            ("runtime", ia_local._install_runtime_worker, ("windows-x64",)),
+            ("model", ia_local._download_model_worker, ("qwen3-4b-q4km",)),
+        ):
+            with self.subTest(kind=kind):
+                jid = ia_local._job(kind)
+                with mock.patch.object(ia_local.threading, "Thread", side_effect=RuntimeError("thread startup failed")):
+                    started = ia_local._start_background_job(jid, target, *args)
+                self.assertFalse(started)
+                self.assertEqual(ia_local.JOBS[jid]["status"], "error")
+                self.assertIn("thread startup failed", ia_local.JOBS[jid]["message"])
+
     def test_archive_path_rejects_parent_traversal(self):
         root = Path(TEMP_DATA) / "extract"
         with self.assertRaises(ValueError):

@@ -179,6 +179,19 @@ def _update_job(jid: str, **values):
         if jid in JOBS:
             JOBS[jid].update(values)
 
+def _start_background_job(jid: str, target, *args) -> bool:
+    """Start a model/runtime worker and never leave a queued job if startup fails."""
+    try:
+        threading.Thread(target=target, args=(jid, *args), daemon=True).start()
+    except Exception as exc:
+        _update_job(
+            jid,
+            status="error",
+            message=f"Não foi possível iniciar a operação: {type(exc).__name__}: {exc}"[:350],
+        )
+        return False
+    return True
+
 def _sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -465,7 +478,7 @@ def install_runtime(payload: dict, request: Request):
     if _runtime_binary(variant):
         return {"installed": True, "message": "Runtime já instalado."}
     jid = _job("runtime")
-    threading.Thread(target=_install_runtime_worker, args=(jid, variant), daemon=True).start()
+    _start_background_job(jid, _install_runtime_worker, variant)
     return {"job_id": jid}
 
 @router.post("/models/download")
@@ -479,7 +492,7 @@ def download_model(payload: dict, request: Request):
     if _model_file(model_id).is_file():
         return {"installed": True}
     jid = _job("model")
-    threading.Thread(target=_download_model_worker, args=(jid, model_id), daemon=True).start()
+    _start_background_job(jid, _download_model_worker, model_id)
     return {"job_id": jid}
 
 @router.post("/models/import")
