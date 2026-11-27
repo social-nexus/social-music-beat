@@ -109,7 +109,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         with mock.patch.object(Path, "iterdir", autospec=True, side_effect=PermissionError("denied")):
             self.assertEqual(server.recover_staged_deletions(), [])
             self.assertEqual(server.recover_separation_backups(), [])
-            self.assertEqual(server.cleanup_stale_staging_files())
+            self.assertEqual(server.cleanup_stale_staging_files(), [])
 
     def test_recovery_normalizes_invalid_job_timestamps(self):
         jobs_file = self.data / server._JOBS_FILE_NAME
