@@ -385,6 +385,5 @@ class ModelImportAtomicityTests(unittest.IsolatedAsyncioTestCase):
             with mock.patch.object(ia_local.os, "replace", side_effect=OSError("simulated publish failure")):
                 with self.assertRaisesRegex(OSError, "simulated publish failure"):
                     await ia_local.import_model(await self._request(), await self._upload())
-                await ia_local.import_model(await self._request(), await self._upload())
         self.assertEqual(list(root.glob("imported-*")), [])
         self.assertEqual(list(root.glob(".*.staging")), [])
