@@ -876,8 +876,8 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     try {
       const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
       setResult(r.lyrics);
-      const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
-      setMessage((labels[compositionMode] || tx("msgCompositionDone")) + " com " + r.model + ".");
+      const labels = { full: tx("msgFullCreated"), continue: tx("msgContinueCreated"), chorus: tx("msgChorusCreated") };
+      setMessage((labels[compositionMode] || tx("msgCompositionDone")) + " " + tx("msgWithModel") + " " + r.model + ".");
     } catch (e) { setError(e.message); }
     finally { setBusy(false); setOperationStartedAt(null); }
   };
