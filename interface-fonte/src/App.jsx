@@ -670,7 +670,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const downloadModel = async () => {
-    setBusy(true); setError(""); setMessage("Preparando o download do modelo…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Preparando o download do modelo…");
     try {
       const r = await jsonPost("/api/ai/models/download", { model_id: model, accept_license: gemmaAccepted });
       if (r.job_id) await waitJob(r.job_id, "Modelo instalado e verificado.");
@@ -680,7 +680,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const activate = async () => {
-    setBusy(true); setError(""); setMessage("Carregando o modelo na memória…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Carregando o modelo na memória…");
     try {
       await jsonPost("/api/ai/models/activate", { model_id: model, variant: runtime, gpu_layers: Number(gpuLayers) });
       await refresh();
@@ -778,7 +778,7 @@ function CompositorPanel({ onUseLyrics }) {
   const generate = async () => {
     if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
     if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
-    setBusy(true); setError(""); setMessage(provider === "local" ? "Compondo a letra localmente…" : "Enviando solicitação ao provedor escolhido…"); setResult("");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage(provider === "local" ? "Compondo a letra localmente…" : "Enviando solicitação ao provedor escolhido…"); setResult("");
     try {
       const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
       setResult(r.lyrics);
@@ -790,7 +790,7 @@ function CompositorPanel({ onUseLyrics }) {
 
   const importModel = async (file) => {
     if (!file) return;
-    setBusy(true); setError(""); setMessage("Importando arquivo GGUF…");
+    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Importando arquivo GGUF…");
     try {
       const fd = new FormData(); fd.append("file", file);
       await http("/api/ai/models/import", { method: "POST", body: fd });
@@ -903,7 +903,7 @@ function CompositorPanel({ onUseLyrics }) {
             <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
           <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">{t("activateModel")}</button>
-          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{t("stopAI")}</button>}
+          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusySince(Date.now()); setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{t("stopAI")}</button>}
         </div>
         <p className="text-xs text-zinc-500">{t("importedLicenseNote")}</p>
       </section>
