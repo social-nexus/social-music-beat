@@ -122,6 +122,14 @@ for (const locale of requiredLocales) {
 }
 
 
+const localizedUnexpectedTaskStatus = { pt: "A operação retornou um estado inesperado. Verifique o servidor e tente novamente.", en: "The operation returned an unexpected status. Check the server and try again.", es: "La operación devolvió un estado inesperado. Comprueba el servidor e inténtalo de nuevo." };
+for (const locale of requiredLocales) {
+  if (uiText(locale, "errUnexpectedTaskStatus") !== localizedUnexpectedTaskStatus[locale]) {
+    failed = true;
+    console.error(`Locale ${locale}: unexpected-task-status message mismatch`);
+  }
+}
+
 const localizedDeleteErrors = { pt: "Não foi possível confirmar a exclusão. A Biblioteca foi atualizada.", en: "Could not confirm deletion. The Library has been refreshed.", es: "No se pudo confirmar la eliminación. La Biblioteca se actualizó." };
 for (const locale of requiredLocales) {
   if (uiText(locale, "errDeleteTrack") !== localizedDeleteErrors[locale]) {

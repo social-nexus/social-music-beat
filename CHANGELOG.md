@@ -11,7 +11,7 @@
 - Revisão adicional de labels na biblioteca: download localizado e texto espanhol de separação refinado.
  — Em desenvolvimento
 
-### Implementado até agora
+- Polling de tarefas ACE-step e legendas agora detecta estados desconhecidos e encerra com mensagem localizada, evitando loops infinitos em status inválidos.\n\n### Implementado até agora
 - Branch de desenvolvimento criada diretamente da tag estável `v3.0.0`, sem alterar a versão estável.
 - Preferência persistente de idioma da interface iniciada: Português do Brasil, English e Español.
 - Tradução ampliada para as três línguas na criação musical, ajuda, compositor IA, configuração de provedores/modelos, modais Cantar por cima e Legendas, validações locais, análise melódica, categorias musicais e nomes dos 55 estilos predefinidos.

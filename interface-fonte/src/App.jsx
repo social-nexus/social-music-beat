@@ -216,6 +216,7 @@ async function waitResult(id) {
     if (!item) continue;
     if (item.status === 1) return JSON.parse(item.result);
     if (item.status === 2) throw new Error(uiText(language, "errAceFailure"));
+    if (item.status !== 0) throw new Error(uiText(language, "errUnexpectedTaskStatus"));
   }
 }
 
@@ -406,6 +407,7 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
         setMsg(s.msg || tx("working"));
         if (s.status === "erro") throw new Error(s.msg);
         if (s.status === "pronto") { setRes(s); setMsg(""); break; }
+        if (s.status !== "processando" && s.status !== "queued" && s.status !== "running") throw new Error(tx("errUnexpectedTaskStatus"));
       }
     } catch (e) {
       setMsg(String(e.message || e).slice(0, 300));
