@@ -123,6 +123,7 @@ _SEPARATION_STAGING_RE = re.compile(
 )
 _LIBRARY_STAGING_RE = re.compile(r"\.biblioteca\.json\.[0-9a-f]{32}\.tmp")
 _AUDIO_STAGING_RE = re.compile(r"\.\d+_[0-9a-f]{6}\.[A-Za-z0-9]+\.[0-9a-f]{32}\.tmp")
+_AUDIO_FINAL_RE = re.compile(r"\\d+_[0-9a-f]{6}\\.[A-Za-z0-9]+")
 _DELETE_STAGING_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.deleting")
 _SEPARATION_BACKUP_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.backup")
 
@@ -433,8 +434,11 @@ def sniff_ext(data: bytes) -> str:
 def cleanup_unregistered_audio(payload: dict):
     """Remove an audio file only when it is not referenced by the library."""
     name = Path(str(payload.get("file", ""))).name
-    if not name or name in (".", ".."):
-        raise HTTPException(400, "Nome de arquivo inválido.")
+    # This endpoint is only for rolling back files created by /api/save.
+    # Never allow cleanup to unlink library metadata, job state, separation
+    # outputs, backups, or arbitrary files inside DATA.
+    if not _AUDIO_FINAL_RE.fullmatch(name):
+        raise HTTPException(400, "Nome de áudio temporário inválido.")
     target = DATA / name
     with _lib_lock:
         # Match the same case-insensitive filename semantics used by deletion.
