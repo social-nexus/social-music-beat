@@ -511,6 +511,8 @@ def cleanup_unregistered_audio(payload: dict):
         # Match the same case-insensitive filename semantics used by deletion.
         # This prevents cleanup from bypassing a registered reference on Windows
         # or when metadata casing differs from the physical filename.
+        if not LIB_FILE.is_file():
+            raise HTTPException(503, "Biblioteca indisponível; o áudio foi preservado.")
         requested_name = name.casefold()
         if any(
             Path(str(item.get("file", ""))).name.casefold() == requested_name
