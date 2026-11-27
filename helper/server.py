@@ -308,7 +308,10 @@ def _persist_audio_content(content: bytes, extension: str) -> str:
         staged.write_bytes(content)
         os.replace(staged, target)
     except OSError as exc:
-        staged.unlink(missing_ok=True)
+        try:
+            staged.unlink(missing_ok=True)
+        except OSError:
+            pass
         raise HTTPException(500, "Não foi possível salvar o áudio localmente.") from exc
     return f"/musicas/{name}"
 
