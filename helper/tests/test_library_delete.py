@@ -975,6 +975,39 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(raised.exception.status_code, 502)
         persist.assert_not_called()
 
+    def test_library_batch_rejects_duplicate_or_invalid_ids_without_mutation(self):
+        original = [{"id": "existing", "file": "track.wav", "title": "Original"}]
+        server.write_lib(original)
+        invalid_payloads = (
+            {"items": []},
+            {"items": [{"id": "", "file": "a.wav"}]},
+            {"items": [{"id": "dup"}, {"id": "dup"}]},
+            {"items": ["not-a-track"]},
+        )
+        for payload in invalid_payloads:
+            with self.subTest(payload=payload):
+                with self.assertRaises(server.HTTPException) as raised:
+                    server.upsert_tracks_batch(payload)
+                self.assertEqual(raised.exception.status_code, 400)
+                self.assertEqual(server.read_lib(), original)
+
+    def test_library_batch_is_atomic_and_idempotently_replaces_ids(self):
+        server.write_lib([
+            {"id": "existing", "file": "track.wav", "title": "Old"},
+            {"id": "keep", "file": "other.wav", "title": "Keep"},
+        ])
+        batch = [
+            {"id": "existing", "file": "new.wav", "title": "Updated"},
+            {"id": "voice", "file": "voice.wav", "title": "Voice"},
+        ]
+        self.assertEqual(server.upsert_tracks_batch({"items": batch}), {"ok": True})
+        first = server.read_lib()
+        self.assertEqual(first, batch + [{"id": "keep", "file": "other.wav", "title": "Keep"}])
+        self.assertEqual(server.upsert_tracks_batch({"items": batch}), {"ok": True})
+        self.assertEqual(server.read_lib(), first)
+        self.assertEqual(sum(item["id"] == "existing" for item in server.read_lib()), 1)
+        self.assertEqual(sum(item["id"] == "voice" for item in server.read_lib()), 1)
+
     def test_delete_unknown_id_is_noop(self):
         result = server.delete_track("missing")
         self.assertEqual(result, {"ok": True})
