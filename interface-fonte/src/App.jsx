@@ -864,7 +864,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
             <button disabled={providerBusy || !providerModel} onClick={saveProviderChoice} className="rounded-lg bg-pink-500 px-3 py-2 text-xs font-bold text-white">{tx("useProvider")}</button>
             <button disabled={providerBusy || !providerConfig.providers.find((p) => p.id === provider)?.configured || !providerModel} onClick={testProvider} className="rounded-lg border border-white/15 px-3 py-2 text-xs">{tx("testConnection")}</button>
           </div>
-          <p className="text-[11px] text-zinc-500">A chave é guardada no cofre de credenciais do Windows/macOS/Linux, não no código, no GitHub ou no arquivo de configurações. Confira limites, créditos e preços com o provedor.</p>
+          <p className="text-[11px] text-zinc-500">{tx("secureKeyNote")}</p>
         </>}
       </section>
 
@@ -874,7 +874,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
           <>
             <label className="block text-xs font-semibold text-zinc-300">{tx("compatiblePackage")}</label>
             <select className={inputCls} value={runtime} onChange={(e) => setRuntime(e.target.value)}>
-              {compatibleRuntimes.map((r) => <option key={r.id} value={r.id}>{r.label} {r.installed ? `— ${r.installed ? tx("installed") : " " + (r.size_bytes / 1024 / 1024).toFixed(0) + " MB"}</option>)}
+              {compatibleRuntimes.map((r) => <option key={r.id} value={r.id}>{r.label} {r.installed ? `— ${tx("installed")}` : `— ${(r.size_bytes / 1024 / 1024).toFixed(0)} MB`}</option>)
             </select>
             <div className="flex flex-wrap items-center gap-3">
               <button disabled={busy || !runtime || runtimeInstalled} onClick={installRuntime} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black disabled:opacity-40">
@@ -902,7 +902,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
         </select>
         {selectedModel && <div className="rounded-xl bg-white/[0.03] p-3 text-xs text-zinc-400">
           <p>{selectedModel.description}</p>
-          <p className="mt-2">Licença: <b className="text-zinc-200">{selectedModel.license}</b> · <a className="underline" href={selectedModel.license_url} target="_blank" rel="noreferrer">{tx("viewLicense")}</a> · <a className="underline" href={selectedModel.model_url} target="_blank" rel="noreferrer">{tx("officialSource")}</a></p>
+          <p className="mt-2">{tx("license")} <b className="text-zinc-200">{selectedModel.license}</b> · <a className="underline" href={selectedModel.license_url} target="_blank" rel="noreferrer">{tx("viewLicense")}</a> · <a className="underline" href={selectedModel.model_url} target="_blank" rel="noreferrer">{tx("officialSource")}</a></p>
         </div>}
         {selectedModel?.requires_license_acceptance && (
           <label className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-100">
@@ -913,11 +913,11 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
         <div className="flex flex-wrap gap-2">
           <button disabled={busy || installedSelected || !selectedModel || (selectedModel.requires_license_acceptance && !gemmaAccepted)} onClick={downloadModel} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold disabled:opacity-40">{installedSelected ? tx("modelInstalled") : tx("downloadModel")}</button>
           <label className="cursor-pointer rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold hover:bg-white/5">
-            Importar GGUF
+            {tx("importGguf")}
             <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
           <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">{tx("activateModel")}</button>
-          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage("Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{tx("stopAI")}</button>}
+          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage(uiLanguage === "en" ? "Engine stopped." : uiLanguage === "es" ? "Motor detenido." : "Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{tx("stopAI")}</button>}
         </div>
         <p className="text-xs text-zinc-500">{tx("importNote")}</p>
       </section>
