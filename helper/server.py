@@ -439,6 +439,16 @@ def _persist_jobs_locked():
             pass
 
 
+def _is_finite_timestamp(value):
+    """Accept finite numeric timestamps, excluding booleans and oversized integers."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(value)
+    except (OverflowError, TypeError, ValueError):
+        return False
+
+
 def recover_separation_jobs():
     """Restore completed jobs and mark work interrupted by a previous process."""
     target = DATA / _JOBS_FILE_NAME
@@ -463,7 +473,7 @@ def recover_separation_jobs():
             continue
         task = dict(info)
         created_at = task.get("created_at")
-        if not isinstance(created_at, (int, float)) or not math.isfinite(created_at):
+        if not _is_finite_timestamp(created_at):
             task["created_at"] = now
         if status == "running":
             task.update(
@@ -473,7 +483,7 @@ def recover_separation_jobs():
             )
         else:
             finished_at = task.get("finished_at")
-            if not isinstance(finished_at, (int, float)) or not math.isfinite(finished_at):
+            if not _is_finite_timestamp(finished_at):
                 task["finished_at"] = now
         if status == "done":
             result = task.get("result")
@@ -501,7 +511,7 @@ def _prune_jobs_locked(now):
         timestamp = info.get("finished_at")
         if timestamp is None:
             continue
-        if not isinstance(timestamp, (int, float)) or not math.isfinite(timestamp):
+        if not _is_finite_timestamp(timestamp):
             # Invalid persisted/runtime metadata must not break startup or polling.
             info["finished_at"] = now
             timestamp = now
