@@ -1134,12 +1134,6 @@ export default function App() {
     return () => clearInterval(t);
   }, [job]);
 
-  const addTrack = useCallback(async (t) => {
-    // Persist first; only publish the track in the UI after the server confirms it.
-    await jsonPost("/api/library", t);
-    setTracks((prev) => [t, ...prev.filter((item) => item.id !== t.id)]);
-  }, []);
-
   const runJob = async (title, fn) => {
     if (jobLockRef.current) return;
     jobLockRef.current = true;
@@ -1159,22 +1153,23 @@ export default function App() {
 
   // Salva o que o motor gerou e cria as faixas na biblioteca
   const saveItems = async (items, make) => {
-    let n = 0;
-    for (const it of items) {
-      if (!it.file) continue;
-      n += 1;
-      const saved = await jsonPost("/api/save", { url: it.file });
-      if (!saved?.file) throw new Error(tx("errNoAudio"));
-      const track = { id: uid(), file: saved.file, createdAt: Date.now(), ...make(it, n, items.length) };
-      try {
-        await addTrack(track);
-      } catch (persistError) {
-        // If metadata could not be persisted, remove the downloaded orphan file.
-        try { await jsonPost("/api/audio/cleanup", { file: saved.file }); } catch { /* preserve the original persistence error */ }
-        throw persistError;
+    const prepared = [];
+    try {
+      for (const it of items) {
+        if (!it.file) continue;
+        const saved = await jsonPost("/api/save", { url: it.file });
+        if (!saved?.file) throw new Error(tx("errNoAudio"));
+        prepared.push({ id: uid(), file: saved.file, createdAt: Date.now(), ...make(it, prepared.length + 1, items.length) });
       }
+      if (!prepared.length) throw new Error(tx("errNoAudio"));
+      // Persist all generated versions in a single metadata transaction.
+      await jsonPost("/api/library/batch", { items: prepared });
+      setTracks((prev) => [...prepared, ...prev.filter((item) => !prepared.some((saved) => saved.id === item.id))]);
+    } catch (saveError) {
+      // Remove every audio file downloaded by this operation if the batch did not commit.
+      await Promise.all(prepared.map((item) => jsonPost("/api/audio/cleanup", { file: item.file }).catch(() => null)));
+      throw saveError;
     }
-    if (!n) throw new Error(tx("errNoAudio"));
   };
 
   const separateInto = async (t, titles, phase) => {

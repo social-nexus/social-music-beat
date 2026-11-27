@@ -1,6 +1,7 @@
 # Histórico de alterações
 
 ## [3.1.0]
+- Persist multi-version song generation as a single library batch; clean up all downloaded files if the batch fails.
 - Save downloaded generated audio through a temporary file and atomic rename to avoid partially written library files.
 - Register separated vocal and instrumental stems together, preventing partial library updates.
 - Clean up downloaded audio when library persistence fails, without deleting audio referenced by library metadata.
