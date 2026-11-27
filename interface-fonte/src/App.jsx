@@ -358,7 +358,7 @@ function LegendaModal({ track, tracks, onClose }) {
           <div className="font-semibold text-white mb-1">{t("captionAudio")}</div>
           {outro ? `Seu arquivo: ${outro.name}` : `${fonte.title}${voz ? " (voz separada, melhor resultado)" : " (música inteira)"}`}
           {!outro && !voz && (
-            <div className="mt-1 text-amber-300">Sem a voz separada o resultado costuma ser pior. Feche esta janela e use “Separar voz e instrumental” antes.</div>
+            <div className="mt-1 text-amber-300">{t("voiceSeparatedWarning")}</div>
           )}
           <div className="mt-2">
             <button onClick={() => inputRef.current.click()} className="underline text-pink-300">{t("captionUpload")}</button>
@@ -866,17 +866,17 @@ function CompositorPanel({ onUseLyrics }) {
               <button disabled={busy || !runtime || runtimeInstalled} onClick={installRuntime} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black disabled:opacity-40">
                 {runtimeInstalled ? "Motor instalado" : "Baixar e instalar motor"}
               </button>
-              {runtimeInstalled && <span className="text-xs text-emerald-300">SHA-256 verificado</span>}
+              {runtimeInstalled && <span className="text-xs text-emerald-300">{t("hashVerified")}</span>}
             </div>
             {selectedRuntime?.backend !== "cpu" && (
               <label className="block max-w-xs text-xs text-zinc-300">
-                Camadas na GPU (0 = CPU)
+                {t("gpuLayers")}
                 <input type="number" min="0" max="200" value={gpuLayers} onChange={(e) => setGpuLayers(e.target.value)} className={inputCls + " mt-1"} />
               </label>
             )}
             <p className="text-xs text-zinc-500">O pacote CPU é o caminho mais compatível. CUDA/Vulkan/Metal dependem dos drivers e do hardware. A aceleração pode exigir ajustes de memória.</p>
           </>
-        ) : <p className="text-sm text-amber-200">Não encontrei um pacote pronto para este sistema/arquitetura. A ferramenta continua funcionando sem o compositor.</p>}
+        ) : <p className="text-sm text-amber-200">{t("noModelPackage")}</p>}
       </section>
 
       <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-4">
@@ -888,12 +888,12 @@ function CompositorPanel({ onUseLyrics }) {
         </select>
         {selectedModel && <div className="rounded-xl bg-white/[0.03] p-3 text-xs text-zinc-400">
           <p>{selectedModel.description}</p>
-          <p className="mt-2">Licença: <b className="text-zinc-200">{selectedModel.license}</b> · <a className="underline" href={selectedModel.license_url} target="_blank" rel="noreferrer">ver licença</a> · <a className="underline" href={selectedModel.model_url} target="_blank" rel="noreferrer">origem oficial</a></p>
+          <p className="mt-2">{t("licenseLabel")} <b className="text-zinc-200">{selectedModel.license}</b> · <a className="underline" href={selectedModel.license_url} target="_blank" rel="noreferrer">{t("licenseView")}</a> · <a className="underline" href={selectedModel.model_url} target="_blank" rel="noreferrer">{t("officialSource")}</a></p>
         </div>}
         {selectedModel?.requires_license_acceptance && (
           <label className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-100">
             <input type="checkbox" checked={gemmaAccepted} onChange={(e) => setGemmaAccepted(e.target.checked)} className="mt-0.5" />
-            <span>Li e aceito os <a className="underline font-bold" href={selectedModel.license_url} target="_blank" rel="noreferrer">Gemma Terms of Use</a>. Entendo que o Gemma possui condições próprias de uso.</span>
+            <span>{t("gemmaAccept")} <a className="underline font-bold" href={selectedModel.license_url} target="_blank" rel="noreferrer">{t("gemmaTerms")}</a>{t("gemmaUnderstand")}</span>
           </label>
         )}
         <div className="flex flex-wrap gap-2">
@@ -1337,13 +1337,13 @@ export default function App() {
                       {KEYS.map((k) => <option key={k} value={k}>{k || "Tom: automático"}</option>)}
                     </select>
                     <select className={inputCls} value={form.lang} onChange={(e) => set("lang", e.target.value)}>
-                      <option value="pt">Letra em português</option>
-                      <option value="en">Letra em inglês</option>
-                      <option value="es">Letra em espanhol</option>
+                      <option value="pt">{t("lyricsPt")}</option>
+                      <option value="en">{t("lyricsEn")}</option>
+                      <option value="es">{t("lyricsEs")}</option>
                     </select>
                     <select className={inputCls} value={form.versions} onChange={(e) => set("versions", Number(e.target.value))}>
-                      <option value={1}>1 versão</option>
-                      <option value={2}>2 versões (usa mais memória)</option>
+                      <option value={1}>{t("version1")}</option>
+                      <option value={2}>{t("version2")}</option>
                     </select>
                   </div>
                 </div>
