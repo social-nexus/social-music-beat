@@ -152,30 +152,37 @@ def cleanup_stale_staging_files(now=None):
 
 def cleanup_orphaned_audio_files(now=None):
     """Remove abandoned generated audio only after 24h and with trusted metadata."""
-    if not LIB_FILE.is_file():
-        return []
-    try:
-        with _lib_lock:
+    removed = []
+    # Keep the library lock for the complete check-and-delete transaction. A
+    # concurrent upsert must not register a file after the reference snapshot
+    # but before its unlink.
+    with _lib_lock:
+        if not LIB_FILE.is_file():
+            return []
+        try:
             referenced = {
                 Path(str(item.get("file", ""))).name.casefold()
                 for item in read_lib() if item.get("file")
             }
-    except (OSError, RuntimeError):
-        # Missing or corrupt metadata must never be interpreted as an empty library.
-        return []
+        except (OSError, RuntimeError):
+            # Missing or corrupt metadata must never be interpreted as an empty library.
+            return []
 
-    now = time.time() if now is None else now
-    removed = []
-    for path in DATA.iterdir():
-        if not _AUDIO_FINAL_RE.fullmatch(path.name) or path.name.casefold() in referenced:
-            continue
+        now = time.time() if now is None else now
         try:
-            if not path.is_file() or now - path.stat().st_mtime <= _STALE_STAGING_SECONDS:
-                continue
-            path.unlink()
-            removed.append(path.name)
+            candidates = list(DATA.iterdir())
         except OSError:
-            continue
+            return []
+        for path in candidates:
+            if not _AUDIO_FINAL_RE.fullmatch(path.name) or path.name.casefold() in referenced:
+                continue
+            try:
+                if not path.is_file() or now - path.stat().st_mtime <= _STALE_STAGING_SECONDS:
+                    continue
+                path.unlink()
+                removed.append(path.name)
+            except OSError:
+                continue
     return removed
 
 
