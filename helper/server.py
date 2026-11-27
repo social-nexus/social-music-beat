@@ -151,7 +151,12 @@ def write_lib(items):
         temp_path.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
         os.replace(temp_path, LIB_FILE)
     finally:
-        temp_path.unlink(missing_ok=True)
+        # A committed replace must not be reported as failed because cleanup
+        # of an already-removed staging path was denied by the OS.
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 @app.get("/api/library")
@@ -161,8 +166,9 @@ def get_library():
 
 @app.post("/api/library")
 def upsert_track(item: dict):
-    if not item.get("id"):
-        raise HTTPException(400, "Faltou o id da faixa.")
+    track_id = item.get("id")
+    if not isinstance(track_id, str) or not track_id.strip():
+        raise HTTPException(400, "O id da faixa precisa ser um texto válido.")
     with _lib_lock:
         items = [t for t in read_lib() if t.get("id") != item["id"]]
         items.insert(0, item)
