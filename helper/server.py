@@ -137,7 +137,13 @@ def read_lib():
 
 
 def write_lib(items):
-    LIB_FILE.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
+    """Persist the library atomically to avoid truncated JSON on interrupted writes."""
+    temp_path = LIB_FILE.with_name(f".{LIB_FILE.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        temp_path.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
+        os.replace(temp_path, LIB_FILE)
+    finally:
+        temp_path.unlink(missing_ok=True)
 
 
 @app.get("/api/library")
@@ -161,11 +167,44 @@ def delete_track(tid: str):
     with _lib_lock:
         items = read_lib()
         gone = [t for t in items if t.get("id") == tid]
-        write_lib([t for t in items if t.get("id") != tid])
-    for t in gone:
-        name = Path(str(t.get("file", ""))).name
-        if name and (DATA / name).is_file():
-            (DATA / name).unlink()
+        if not gone:
+            return {"ok": True}
+
+        # Stage the audio file first. If metadata persistence fails, restore it
+        # so the client can reload and keep the track instead of losing it.
+        staged_files = []
+        for track in gone:
+            name = Path(str(track.get("file", ""))).name
+            audio_path = DATA / name if name else None
+            if audio_path and audio_path.is_file():
+                staged_path = DATA / f".{name}.{uuid.uuid4().hex}.deleting"
+                try:
+                    os.replace(audio_path, staged_path)
+                    staged_files.append((audio_path, staged_path))
+                except OSError as exc:
+                    raise HTTPException(500, f"Não foi possível preparar a exclusão do áudio: {exc}") from exc
+
+        try:
+            write_lib([t for t in items if t.get("id") != tid])
+        except Exception as exc:
+            restore_errors = []
+            for original, staged in reversed(staged_files):
+                try:
+                    os.replace(staged, original)
+                except OSError as restore_exc:
+                    restore_errors.append(str(restore_exc))
+            detail = "Não foi possível atualizar a biblioteca; a exclusão foi cancelada."
+            if restore_errors:
+                detail += " Falha ao restaurar arquivo: " + "; ".join(restore_errors)
+            raise HTTPException(500, detail) from exc
+
+        # Metadata is committed; leftover staged files are harmless if the OS
+        # refuses cleanup, and must not turn a completed deletion into a failure.
+        for _, staged in staged_files:
+            try:
+                staged.unlink(missing_ok=True)
+            except OSError:
+                pass
     return {"ok": True}
 
 
