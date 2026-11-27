@@ -1184,7 +1184,7 @@ export default function App() {
       const items = await waitResult(id);
       phase("Guardando...");
       await saveItems(items, () => {
-        return { kind: "banda", title: `${parent.title} - com a minha voz`, lyrics: parent.lyrics, style: params.prompt, bpm: params.bpm ?? parent.bpm, key: params.key_scale || parent.key, parent: parent.id };
+        return { kind: "banda", title: `${parent.title} - com a minha voz`, lyrics: parent.lyrics, language: parent.language || form.lang, style: params.prompt, bpm: params.bpm ?? parent.bpm, key: params.key_scale || parent.key, parent: parent.id };
       });
       if (o.autoSep) {
         // pega a faixa recém-criada (a mais nova da biblioteca)
