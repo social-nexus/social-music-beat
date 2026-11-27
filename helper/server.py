@@ -323,23 +323,25 @@ async def save_audio(payload: dict):
 
 # ---------------------------------------------------------------- separação (Demucs)
 jobs = {}
+_jobs_registry_lock = threading.Lock()
 _JOBS_TTL_SECONDS = 60 * 60
 _JOBS_MAX_COMPLETED = 200
 
 
 def _prune_jobs(now=None):
     """Bound the in-memory job registry while preserving active work."""
-    now = now or time.time()
-    finished = [(jid, info) for jid, info in jobs.items() if info.get("finished_at")]
-    for jid, info in finished:
-        if now - info["finished_at"] > _JOBS_TTL_SECONDS:
+    now = time.time() if now is None else now
+    with _jobs_registry_lock:
+        finished = [(jid, info) for jid, info in jobs.items() if info.get("finished_at")]
+        for jid, info in finished:
+            if now - info["finished_at"] > _JOBS_TTL_SECONDS:
+                jobs.pop(jid, None)
+        finished = sorted(
+            ((jid, info) for jid, info in jobs.items() if info.get("finished_at")),
+            key=lambda pair: pair[1]["finished_at"],
+        )
+        for jid, _ in finished[:-_JOBS_MAX_COMPLETED]:
             jobs.pop(jid, None)
-    finished = sorted(
-        ((jid, info) for jid, info in jobs.items() if info.get("finished_at")),
-        key=lambda pair: pair[1]["finished_at"],
-    )
-    for jid, _ in finished[:-_JOBS_MAX_COMPLETED]:
-        jobs.pop(jid, None)
 
 
 _dm = None
@@ -414,17 +416,24 @@ def separate_file(src: Path, stem: str):
 _separation_job_lock = threading.Lock()
 
 
+def _update_job(jid, **changes):
+    with _jobs_registry_lock:
+        if jid in jobs:
+            jobs[jid].update(changes)
+
+
 def run_separation(jid: str, src: Path):
     try:
         # Demucs/model inference is serialized to prevent concurrent model use.
-        jobs[jid]["msg"] = "Na fila..."
+        _update_job(jid, msg="Na fila...")
         with _separation_job_lock:
-            jobs[jid]["msg"] = "Carregando o separador (na primeira vez baixa um arquivo pequeno)..."
+            _update_job(jid, msg="Carregando o separador (na primeira vez baixa um arquivo pequeno)...")
             stem = f"{int(time.time())}_{uuid.uuid4().hex[:6]}"
-            jobs[jid]["msg"] = "Separando voz e instrumental. Pode levar alguns minutos..."
-            jobs[jid].update(status="done", result=separate_file(src, stem), finished_at=time.time())
+            _update_job(jid, msg="Separando voz e instrumental. Pode levar alguns minutos...")
+            result = separate_file(src, stem)
+            _update_job(jid, status="done", result=result, finished_at=time.time())
     except Exception as e:  # mostra o erro de forma simples na interface
-        jobs[jid].update(status="error", msg=f"{type(e).__name__}: {e}"[:400], finished_at=time.time())
+        _update_job(jid, status="error", msg=f"{type(e).__name__}: {e}"[:400], finished_at=time.time())
 
 
 @app.post("/api/separate")
@@ -434,8 +443,9 @@ def separate(payload: dict):
     if not name or not src.is_file():
         raise HTTPException(404, "Arquivo não encontrado.")
     _prune_jobs()
-    jid = uuid.uuid4().hex[:8]
-    jobs[jid] = {"status": "running", "msg": "Na fila...", "created_at": time.time()}
+    jid = uuid.uuid4().hex
+    with _jobs_registry_lock:
+        jobs[jid] = {"status": "running", "msg": "Na fila...", "created_at": time.time()}
     threading.Thread(target=run_separation, args=(jid, src), daemon=True).start()
     return {"job": jid}
 
@@ -443,9 +453,10 @@ def separate(payload: dict):
 @app.get("/api/jobs/{jid}")
 def job_status(jid: str):
     _prune_jobs()
-    if jid not in jobs:
-        raise HTTPException(404, "Tarefa não encontrada.")
-    return jobs[jid]
+    with _jobs_registry_lock:
+        if jid not in jobs:
+            raise HTTPException(404, "Tarefa não encontrada.")
+        return dict(jobs[jid])
 
 
 # ---------------------------------------------------------------- arquivos e interface
