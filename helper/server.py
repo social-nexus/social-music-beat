@@ -318,6 +318,21 @@ def delete_track(tid: str):
         if not gone:
             return {"ok": True}
 
+        # Library metadata may be old, malformed, or manually edited. Only
+        # generated audio filenames are eligible for deletion; never let a
+        # track entry target library/job metadata or an arbitrary DATA file.
+        for track in gone:
+            raw_name = track.get("file")
+            if raw_name in (None, ""):
+                continue
+            if (not isinstance(raw_name, str)
+                    or Path(raw_name).name != raw_name
+                    or not _AUDIO_FINAL_RE.fullmatch(raw_name)):
+                raise HTTPException(
+                    400,
+                    "A faixa contém um nome de arquivo inválido; nenhum arquivo foi excluído."
+                )
+
         # Do not remove audio that is still referenced by another library entry.
         remaining = [t for t in items if t.get("id") != tid]
         # A source file must remain available until its background separation
