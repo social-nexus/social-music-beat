@@ -253,41 +253,46 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(unrelated.read_bytes(), b"keep this file")
 
     def test_delete_removes_metadata_and_audio(self):
+        audio = self.data / "1234567890_abcdef.wav"
+        audio.write_bytes(b"audio sample")
+        server.write_lib([{"id": "track-1", "file": audio.name, "title": "Test track"}])
         result = server.delete_track("track-1")
         self.assertEqual(result, {"ok": True})
         self.assertEqual(server.read_lib(), [])
-        self.assertFalse(self.audio_file.exists())
-
+        self.assertFalse(audio.exists())
     def test_delete_preserves_audio_shared_with_remaining_track(self):
+        audio = self.data / "1234567890_abcdef.wav"
+        audio.write_bytes(b"audio sample")
         server.write_lib([
-            {"id": "track-1", "file": "track.wav"},
-            {"id": "track-2", "file": "track.wav"},
+            {"id": "track-1", "file": audio.name},
+            {"id": "track-2", "file": audio.name},
         ])
         result = server.delete_track("track-1")
         self.assertEqual(result, {"ok": True})
-        self.assertEqual(server.read_lib(), [{"id": "track-2", "file": "track.wav"}])
-        self.assertTrue(self.audio_file.exists())
-    
+        self.assertEqual(server.read_lib(), [{"id": "track-2", "file": audio.name}])
+        self.assertTrue(audio.exists())
     def test_delete_preserves_audio_when_reference_differs_only_by_case(self):
+        audio = self.data / "1234567890_abcdef.wav"
+        audio.write_bytes(b"audio sample")
         server.write_lib([
-            {"id": "track-1", "file": "track.wav"},
-            {"id": "track-2", "file": "TRACK.WAV"},
+            {"id": "track-1", "file": audio.name},
+            {"id": "track-2", "file": audio.name.upper()},
         ])
         result = server.delete_track("track-1")
         self.assertEqual(result, {"ok": True})
-        self.assertEqual(server.read_lib(), [{"id": "track-2", "file": "TRACK.WAV"}])
-        self.assertTrue(self.audio_file.exists())
-
+        self.assertEqual(server.read_lib(), [{"id": "track-2", "file": audio.name.upper()}])
+        self.assertTrue(audio.exists())
     def test_delete_duplicate_records_stages_audio_only_once(self):
+        audio = self.data / "1234567890_abcdef.wav"
+        audio.write_bytes(b"audio sample")
         server.write_lib([
-            {"id": "dup-id", "file": "track.wav"},
-            {"id": "dup-id", "file": "track.wav"},
+            {"id": "dup-id", "file": audio.name},
+            {"id": "dup-id", "file": audio.name},
         ])
         result = server.delete_track("dup-id")
         self.assertEqual(result, {"ok": True})
         self.assertEqual(server.read_lib(), [])
-        self.assertFalse(self.audio_file.exists())
-
+        self.assertFalse(audio.exists())
     def test_audio_stage_failure_keeps_metadata_and_audio(self):
         original_replace = server.os.replace
 
@@ -303,11 +308,13 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(self.audio_file.exists())
 
     def test_delete_staging_second_file_failure_restores_first(self):
-        second_audio = self.data / "second.wav"
+        first_audio = self.data / "1234567890_abcdef.wav"
+        second_audio = self.data / "1234567891_abcdef.wav"
+        first_audio.write_bytes(b"first audio")
         second_audio.write_bytes(b"second audio")
         server.write_lib([
-            {"id": "dup-id", "file": "track.wav"},
-            {"id": "dup-id", "file": "second.wav"},
+            {"id": "dup-id", "file": first_audio.name},
+            {"id": "dup-id", "file": second_audio.name},
         ])
         original_replace = server.os.replace
         def fail_second_stage(src, dst):
@@ -319,23 +326,24 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                 server.delete_track("dup-id")
         self.assertEqual(raised.exception.status_code, 500)
         self.assertIn("preparar a exclusão", raised.exception.detail)
-        self.assertTrue(self.audio_file.exists())
+        self.assertTrue(first_audio.exists())
         self.assertTrue(second_audio.exists())
         self.assertEqual(len(server.read_lib()), 2)
         self.assertFalse(any(self.data.glob("*.deleting")))
-
     def test_delete_staging_rollback_failure_reports_retained_file(self):
-        second_audio = self.data / "second.wav"
+        first_audio = self.data / "1234567890_abcdef.wav"
+        second_audio = self.data / "1234567891_abcdef.wav"
+        first_audio.write_bytes(b"audio sample")
         second_audio.write_bytes(b"second audio")
         server.write_lib([
-            {"id": "dup-id", "file": "track.wav"},
-            {"id": "dup-id", "file": "second.wav"},
+            {"id": "dup-id", "file": first_audio.name},
+            {"id": "dup-id", "file": second_audio.name},
         ])
         original_replace = server.os.replace
         def fail_second_stage_and_first_restore(src, dst):
             if Path(src) == second_audio:
                 raise OSError("simulated second staging failure")
-            if Path(src).name.endswith(".deleting") and Path(dst) == self.audio_file:
+            if Path(src).name.endswith(".deleting") and Path(dst) == first_audio:
                 raise OSError("simulated restore failure")
             return original_replace(src, dst)
         with mock.patch.object(server.os, "replace", side_effect=fail_second_stage_and_first_restore):
@@ -347,7 +355,6 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(retained[0].read_bytes(), b"audio sample")
         self.assertTrue(second_audio.exists())
         self.assertEqual(len(server.read_lib()), 2)
-
     def test_metadata_write_failure_restores_audio(self):
         with mock.patch.object(server, "write_lib", side_effect=OSError("simulated disk write error")):
             with self.assertRaises(server.HTTPException):
@@ -695,18 +702,20 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(jobs_file.exists())
 
     def test_delete_is_blocked_while_source_separation_is_running(self):
+        audio = self.data / "1234567890_abcdef.wav"
+        audio.write_bytes(b"audio sample")
+        server.write_lib([{"id": "track-1", "file": audio.name, "title": "Test track"}])
         server.jobs.clear()
         server.jobs["active-job"] = {
             "status": "running",
-            "source_file": "track.wav",
+            "source_file": audio.name,
             "created_at": time.time(),
         }
         with self.assertRaises(server.HTTPException) as raised:
             server.delete_track("track-1")
         self.assertEqual(raised.exception.status_code, 409)
         self.assertEqual(len(server.read_lib()), 1)
-        self.assertTrue(self.audio_file.exists())
-
+        self.assertTrue(audio.exists())
     def test_separation_job_registers_source_filename(self):
         server.jobs.clear()
         with mock.patch.object(server.threading, "Thread") as thread_factory:
