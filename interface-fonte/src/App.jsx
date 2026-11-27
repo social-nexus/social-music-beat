@@ -215,7 +215,7 @@ async function waitResult(id) {
     const item = res?.data?.[0];
     if (!item) continue;
     if (item.status === 1) return JSON.parse(item.result);
-    if (item.status === 2) throw new Error("A criação falhou. Olhe a janela preta do ACE-Step para ver o motivo.");
+    if (item.status === 2) throw new Error(uiText(language, "errAceFailure"));
   }
 }
 
