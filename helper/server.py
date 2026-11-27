@@ -122,6 +122,7 @@ _SEPARATION_STAGING_RE = re.compile(
     r"\.\d+_[0-9a-f]{6}_(?:voz|instrumental)\.[0-9a-f]{32}\.tmp\.wav"
 )
 _LIBRARY_STAGING_RE = re.compile(r"\.biblioteca\.json\.[0-9a-f]{32}\.tmp")
+_DELETE_STAGING_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.deleting")
 
 
 def cleanup_stale_staging_files(now=None):
@@ -145,6 +146,7 @@ def cleanup_stale_staging_files(now=None):
 
 @app.on_event("startup")
 def recover_stale_staging_files():
+    recover_staged_deletions()
     cleanup_stale_staging_files()
 
 
@@ -180,6 +182,43 @@ def read_lib():
     if any(not isinstance(item, dict) for item in items):
         raise RuntimeError("A biblioteca contém entradas inválidas; o arquivo original foi preservado.")
     return items
+
+
+def recover_staged_deletions():
+    """Restore staged audio still referenced by the library; discard committed deletions."""
+    try:
+        with _lib_lock:
+            referenced = {
+                Path(str(item.get("file", ""))).name.casefold()
+                for item in read_lib() if item.get("file")
+            }
+    except (OSError, RuntimeError):
+        # If metadata cannot be trusted, preserve every staged audio file.
+        return []
+
+    recovered = []
+    for staged in DATA.iterdir():
+        match = _DELETE_STAGING_RE.fullmatch(staged.name)
+        if not match:
+            continue
+        original = DATA / match.group("name")
+        try:
+            if not staged.is_file():
+                continue
+            if original.name.casefold() in referenced:
+                if not original.exists():
+                    os.replace(staged, original)
+                    recovered.append(("restored", original.name))
+                else:
+                    staged.unlink()
+                    recovered.append(("discarded_duplicate", staged.name))
+            else:
+                staged.unlink()
+                recovered.append(("discarded", staged.name))
+        except OSError:
+            # Keep the staged file for a later startup retry.
+            continue
+    return recovered
 
 
 def write_lib(items):
