@@ -879,6 +879,25 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         persist.assert_called_once_with(b"audio-bytes", server.sniff_ext(b"audio-bytes"))
         self.assertEqual(result, {"file": "/musicas/test.wav"})
 
+
+    def test_save_audio_upstream_failure_returns_502_without_persisting(self):
+        import asyncio
+        response = mock.Mock(status_code=503, content=b"upstream unavailable")
+        request = mock.AsyncMock(return_value=response)
+        client = mock.Mock()
+        client.get = request
+        class ClientContext:
+            async def __aenter__(self):
+                return client
+            async def __aexit__(self, *args):
+                return False
+        with mock.patch.object(server.httpx, "AsyncClient", return_value=ClientContext()):
+            with mock.patch.object(server, "_persist_audio_content") as persist:
+                with self.assertRaises(server.HTTPException) as raised:
+                    asyncio.run(server.save_audio({"url": "/v1/audio?filename=sample.wav"}))
+        self.assertEqual(raised.exception.status_code, 502)
+        persist.assert_not_called()
+
     def test_delete_unknown_id_is_noop(self):
         result = server.delete_track("missing")
         self.assertEqual(result, {"ok": True})
