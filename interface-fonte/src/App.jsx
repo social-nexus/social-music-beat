@@ -1115,7 +1115,7 @@ export default function App() {
 
   // -------- 2) separar voz e instrumental
   const separateTrack = (t) =>
-    runJob(`Separando: ${t.title}`, (phase) =>
+    runJob(`${t("separatingTitlePrefix")}${t.title}`, (phase) =>
       separateInto(t, {
         voz: `${t.title} (voz)`,
         instrumental: t.kind === "banda" ? `${t.title} (só a banda)` : `${t.title} (instrumental)`,
@@ -1124,7 +1124,7 @@ export default function App() {
   // -------- 3) cantar por cima: criar a banda para a voz do usuário
   const singOver = (parent, o) => {
     setVoiceFor(null);
-    return runJob(`Banda para: ${parent.title}`, async (phase) => {
+    return runJob(`${t("voiceBandTitlePrefix")}${parent.title}`, async (phase) => {
       phase("Preparando a sua voz...");
       const { blob, seconds } = await toWavBlob(o.file);
       if (seconds < 10) throw new Error(t("voiceAudioMin"));
