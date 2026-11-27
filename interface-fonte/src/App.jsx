@@ -193,7 +193,7 @@ const jsonPost = (url, body) =>
   http(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 // Envia uma tarefa ao ACE-Step. Com arquivo: tudo vai dentro de "param_obj" (aceita listas).
-async function submitTask(params, file, uiLanguage = "pt") {
+// Keep fallback task-start errors in the selected interface language.\nasync function submitTask(params, file, uiLanguage = "pt") {
   let res;
   if (file) {
     const fd = new FormData();
