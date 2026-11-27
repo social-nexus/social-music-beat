@@ -853,6 +853,32 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                 if before is not None:
                     self.assertEqual(target.read_bytes(), before)
 
+
+    def test_save_audio_rejects_source_without_ace_audio_endpoint(self):
+        import asyncio
+        with self.assertRaises(server.HTTPException) as raised:
+            asyncio.run(server.save_audio({"url": "https://example.invalid/file.wav"}))
+        self.assertEqual(raised.exception.status_code, 400)
+
+    def test_save_audio_fetches_from_configured_ace_host_and_persists(self):
+        import asyncio
+        response = mock.Mock(status_code=200, content=b"audio-bytes")
+        request = mock.AsyncMock(return_value=response)
+        client = mock.Mock()
+        client.get = request
+        class ClientContext:
+            async def __aenter__(self):
+                return client
+            async def __aexit__(self, *args):
+                return False
+        with mock.patch.object(server.httpx, "AsyncClient", return_value=ClientContext()) as factory:
+            with mock.patch.object(server, "_persist_audio_content", return_value="/musicas/test.wav") as persist:
+                result = asyncio.run(server.save_audio({"url": "https://untrusted.example/v1/audio?filename=sample.wav"}))
+        factory.assert_called_once_with(timeout=300.0)
+        request.assert_awaited_once_with(f"{server.ACE}/v1/audio?filename=sample.wav")
+        persist.assert_called_once_with(b"audio-bytes", server.sniff_ext(b"audio-bytes"))
+        self.assertEqual(result, {"file": "/musicas/test.wav"})
+
     def test_delete_unknown_id_is_noop(self):
         result = server.delete_track("missing")
         self.assertEqual(result, {"ok": True})
