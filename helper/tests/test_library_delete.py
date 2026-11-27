@@ -996,7 +996,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
 
     def test_save_audio_fetches_from_configured_ace_host_and_persists(self):
         import asyncio
-        response = mock.Mock(status_code=200, content=b"RIFF\\x00\\x00\\x00\\x00WAVEaudio")
+        response = mock.Mock(status_code=200, content=b"RIFF\x00\x00\x00\x00WAVEaudio")
         request = mock.AsyncMock(return_value=response)
         client = mock.Mock()
         client.get = request
@@ -1010,7 +1010,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                 result = asyncio.run(server.save_audio({"url": "https://untrusted.example/v1/audio?filename=sample.wav"}))
         factory.assert_called_once_with(timeout=300.0)
         request.assert_awaited_once_with(f"{server.ACE}/v1/audio?filename=sample.wav")
-        persist.assert_called_once_with(b"RIFF\\x00\\x00\\x00\\x00WAVEaudio", "wav")
+        persist.assert_called_once_with(b"RIFF\x00\x00\x00\x00WAVEaudio", "wav")
         self.assertEqual(result, {"file": "/musicas/test.wav"})
 
 
