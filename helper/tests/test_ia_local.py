@@ -476,3 +476,16 @@ class ModelDeleteSafetyTests(unittest.TestCase):
         self.assertEqual(result, {"ok": True})
         stop.assert_called_once_with()
         self.assertFalse(folder.exists())
+
+    def test_active_model_is_preserved_when_runtime_cannot_stop(self):
+        root = Path(TEMP_DATA) / "model-delete-stop-failure"
+        root.mkdir(parents=True, exist_ok=True)
+        folder = self._model(root)
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with mock.patch.object(ia_local, "ACTIVE_MODEL", folder.name):
+                with mock.patch.object(ia_local, "_stop_runtime", side_effect=RuntimeError("runtime busy")):
+                    with self.assertRaises(ia_local.HTTPException) as ctx:
+                        ia_local.delete_model(folder.name, self._request())
+        self.assertEqual(ctx.exception.status_code, 503)
+        self.assertTrue((folder / "model.gguf").is_file())
+        self.assertEqual(list(root.glob(".*.deleting-*")), [])
