@@ -83,6 +83,25 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertFalse(staged_vocals.exists())
         self.assertFalse(staged_instrumental.exists())
 
+    def test_audio_persist_publishes_complete_file(self):
+        result = server._persist_audio_content(b"full-audio-payload", "wav")
+        target = self.data / Path(result).name
+        self.assertEqual(target.read_bytes(), b"full-audio-payload")
+        self.assertFalse(any(self.data.glob("*.tmp")))
+
+    def test_audio_persist_cleans_staging_file_when_promotion_fails(self):
+        original_replace = server.os.replace
+        def fail_audio_promote(src, dst):
+            if Path(dst).suffix == ".wav" and Path(src).suffix == ".tmp":
+                raise OSError("simulated promotion error")
+            return original_replace(src, dst)
+        with mock.patch.object(server.os, "replace", side_effect=fail_audio_promote):
+            with self.assertRaises(server.HTTPException) as raised:
+                server._persist_audio_content(b"payload", "wav")
+        self.assertEqual(raised.exception.status_code, 500)
+        self.assertFalse(any(self.data.glob("*.wav")))
+        self.assertFalse(any(self.data.glob("*.tmp")))
+
     def test_batch_upsert_persists_all_tracks_atomically(self):
         items = [{"id": "voice", "file": "voice.wav"}, {"id": "inst", "file": "inst.wav"}]
         result = server.upsert_tracks_batch({"items": items})

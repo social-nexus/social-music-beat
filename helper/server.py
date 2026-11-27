@@ -284,6 +284,21 @@ def cleanup_unregistered_audio(payload: dict):
     return {"ok": True}
 
 
+def _persist_audio_content(content: bytes, extension: str) -> str:
+    """Write downloaded audio to a temporary file and atomically publish it."""
+    safe_ext = extension if extension and extension.isalnum() else "wav"
+    name = f"{int(time.time())}_{uuid.uuid4().hex[:6]}.{safe_ext}"
+    target = DATA / name
+    staged = DATA / f".{name}.{uuid.uuid4().hex}.tmp"
+    try:
+        staged.write_bytes(content)
+        os.replace(staged, target)
+    except OSError as exc:
+        staged.unlink(missing_ok=True)
+        raise HTTPException(500, "Não foi possível salvar o áudio localmente.") from exc
+    return f"/musicas/{name}"
+
+
 @app.post("/api/save")
 async def save_audio(payload: dict):
     """Baixa o áudio gerado pelo ACE-Step e guarda na pasta musicas."""
@@ -295,9 +310,7 @@ async def save_audio(payload: dict):
         r = await c.get(f"{ACE}{src[i:]}")
     if r.status_code != 200:
         raise HTTPException(502, "Não consegui baixar o áudio gerado.")
-    name = f"{int(time.time())}_{uuid.uuid4().hex[:6]}.{sniff_ext(r.content)}"
-    (DATA / name).write_bytes(r.content)
-    return {"file": f"/musicas/{name}"}
+    return {"file": _persist_audio_content(r.content, sniff_ext(r.content))}
 
 
 # ---------------------------------------------------------------- separação (Demucs)

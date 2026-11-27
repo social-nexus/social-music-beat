@@ -1,6 +1,7 @@
 # Histórico de alterações
 
 ## [3.1.0]
+- Save downloaded generated audio through a temporary file and atomic rename to avoid partially written library files.
 - Register separated vocal and instrumental stems together, preventing partial library updates.
 - Clean up downloaded audio when library persistence fails, without deleting audio referenced by library metadata.
 - Tradução para inglês e espanhol de mensagens de estado do compositor, runtime, gestão de chaves, análise musical, importação de modelos e confirmação do resultado da composição, incluindo nome do modelo usado.
