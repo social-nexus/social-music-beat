@@ -424,8 +424,14 @@ def _publish_model_files(staged: Path, target: Path, metadata_staged: Path, meta
             os.replace(metadata_backup, metadata)
         raise
     else:
-        target_backup.unlink(missing_ok=True)
-        metadata_backup.unlink(missing_ok=True)
+        # A publicação já foi concluída; falhas de limpeza não devem reportar
+        # erro falso nem desfazer arquivos válidos. Backups remanescentes são
+        # ocultos e podem ser removidos numa limpeza posterior.
+        for backup in (target_backup, metadata_backup):
+            try:
+                backup.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 def _download_model_worker(jid: str, model_id: str):
     with _model_operation_lock(model_id):
