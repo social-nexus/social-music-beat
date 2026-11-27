@@ -17,7 +17,8 @@ const TEXT = {
     lyricsPortuguese: "Letra em português", lyricsEnglish: "Letra em inglês", lyricsSpanish: "Letra em espanhol",
     languagePT: "Português (Brasil)", languageEN: "Inglês", languageES: "Espanhol",
         providerChooseKey:"Escolha um provedor e informe a chave de API.", providerSaving:"Salvando a chave no cofre seguro do sistema…", providerKeySaved:"Chave salva no cofre de credenciais do sistema.", providerTesting:"Testando conexão com o provedor…", providerKeyRemoved:"Chave removida do cofre de credenciais.", runtimePreparing:"Preparando o motor local…", modelDownloadPreparing:"Preparando o download do modelo…", modelLoading:"Carregando o modelo na memória…", modelActive:"Modelo ativo. Você já pode compor.", melodyAnalyzing:"Analisando a referência musical no navegador…", melodyAnalyzed:"Referência analisada. Somente o resumo musical será enviado ao modelo local.", recordingPrompt:"Gravando… cante a ideia musical e depois pressione Parar.", whisperPreparing:"Preparando o áudio para o Whisper…", lyricsComposing:"Compondo a letra localmente…", providerSending:"Enviando solicitação ao provedor escolhido…", ggufImporting:"Importando arquivo GGUF…", ggufImported:"Modelo importado. Confirme a licença e selecione-o para ativar.", runtimeStopped:"Motor encerrado.",
-    "Começando...": "Começando..., "Preparando a sua voz...": "Preparando a sua voz...",
+    songFullCreated:"Música completa criada", compositionContinued:"Composição continuada", chorusCreated:"Refrão criado",
+    "Começando...": "Começando...", "Preparando a sua voz...": "Preparando a sua voz...",
     "Separando...": "Separando...", "Guardando...": "Guardando..."
   },
     whisperBase:"Whisper base (about 150 MB)", whisperSmall:"Whisper small (about 480 MB)",
@@ -38,7 +39,8 @@ const TEXT = {
     lyricsPortuguese: "Lyrics in Portuguese", lyricsEnglish: "Lyrics in English", lyricsSpanish: "Lyrics in Spanish",
     languagePT: "Brazilian Portuguese", languageEN: "English", languageES: "Spanish",
         providerChooseKey:"Choose a provider and enter the API key.", providerSaving:"Saving API key in the system secure vault…", providerKeySaved:"Key saved in the system credential vault.", providerTesting:"Testing provider connection…", providerKeyRemoved:"Key removed from credential vault.", runtimePreparing:"Preparing local runtime…", modelDownloadPreparing:"Preparing model download…", modelLoading:"Loading model into memory…", modelActive:"Model active. You can start composing.", melodyAnalyzing:"Analyzing musical reference in your browser…", melodyAnalyzed:"Reference analyzed. Only the musical summary will be sent to the local model.", recordingPrompt:"Recording… sing your musical idea, then press Stop.", whisperPreparing:"Preparing audio for Whisper…", lyricsComposing:"Composing lyrics locally…", providerSending:"Sending request to the selected provider…", ggufImporting:"Importing GGUF file…", ggufImported:"Model imported. Confirm the license and select it to activate.", runtimeStopped:"Runtime stopped.",
-    "Começando...": "Starting..., "Preparando a sua voz...": "Preparing your voice...",
+    songFullCreated:"Full song created", compositionContinued:"Composition continued", chorusCreated:"Chorus created",
+    "Começando...": "Starting...", "Preparando a sua voz...": "Preparing your voice...",
     "Separando...": "Separating...", "Guardando...": "Saving..."
   },
     whisperBase:"Whisper base (unos 150 MB)", whisperSmall:"Whisper small (unos 480 MB)",
@@ -60,7 +62,8 @@ const TEXT = {
     lyricsPortuguese: "Letra en portugués", lyricsEnglish: "Letra en inglés", lyricsSpanish: "Letra en español",
     languagePT: "Portugués de Brasil", languageEN: "Inglés", languageES: "Español",
         providerChooseKey:"Elige un proveedor e introduce la clave API.", providerSaving:"Guardando la clave en el almacén seguro del sistema…", providerKeySaved:"Clave guardada en el almacén de credenciales del sistema.", providerTesting:"Probando la conexión con el proveedor…", providerKeyRemoved:"Clave eliminada del almacén de credenciales.", runtimePreparing:"Preparando el motor local…", modelDownloadPreparing:"Preparando la descarga del modelo…", modelLoading:"Cargando el modelo en memoria…", modelActive:"Modelo activo. Ya puedes componer.", melodyAnalyzing:"Analizando la referencia musical en el navegador…", melodyAnalyzed:"Referencia analizada. Solo se enviará el resumen musical al modelo local.", recordingPrompt:"Grabando… canta tu idea musical y luego pulsa Detener.", whisperPreparing:"Preparando el audio para Whisper…", lyricsComposing:"Componiendo la letra localmente…", providerSending:"Enviando solicitud al proveedor elegido…", ggufImporting:"Importando archivo GGUF…", ggufImported:"Modelo importado. Confirma la licencia y selecciónalo para activarlo.", runtimeStopped:"Motor detenido.",
-    "Começando...": "Iniciando..., "Preparando a sua voz...": "Preparando tu voz...",
+    songFullCreated:"Canción completa creada", compositionContinued:"Composición continuada", chorusCreated:"Estribillo creado",
+    "Começando...": "Iniciando...", "Preparando a sua voz...": "Preparando tu voz...",
     "Separando...": "Separando...", "Guardando...": "Guardando..."
   }
 };
