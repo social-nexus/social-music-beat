@@ -204,14 +204,21 @@ def delete_track(tid: str):
         if not gone:
             return {"ok": True}
 
-        # Stage the audio file first. If metadata persistence fails, restore it
-        # so the client can reload and keep the track instead of losing it.
+        # Do not remove audio that is still referenced by another library entry.
+        remaining = [t for t in items if t.get("id") != tid]
+        retained_names = {Path(str(t.get("file", ""))).name for t in remaining if t.get("file")}
+        # Stage unique files only. If metadata persistence fails, restore staged
+        # files so the client can reload and keep the track instead of losing it.
         staged_files = []
+        staged_names = set()
         try:
             for track in gone:
                 name = Path(str(track.get("file", ""))).name
-                audio_path = DATA / name if name else None
-                if audio_path and audio_path.is_file():
+                if not name or name in retained_names or name in staged_names:
+                    continue
+                staged_names.add(name)
+                audio_path = DATA / name
+                if audio_path.is_file():
                     staged_path = DATA / f".{name}.{uuid.uuid4().hex}.deleting"
                     os.replace(audio_path, staged_path)
                     staged_files.append((audio_path, staged_path))
@@ -228,7 +235,7 @@ def delete_track(tid: str):
             raise HTTPException(500, detail) from exc
 
         try:
-            write_lib([t for t in items if t.get("id") != tid])
+            write_lib(remaining)
         except Exception as exc:
             restore_errors = []
             for original, staged in reversed(staged_files):
