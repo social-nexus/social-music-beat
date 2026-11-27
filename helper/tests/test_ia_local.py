@@ -178,3 +178,24 @@ class LocalRequestSecurityMiddlewareTests(unittest.IsolatedAsyncioTestCase):
     async def test_accepts_body_at_limit(self):
         sent = await self._run([(b"host", b"localhost:8002"), (b"origin", b"http://localhost:8002")], [b"1234", b"5678"], limit=8)
         self.assertEqual(sent[0]["status"], 200)
+
+
+class MultilingualLyricsTests(unittest.TestCase):
+    def test_language_directive_covers_all_supported_song_languages(self):
+        expected = {
+            "português do Brasil": "português natural do Brasil",
+            "inglês": "natural, idiomatic English",
+            "espanhol": "español natural y fluido",
+        }
+        for language, phrase in expected.items():
+            with self.subTest(language=language):
+                self.assertIn(phrase, ia_local._language_directive(language))
+
+    def test_language_directive_rejects_unknown_language(self):
+        with self.assertRaises(ValueError):
+            ia_local._language_directive("francês")
+
+    def test_language_directive_keeps_structural_tags_in_english(self):
+        for language in ("português do Brasil", "inglês", "espanhol"):
+            with self.subTest(language=language):
+                self.assertIn("tags estruturais", ia_local._language_directive(language)) if language == "português do Brasil" else self.assertIn("song-structure tags", ia_local._language_directive(language)) if language == "inglês" else self.assertIn("etiquetas estructurales", ia_local._language_directive(language))
