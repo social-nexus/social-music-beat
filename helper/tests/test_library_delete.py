@@ -220,6 +220,25 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(set(self.data.glob("*.wav")), existing_audio)
         self.assertFalse(any(self.data.glob("*.tmp")))
 
+    def test_single_upsert_rejects_invalid_track_id(self):
+        for invalid in (None, 7, {}, "", "   "):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(server.HTTPException) as raised:
+                    server.upsert_track({"id": invalid, "file": "x.wav"})
+                self.assertEqual(raised.exception.status_code, 400)
+                self.assertEqual(len(server.read_lib()), 1)
+
+    def test_library_write_cleanup_error_does_not_mask_commit(self):
+        original_unlink = Path.unlink
+        def fail_temp_cleanup(path, *args, **kwargs):
+            if path.name.endswith(".tmp"):
+                raise OSError("simulated temp cleanup permission error")
+            return original_unlink(path, *args, **kwargs)
+        replacement = [{"id": "replacement", "file": "replacement.wav"}]
+        with mock.patch.object(Path, "unlink", fail_temp_cleanup):
+            server.write_lib(replacement)
+        self.assertEqual(server.read_lib(), replacement)
+
     def test_batch_upsert_persists_all_tracks_atomically(self):
         items = [{"id": "voice", "file": "voice.wav"}, {"id": "inst", "file": "inst.wav"}]
         result = server.upsert_tracks_batch({"items": items})
