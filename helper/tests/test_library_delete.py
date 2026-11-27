@@ -294,19 +294,22 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(server.read_lib(), [])
         self.assertFalse(audio.exists())
     def test_audio_stage_failure_keeps_metadata_and_audio(self):
+        audio = self.data / "1234567890_abcdef.wav"
+        audio.write_bytes(b"audio sample")
+        server.write_lib([{"id": "track-1", "file": audio.name}])
         original_replace = server.os.replace
 
         def fail_audio_stage(src, dst):
-            if Path(src) == self.audio_file:
+            if Path(src) == audio:
                 raise OSError("simulated file busy")
             return original_replace(src, dst)
 
         with mock.patch.object(server.os, "replace", side_effect=fail_audio_stage):
-            with self.assertRaises(server.HTTPException):
+            with self.assertRaises(server.HTTPException) as raised:
                 server.delete_track("track-1")
+        self.assertEqual(raised.exception.status_code, 500)
         self.assertEqual(len(server.read_lib()), 1)
-        self.assertTrue(self.audio_file.exists())
-
+        self.assertTrue(audio.exists())
     def test_delete_staging_second_file_failure_restores_first(self):
         first_audio = self.data / "1234567890_abcdef.wav"
         second_audio = self.data / "1234567891_abcdef.wav"
@@ -356,13 +359,16 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(second_audio.exists())
         self.assertEqual(len(server.read_lib()), 2)
     def test_metadata_write_failure_restores_audio(self):
+        audio = self.data / "1234567890_abcdef.wav"
+        audio.write_bytes(b"audio sample")
+        server.write_lib([{"id": "track-1", "file": audio.name}])
         with mock.patch.object(server, "write_lib", side_effect=OSError("simulated disk write error")):
-            with self.assertRaises(server.HTTPException):
+            with self.assertRaises(server.HTTPException) as raised:
                 server.delete_track("track-1")
+        self.assertEqual(raised.exception.status_code, 500)
         self.assertEqual(len(server.read_lib()), 1)
-        self.assertTrue(self.audio_file.exists())
+        self.assertTrue(audio.exists())
         self.assertFalse(any(self.data.glob("*.deleting")))
-
     def test_separation_file_pair_commit_rolls_back_on_second_move_failure(self):
         staged_vocals = self.data / ".vocals.tmp.wav"
         staged_instrumental = self.data / ".instrumental.tmp.wav"
