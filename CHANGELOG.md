@@ -8,6 +8,7 @@
 - Catálogos PT-BR/EN/ES extraídos para módulo próprio, com teste automatizado de paridade de chaves, idiomas obrigatórios e fallback.
 - Correção de compilação durante a refatoração de i18n: removida declaração duplicada de `uiText`.
 - Auditoria de diagnóstico: mensagens técnicas inesperadas preservadas para facilitar suporte, com regra explícita de traduzir apenas erros previsíveis/controlados pela interface.
+- Revisão adicional de labels na biblioteca: download localizado e texto espanhol de separação refinado.
  — Em desenvolvimento
 
 ### Implementado até agora
