@@ -5,6 +5,7 @@ import tempfile
 import unittest
 import sys
 import types
+import json
 from pathlib import Path
 from unittest import mock
 
@@ -139,6 +140,33 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         result = server.upsert_tracks_batch({"items": items})
         self.assertEqual(result, {"ok": True})
         self.assertEqual(server.read_lib()[:2], items)
+
+    def test_read_library_missing_file_is_empty(self):
+        server.LIB_FILE.unlink()
+        self.assertEqual(server.read_lib(), [])
+
+    def test_read_library_corruption_is_fail_closed(self):
+        original = b'{"broken":'
+        server.LIB_FILE.write_bytes(original)
+        with self.assertRaises(RuntimeError):
+            server.read_lib()
+        self.assertEqual(server.LIB_FILE.read_bytes(), original)
+
+    def test_read_library_rejects_non_list_and_non_object_entries(self):
+        server.LIB_FILE.write_text(json.dumps({"unexpected": "object"}), encoding="utf-8")
+        with self.assertRaises(RuntimeError):
+            server.read_lib()
+        server.LIB_FILE.write_text(json.dumps([{"id": "ok"}, "invalid-entry"]), encoding="utf-8")
+        with self.assertRaises(RuntimeError):
+            server.read_lib()
+
+    def test_batch_upsert_rejects_non_string_ids(self):
+        for invalid in ([], {}, 12, ""):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(server.HTTPException) as raised:
+                    server.upsert_tracks_batch({"items": [{"id": invalid}]})
+                self.assertEqual(raised.exception.status_code, 400)
+                self.assertEqual(len(server.read_lib()), 1)
 
     def test_batch_upsert_rejects_duplicate_ids(self):
         with self.assertRaises(server.HTTPException) as raised:

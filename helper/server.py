@@ -130,10 +130,18 @@ _lib_lock = threading.Lock()
 
 # ---------------------------------------------------------------- biblioteca
 def read_lib():
-    try:
-        return json.loads(LIB_FILE.read_text(encoding="utf-8"))
-    except Exception:
+    """Read library metadata; fail closed on corruption to avoid overwriting it."""
+    if not LIB_FILE.exists():
         return []
+    try:
+        items = json.loads(LIB_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError("A biblioteca está ilegível ou corrompida; o arquivo original foi preservado.") from exc
+    if not isinstance(items, list):
+        raise RuntimeError("Formato inválido da biblioteca; o arquivo original foi preservado.")
+    if any(not isinstance(item, dict) for item in items):
+        raise RuntimeError("A biblioteca contém entradas inválidas; o arquivo original foi preservado.")
+    return items
 
 
 def write_lib(items):
@@ -168,8 +176,8 @@ def upsert_tracks_batch(payload: dict):
     items = payload.get("items")
     if not isinstance(items, list) or not items:
         raise HTTPException(400, "Lista de faixas inválida.")
-    if any(not isinstance(item, dict) or not item.get("id") for item in items):
-        raise HTTPException(400, "Todas as faixas precisam de um id.")
+    if any(not isinstance(item, dict) or not isinstance(item.get("id"), str) or not item.get("id").strip() for item in items):
+        raise HTTPException(400, "Todas as faixas precisam de um id válido.")
     ids = [item["id"] for item in items]
     if len(ids) != len(set(ids)):
         raise HTTPException(400, "IDs de faixas duplicados.")

@@ -1,6 +1,7 @@
 # Histórico de alterações
 
 ## [3.1.0]
+- Fail closed on malformed library metadata instead of silently treating corruption as an empty library; validate batch IDs as non-empty strings.
 - Serialize backend Demucs separation jobs so concurrent requests queue safely instead of using the model at the same time.
 - Persist multi-version song generation as a single library batch; clean up all downloaded files if the batch fails.
 - Save downloaded generated audio through a temporary file and atomic rename to avoid partially written library files.
