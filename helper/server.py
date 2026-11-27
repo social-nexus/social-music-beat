@@ -487,14 +487,47 @@ async def ace_proxy(path: str, request: Request):
     return Response(r.content, status_code=r.status_code, media_type=r.headers.get("content-type"))
 
 
+def _is_mp3_frame(data: bytes, offset: int = 0) -> bool:
+    if len(data) < offset + 4:
+        return False
+    header = int.from_bytes(data[offset:offset + 4], "big")
+    sync = (header >> 21) & 0x7FF
+    version = (header >> 19) & 0x3
+    layer = (header >> 17) & 0x3
+    bitrate_index = (header >> 12) & 0xF
+    sample_rate_index = (header >> 10) & 0x3
+    return (
+        sync == 0x7FF
+        and version != 0x1
+        and layer == 0x1  # MPEG Layer III
+        and bitrate_index != 0xF
+        and sample_rate_index != 0x3
+    )
+
+
 def sniff_ext(data: bytes) -> str | None:
     if data[:4] == b"RIFF" and data[8:12] == b"WAVE":
         return "wav"
     if data[:4] == b"fLaC":
         return "flac"
-    if data[:3] == b"ID3" or data[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"):
-        return "mp3"
-    return None
+    if data[:3] == b"ID3":
+        # ID3v2 has a 10-byte header followed by a synchsafe-sized tag.
+        if len(data) < 10 or data[3] not in (2, 3, 4):
+            return None
+        size_bytes = data[6:10]
+        if any(value & 0x80 for value in size_bytes):
+            return None
+        tag_size = (
+            (size_bytes[0] << 21)
+            | (size_bytes[1] << 14)
+            | (size_bytes[2] << 7)
+            | size_bytes[3]
+        )
+        offset = 10 + tag_size
+        if data[3] == 4 and data[5] & 0x10:
+            offset += 10  # ID3v2.4 footer
+        return "mp3" if _is_mp3_frame(data, offset) else None
+    return "mp3" if _is_mp3_frame(data) else None
 
 
 @app.post("/api/audio/cleanup")
