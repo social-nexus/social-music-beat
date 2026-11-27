@@ -1615,7 +1615,7 @@ export default function App() {
         {player ? (
           <div className="mx-auto flex max-w-5xl items-center gap-4">
             <div className="hidden w-48 truncate text-sm font-bold sm:block">{player.title}</div>
-            <audio key={player.url} src={player.url} controls autoPlay className="h-10 w-full" />
+            <audio key={player.url} src={player.url} controls autoPlay onError={() => setErr(tx("errAudioPlayback"))} className="h-10 w-full" />
           </div>
         ) : (
           <div className="text-center text-xs text-zinc-500">{tx("playHint")}</div>

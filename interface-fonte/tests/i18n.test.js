@@ -2,10 +2,14 @@ import { readFileSync } from "node:fs";
 import { UI_TEXT, localeCoverage, uiText } from "../src/i18n.js";
 
 const requiredLocales = ["pt", "en", "es"];
+const requiredKeys = ["errAudioPlayback"];
 let failed = false;
 const source = readFileSync(new URL("../src/i18n.js", import.meta.url), "utf8");
 
 for (const locale of requiredLocales) {
+  for (const key of requiredKeys) {
+    if (!UI_TEXT[locale][key]) { failed = true; console.error(`Missing ${key} in ${locale}`); }
+  }
   if (!UI_TEXT[locale]) {
     failed = true;
     console.error(`Missing required locale catalog: ${locale}`);
