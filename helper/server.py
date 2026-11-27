@@ -206,6 +206,26 @@ def delete_track(tid: str):
 
         # Do not remove audio that is still referenced by another library entry.
         remaining = [t for t in items if t.get("id") != tid]
+        # A source file must remain available until its background separation
+        # finishes. Check under the registry lock while holding _lib_lock;
+        # /api/separate uses the same lock order when registering a job.
+        active_sources = set()
+        with _jobs_registry_lock:
+            active_sources = {
+                Path(str(info.get("source_file", ""))).name.casefold()
+                for info in jobs.values()
+                if info.get("status") == "running" and info.get("source_file")
+            }
+        requested_sources = {
+            Path(str(track.get("file", ""))).name.casefold()
+            for track in gone if track.get("file")
+        }
+        busy_sources = requested_sources & active_sources
+        if busy_sources:
+            raise HTTPException(
+                409,
+                "Não é possível excluir esta faixa enquanto a separação de áudio estiver em andamento."
+            )
         # Case-fold names for cross-platform safety: Windows treats filenames
         # case-insensitively, so differently-cased metadata may still share one file.
         retained_names = {Path(str(t.get("file", ""))).name.casefold() for t in remaining if t.get("file")}
@@ -511,8 +531,18 @@ def separate(payload: dict):
         raise HTTPException(404, "Arquivo não encontrado.")
     _prune_jobs()
     jid = uuid.uuid4().hex
-    with _jobs_registry_lock:
-        jobs[jid] = {"status": "running", "msg": "Na fila...", "created_at": time.time()}
+    # Serialize job registration with library deletion so a source cannot be
+    # removed between the existence check and the job becoming visible.
+    with _lib_lock:
+        if not src.is_file():
+            raise HTTPException(404, "Arquivo não encontrado.")
+        with _jobs_registry_lock:
+            jobs[jid] = {
+                "status": "running",
+                "msg": "Na fila...",
+                "created_at": time.time(),
+                "source_file": name,
+            }
     threading.Thread(target=run_separation, args=(jid, src), daemon=True).start()
     return {"job": jid}
 
