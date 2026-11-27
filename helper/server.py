@@ -159,10 +159,9 @@ def recover_separation_backups():
             if not backup.is_file():
                 continue
             if final.exists():
-                # The atomic promotion reached its destination; this backup is
-                # the superseded version and can now be discarded.
-                backup.unlink()
-                recovered.append(("discarded", backup.name))
+                # A file may have been recreated at the same path after a crash.
+                # Matching names do not prove that the contents are duplicates.
+                recovered.append(("preserved_conflict", backup.name))
             else:
                 os.replace(backup, final)
                 recovered.append(("restored", final.name))
