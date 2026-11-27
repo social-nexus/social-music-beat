@@ -1306,7 +1306,7 @@ export default function App() {
               </div>
 
               <button onClick={() => setShowAdv((s) => !s)} className="text-xs font-semibold text-zinc-400 hover:text-white">
-                {showAdv ? "▾" : "▸"} Opções avançadas
+                {showAdv ? "▾" : "▸"} {t("advanced")}
               </button>
               {showAdv && (
                 <div className="space-y-4 rounded-xl border border-white/5 p-4">
