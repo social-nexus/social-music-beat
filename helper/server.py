@@ -124,7 +124,7 @@ _SEPARATION_STAGING_RE = re.compile(
 _LIBRARY_STAGING_RE = re.compile(r"\.biblioteca\.json\.[0-9a-f]{32}\.tmp")
 _JOBS_STAGING_RE = re.compile(r"\.separation_jobs\.json\.[0-9a-f]{32}\.tmp")
 _AUDIO_STAGING_RE = re.compile(r"\.\d+_[0-9a-f]{6}\.[A-Za-z0-9]+\.[0-9a-f]{32}\.tmp")
-_AUDIO_FINAL_RE = re.compile(r"\d+_[0-9a-f]{6}\.[A-Za-z0-9]+")
+_AUDIO_FINAL_RE = re.compile(r"\d+_[0-9a-f]{6}\.(?:wav|flac|mp3)")
 _DELETE_STAGING_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.deleting")
 _SEPARATION_BACKUP_RE = re.compile(r"\.(?P<name>.+)\.[0-9a-f]{32}\.backup")
 
