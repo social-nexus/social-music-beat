@@ -207,16 +207,25 @@ def delete_track(tid: str):
         # Stage the audio file first. If metadata persistence fails, restore it
         # so the client can reload and keep the track instead of losing it.
         staged_files = []
-        for track in gone:
-            name = Path(str(track.get("file", ""))).name
-            audio_path = DATA / name if name else None
-            if audio_path and audio_path.is_file():
-                staged_path = DATA / f".{name}.{uuid.uuid4().hex}.deleting"
-                try:
+        try:
+            for track in gone:
+                name = Path(str(track.get("file", ""))).name
+                audio_path = DATA / name if name else None
+                if audio_path and audio_path.is_file():
+                    staged_path = DATA / f".{name}.{uuid.uuid4().hex}.deleting"
                     os.replace(audio_path, staged_path)
                     staged_files.append((audio_path, staged_path))
-                except OSError as exc:
-                    raise HTTPException(500, f"Não foi possível preparar a exclusão do áudio: {exc}") from exc
+        except OSError as exc:
+            restore_errors = []
+            for original, staged in reversed(staged_files):
+                try:
+                    os.replace(staged, original)
+                except OSError as restore_exc:
+                    restore_errors.append(f"{staged.name} (restauração: {restore_exc})")
+            detail = f"Não foi possível preparar a exclusão do áudio: {exc}"
+            if restore_errors:
+                detail += "; arquivos temporários preservados: " + ", ".join(restore_errors)
+            raise HTTPException(500, detail) from exc
 
         try:
             write_lib([t for t in items if t.get("id") != tid])
@@ -226,7 +235,7 @@ def delete_track(tid: str):
                 try:
                     os.replace(staged, original)
                 except OSError as restore_exc:
-                    restore_errors.append(str(restore_exc))
+                    restore_errors.append(f"{staged.name} (restauração: {restore_exc})")
             detail = "Não foi possível atualizar a biblioteca; a exclusão foi cancelada."
             if restore_errors:
                 detail += " Falha ao restaurar arquivo: " + "; ".join(restore_errors)
