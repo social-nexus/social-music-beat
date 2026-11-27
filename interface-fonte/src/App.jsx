@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useLocale } from "./i18n";
+import { useLocale, translatePhase } from "./i18n";
 import {
   AlertTriangle, Download, FileText, HelpCircle, Loader2, Mic, Music, Pause, Play, Scissors, Sparkles, Trash2, X,
 } from "lucide-react";
@@ -1163,9 +1163,9 @@ export default function App() {
           <img src="./logo.png" alt="Social Music Beat" className="w-full h-auto select-none" draggable="false" />
         </div>
         {[
-          { id: "criar", label: "Criar", icon: <Sparkles size={16} /> },
-          { id: "compositor", label: "Compositor IA", icon: <Music size={16} /> },
-          { id: "ajuda", label: "Como usar", icon: <HelpCircle size={16} /> },
+          { id: "criar", label: t("create"), icon: <Sparkles size={16} /> },
+          { id: "compositor", label: t("composer"), icon: <Music size={16} /> },
+          { id: "ajuda", label: t("help"), icon: <HelpCircle size={16} /> },
         ].map((n) => (
           <button
             key={n.id}
@@ -1223,17 +1223,17 @@ export default function App() {
             {/* ---------------- formulário ---------------- */}
             <section className="rounded-2xl border border-white/5 bg-[#111116] p-5 space-y-5 h-fit">
               <div className="flex items-center justify-between">
-                <h1 className="text-lg font-black">Criar música</h1>
+                <h1 className="text-lg font-black">{t("createSong")}</h1>
                 <Seg
                   value={form.instrumentalOnly ? "inst" : "voz"}
                   onChange={(v) => set("instrumentalOnly", v === "inst")}
-                  options={[{ v: "voz", label: "Com voz" }, { v: "inst", label: "Só instrumental" }]}
+                  options={[{ v: "voz", label: t("withVoice") }, { v: "inst", label: t("instrumentalOnly") }]}
                 />
               </div>
 
               {!form.instrumentalOnly && (
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-zinc-300">Letra</label>
+                  <label className="mb-1.5 block text-xs font-semibold text-zinc-300">{t("lyrics")}</label>
                   <textarea
                     rows={10}
                     className={inputCls}
@@ -1246,7 +1246,7 @@ export default function App() {
               )}
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-zinc-300">Estilo</label>
+                <label className="mb-1.5 block text-xs font-semibold text-zinc-300">{t("style")}</label>
                 <textarea
                   rows={3}
                   className={inputCls}
@@ -1284,17 +1284,17 @@ export default function App() {
 
               {!form.instrumentalOnly && (
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-zinc-300">Voz:</span>
+                  <span className="text-xs font-semibold text-zinc-300">{t("voice")}:</span>
                   <Seg
                     value={form.voiceKind}
                     onChange={(v) => set("voiceKind", v)}
-                    options={[{ v: "auto", label: "Automática" }, { v: "female", label: "Feminina" }, { v: "male", label: "Masculina" }]}
+                    options={[{ v: "auto", label: t("automatic") }, { v: "female", label: t("female") }, { v: "male", label: t("male") }]}
                   />
                 </div>
               )}
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-zinc-300">Título (opcional)</label>
+                <label className="mb-1.5 block text-xs font-semibold text-zinc-300">{t("titleOptional")}</label>
                 <input className={inputCls} value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Minha música" />
               </div>
 
@@ -1338,14 +1338,14 @@ export default function App() {
 
             {/* ---------------- lista de músicas ---------------- */}
             <section className="min-w-0 space-y-3">
-              <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">Minhas músicas ({tracks.length})</h2>
+              <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">{t("mySongs")} ({tracks.length})</h2>
 
               {job && (
                 <div className="flex items-center gap-4 rounded-2xl border border-pink-500/30 bg-pink-500/5 p-4">
                   <Loader2 className="animate-spin text-pink-400" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-bold">{job.title}</div>
-                    <div className="text-xs text-zinc-400">{t("stage")}: {job.phase}</div><div className="mt-1 text-[11px] text-zinc-500">{t("stageElapsed")}: <span className="font-mono">{mmss(phaseElapsed)}</span></div>
+                    <div className="text-xs text-zinc-400">{t("stage")}: {translatePhase(job.phase, lang)}</div><div className="mt-1 text-[11px] text-zinc-500">{t("stageElapsed")}: <span className="font-mono">{mmss(phaseElapsed)}</span></div>
                   </div>
                   <div className="text-right"><div className="text-[10px] text-zinc-500">{t("totalElapsed")}</div><div className="font-mono text-sm text-pink-300">{mmss(elapsed)}</div></div>
                 </div>
@@ -1354,7 +1354,7 @@ export default function App() {
               {tracks.length === 0 && !job && (
                 <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-zinc-500">
                   <Music className="mx-auto mb-3" />
-                  Suas músicas aparecem aqui. Preencha a letra e o estilo e clique em Criar.
+                  {t("noTracks")}
                 </div>
               )}
 
