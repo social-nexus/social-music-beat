@@ -256,9 +256,8 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                     server._persist_audio_content(b"payload", "wav")
         self.assertEqual(raised.exception.status_code, 500)
         self.assertIn("salvar o áudio", raised.exception.detail)
-        # Cleanup failure can leave a staging file, but never masks the save failure.
-        self.assertEqual(len(list(self.data.glob("*.tmp"))), 0)
-        self.assertEqual(len(list(self.data.glob(".*.tmp"))), 1)
+        # Cleanup failure can leave one staging file, but never masks the save failure.
+        self.assertEqual(len(list(self.data.glob("*.tmp"))), 1)
 
     def test_batch_upsert_persists_all_tracks_atomically(self):
         items = [{"id": "voice", "file": "voice.wav"}, {"id": "inst", "file": "inst.wav"}]
