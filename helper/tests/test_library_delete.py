@@ -573,6 +573,16 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         # Cleanup failure can leave one staging file, but never masks the save failure.
         self.assertEqual(len(list(self.data.glob("*.tmp"))), 1)
 
+    def test_write_lib_preserves_previous_metadata_when_atomic_replace_fails(self):
+        original = self.library_file.read_text(encoding="utf-8")
+
+        with mock.patch.object(server.os, "replace", side_effect=OSError("simulated disk replace failure")):
+            with self.assertRaises(OSError):
+                server.write_lib([{"id": "replacement", "file": "replacement.wav"}])
+
+        self.assertEqual(self.library_file.read_text(encoding="utf-8"), original)
+        self.assertEqual(list(self.data.glob(".biblioteca.json.*.tmp")), [])
+
     def test_batch_upsert_persists_all_tracks_atomically(self):
         items = [{"id": "voice", "file": "voice.wav"}, {"id": "inst", "file": "inst.wav"}]
         result = server.upsert_tracks_batch({"items": items})
