@@ -67,3 +67,12 @@
 - **Auditoria dos fluxos de áudio:** mensagens de fase de separação e salvamento agora são localizadas; títulos padrão de música, banda, voz e instrumental respeitam PT-BR/EN/ES na criação e separação automática.
 
 - Status do backend Demucs agora é traduzido na interface: fila, carregamento inicial e separação em andamento, preservando mensagens de erro técnicas para diagnóstico.
+
+
+## Auditoria de mensagens de erro e diagnóstico (27/11/2026)
+
+- CI da última revisão de localização Demucs concluído com sucesso no commit `8b375f34bd19a022e4efb6b3109a0e6a1dc30a1e`.
+- Revisado o helper HTTP da interface: respostas do backend são exibidas sem apagar o detalhe técnico. Isso é importante para suporte e diagnóstico, especialmente mensagens originadas por ACE-Step, Whisper, modelos locais e bibliotecas Python.
+- Regra adotada para próximos ajustes: traduzir mensagens de erro previsíveis e controladas pela interface; manter o detalhe técnico original em erros inesperados e logs. Evitar substituir mensagens do backend por genéricas, pois isso esconderia a causa real.
+- A auditoria confirma cobertura de timers de geração principal, compositor, transcrição, análise de referência e legendas; validar duração real e visibilidade em execução Windows continua pendente.
+- Próxima revisão: inspeção de mensagens e labels restantes que possam escapar da localização, seguida de build e testes de catálogo antes de publicar a versão.
