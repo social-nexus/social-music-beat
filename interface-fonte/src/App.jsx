@@ -281,6 +281,7 @@ function VoiceModal({ track, onClose, onGo }) {
 
 // Legenda (SRT e LRC) de uma música: usa a voz separada e a letra salva, ou uma gravação sua
 function LegendaModal({ track, tracks, onClose }) {
+  const { t } = useLocale();
   const voz = track.kind === "voz" ? track : tracks.find((x) => x.kind === "voz" && x.parent === track.id);
   const fonte = voz || track;
   const [letra, setLetra] = useState(track.lyrics || "");
@@ -291,10 +292,13 @@ function LegendaModal({ track, tracks, onClose }) {
   const [whisper, setWhisper] = useState(false);
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
+  const [captionStartedAt, setCaptionStartedAt] = useState(0);
+  const [captionTick, setCaptionTick] = useState(0);
   const [res, setRes] = useState(null);
   const inputRef = useRef(null);
 
   useEffect(() => { http("/api/legenda/status").then((s) => setWhisper(!!s.whisper)).catch(() => {}); }, []);
+  useEffect(() => { if (!ocupado) return undefined; const timer = window.setInterval(() => setCaptionTick((n) => n + 1), 1000); return () => window.clearInterval(timer); }, [ocupado]);
 
   const gerar = async () => {
     setRes(null);
@@ -395,6 +399,7 @@ function LegendaModal({ track, tracks, onClose }) {
         >
           {ocupado ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} {ocupado ? "Trabalhando..." : "Gerar legenda"}
         </button>
+        {ocupado && captionStartedAt > 0 && <div className="rounded-lg border border-sky-500/20 bg-sky-500/5 p-2 text-xs text-sky-200">{t("elapsed")}: <span className="font-mono">{mmss(Math.floor((Date.now() - captionStartedAt) / 1000))}</span></div>}
         {msg && <div className={`rounded-lg border p-3 text-xs break-words ${ocupado ? "border-white/10 text-zinc-300" : "border-red-500/30 bg-red-500/10 text-red-200"}`}>{msg}</div>}
 
         {res && (
