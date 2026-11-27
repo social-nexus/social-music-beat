@@ -234,13 +234,46 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(backup.read_bytes(), b"recoverable previous output")
         self.assertFalse(self.audio_file.exists())
 
+    def test_orphan_audio_cleanup_requires_trusted_metadata_and_full_day_age(self):
+        old = self.data / "1234567890_abcdef.wav"
+        fresh = self.data / "1234567891_abcdef.wav"
+        referenced = self.data / "1234567892_abcdef.wav"
+        unrelated = self.data / "user-recording.wav"
+        for path in (old, fresh, referenced, unrelated):
+            path.write_bytes(b"audio")
+        server.write_lib([{"id": "keep", "file": referenced.name}])
+        old_time = time.time() - server._STALE_STAGING_SECONDS - 10
+        os.utime(old, (old_time, old_time))
+        os.utime(referenced, (old_time, old_time))
+
+        removed = server.cleanup_orphaned_audio_files()
+
+        self.assertEqual(removed, [old.name])
+        self.assertFalse(old.exists())
+        self.assertTrue(fresh.exists())
+        self.assertTrue(referenced.exists())
+        self.assertTrue(unrelated.exists())
+
+        original_metadata = self.library_file.read_bytes()
+        self.library_file.write_text("{corrupt", encoding="utf-8")
+        old.write_bytes(b"must preserve")
+        os.utime(old, (old_time, old_time))
+        self.assertEqual(server.cleanup_orphaned_audio_files(), [])
+        self.assertTrue(old.exists())
+        self.library_file.write_bytes(original_metadata)
+
+        self.library_file.unlink()
+        self.assertEqual(server.cleanup_orphaned_audio_files(), [])
+        self.assertTrue(old.exists())
+
     def test_startup_runs_separation_backup_recovery_before_stale_cleanup(self):
         calls = []
         with mock.patch.object(server, "recover_staged_deletions", side_effect=lambda: calls.append("deletions")):
             with mock.patch.object(server, "recover_separation_backups", side_effect=lambda: calls.append("separation")):
                 with mock.patch.object(server, "cleanup_stale_staging_files", side_effect=lambda: calls.append("cleanup")):
-                    server.recover_stale_staging_files()
-        self.assertEqual(calls, ["deletions", "separation", "cleanup"])
+                    with mock.patch.object(server, "cleanup_orphaned_audio_files", side_effect=lambda: calls.append("orphans")):
+                        server.recover_stale_staging_files()
+        self.assertEqual(calls, ["deletions", "separation", "cleanup", "orphans"])
 
     def test_separation_backup_recovery_ignores_unrecognized_backup_names(self):
         unrelated = self.data / ".manual-copy.backup"
