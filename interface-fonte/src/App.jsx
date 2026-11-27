@@ -721,7 +721,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   };
 
   const saveProviderKey = async () => {
-    if (!provider || provider === "local" || !apiKey.trim()) { setError("Escolha um provedor e informe a chave de API."); return; }
+    if (!provider || provider === "local" || !apiKey.trim()) { setError(tx("errProviderKey")); return; }
     setProviderBusy(true); setError(""); setMessage(tx("msgSaveApiKey"));
     try {
       await jsonPost("/api/ai/providers/key", { provider, api_key: apiKey.trim() });
@@ -733,7 +733,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     setProviderBusy(true); setError("");
     try {
       await http("/api/ai/providers/config", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, model: providerModel }) });
-      await refresh(); setMessage(provider === "local" ? "IA local selecionada." : "Provedor e modelo selecionados.");
+      await refresh(); setMessage(provider === "local" ? tx("msgLocalSelected") : tx("msgProviderSelected"));
     } catch (e) { setError(e.message); }
     finally { setProviderBusy(false); }
   };
@@ -741,7 +741,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     setProviderBusy(true); setError(""); setMessage(tx("msgTestProvider"));
     try {
       const r = await jsonPost("/api/ai/providers/test", { provider, model: providerModel });
-      setMessage("Conexão funcionando: " + r.message);
+      setMessage(tx("msgConnectionOk") + r.message);
     } catch (e) { setError(e.message); }
     finally { setProviderBusy(false); }
   };
@@ -785,8 +785,8 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
 
   const loadMelodyReference = async (file) => {
     if (!file) return;
-    if (!file.type.startsWith("audio/")) { setError("Escolha um arquivo de áudio."); return; }
-    if (file.size > 25 * 1024 * 1024) { setError("O arquivo deve ter no máximo 25 MB."); return; }
+    if (!file.type.startsWith("audio/")) { setError(tx("errAudioFile")); return; }
+    if (file.size > 25 * 1024 * 1024) { setError(tx("errAudioSize")); return; }
     setMelodyBusy(true); setError(""); setMessage(tx("msgAnalyzeMelody"));
     try {
       const analysis = await analyzeMelodyReference(file, uiLanguage);
@@ -795,7 +795,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       setMessage(tx("msgMelodyAnalyzed"));
     } catch (e) {
       setMelodyFile(null); setMelodyAnalysis(null);
-      setError("Não consegui analisar este áudio. Tente WAV, MP3 ou M4A em outro navegador. " + e.message);
+      setError(tx("errAudioAnalyze") + e.message);
     } finally { setMelodyBusy(false); }
   };
 
@@ -826,7 +826,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
     } catch (e) {
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null; setRecording(false);
-      setError(e.message || "Não foi possível acessar o microfone.");
+      setError(e.message || tx("errMicrophone"));
     }
   };
 
@@ -835,8 +835,8 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   };
 
   const transcribeMelodyReference = async () => {
-    if (!melodyFile) { setError("Grave ou importe uma referência de áudio primeiro."); return; }
-    setTranscriptionBusy(true); setTranscriptionMessage("Preparando o áudio para o Whisper…"); setError("");
+    if (!melodyFile) { setError(tx("errMelodyReference")); return; }
+    setTranscriptionBusy(true); setTranscriptionMessage(tx("msgWhisperPrepare")); setError("");
     try {
       const { blob } = await toWavBlob(melodyFile, 30);
       const fd = new FormData();
@@ -849,17 +849,17 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       for (;;) {
         await sleep(1200);
         const job = await http("/api/legenda/transcrever/" + started.job);
-        setTranscriptionMessage(job.msg || "Ouvindo sua gravação…");
+        setTranscriptionMessage(job.msg || tx("msgWhisperListen"));
         if (job.status === "erro") throw new Error(job.msg || "Não foi possível transcrever o áudio.");
         if (job.status === "pronto") {
           if (!job.transcript?.trim()) throw new Error("O Whisper não identificou palavras. Se você apenas cantarolou, pode deixar o campo de palavras vazio.");
           setMelodyWords(job.transcript.trim());
-          setTranscriptionMessage("Letra reconhecida. Revise o texto antes de compor.");
+          setTranscriptionMessage(tx("msgWhisperDone"));
           return;
         }
       }
     } catch (e) {
-      setError("Não consegui transcrever a gravação: " + String(e.message || e).slice(0, 260));
+      setError(tx("errWhisper") + String(e.message || e).slice(0, 260));
       setTranscriptionMessage("");
     } finally { setTranscriptionBusy(false); }
   };
@@ -870,14 +870,14 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   };
 
   const generate = async () => {
-    if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
-    if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
-    setBusy(true); setOperationStartedAt(Date.now()); setOperationTick(0); setError(""); setMessage(provider === "local" ? "Compondo a letra localmente…" : "Enviando solicitação ao provedor escolhido…"); setResult("");
+    if (compositionMode !== "full" && !sourceLyrics.trim()) { setError(tx("errLyricsRequired")); return; }
+    if (compositionMode === "full" && !theme.trim()) { setError(tx("errThemeRequired")); return; }
+    setBusy(true); setOperationStartedAt(Date.now()); setOperationTick(0); setError(""); setMessage(provider === "local" ? tx("msgComposeLocal") : tx("msgComposeProvider")); setResult("");
     try {
       const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
       setResult(r.lyrics);
       const labels = { full: "Música completa criada", continue: "Composição continuada", chorus: "Refrão criado" };
-      setMessage((labels[compositionMode] || "Composição concluída") + " com " + r.model + ".");
+      setMessage((labels[compositionMode] || tx("msgCompositionDone")) + " com " + r.model + ".");
     } catch (e) { setError(e.message); }
     finally { setBusy(false); setOperationStartedAt(null); }
   };
@@ -998,7 +998,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
             <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
           <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">{tx("activateModel")}</button>
-          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage(uiLanguage === "en" ? "Engine stopped." : uiLanguage === "es" ? "Motor detenido." : "Motor encerrado."); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{tx("stopAI")}</button>}
+          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage(tx("msgEngineStopped")); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{tx("stopAI")}</button>}
         </div>
         <p className="text-xs text-zinc-500">{tx("importNote")}</p>
       </section>
