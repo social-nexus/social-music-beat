@@ -1282,7 +1282,7 @@ export default function App() {
     } catch {
       try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
     }
-    const validRecovery = typeof pending?.jobId === "string" && pending.jobId.trim() && typeof pending?.track?.id === "string" && typeof pending?.track?.file === "string" && pending.track.file.trim() && typeof pending?.titles?.voz === "string" && pending.titles.voz.trim() && typeof pending?.titles?.instrumental === "string" && pending.titles.instrumental.trim() && (!pending.ids || (typeof pending.ids === "object" && (!pending.ids.voz || typeof pending.ids.voz === "string") && (!pending.ids.instrumental || typeof pending.ids.instrumental === "string"))) && (pending.operationStartedAt == null || Number.isFinite(pending.operationStartedAt));
+    const validRecovery = typeof pending?.jobId === "string" && pending.jobId.trim() && typeof pending?.track?.id === "string" && typeof pending?.track?.file === "string" && pending.track.file.trim() && typeof pending?.titles?.voz === "string" && pending.titles.voz.trim() && typeof pending?.titles?.instrumental === "string" && pending.titles.instrumental.trim() && (!pending.ids || (typeof pending.ids === "object" && (!pending.ids.voz || (typeof pending.ids.voz === "string" && pending.ids.voz.trim())) && (!pending.ids.instrumental || (typeof pending.ids.instrumental === "string" && pending.ids.instrumental.trim())))) && (pending.createdAt == null || Number.isFinite(pending.createdAt)) && (pending.operationStartedAt == null || Number.isFinite(pending.operationStartedAt));
     if (!validRecovery) {
       try { localStorage.removeItem(SEPARATION_RECOVERY_KEY); } catch {}
       return;
