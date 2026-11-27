@@ -548,7 +548,7 @@ async function analyzeMelodyReference(file) {
 }
 
 function CompositorPanel({ onUseLyrics }) {
-  const { t } = useLocale();
+  const { lang, t } = useLocale();
   const [catalog, setCatalog] = useState({ runtimes: [], models: [], installed_models: [] });
   const [status, setStatus] = useState({});
   const [providerConfig, setProviderConfig] = useState({ providers: [], secure_storage_available: false });
@@ -622,9 +622,9 @@ function CompositorPanel({ onUseLyrics }) {
   const waitJob = async (id, doneMessage) => {
     for (;;) {
       const j = await http("/api/ai/jobs/" + id);
-      setMessage(j.message || t("processing"));
+      setMessage(j.message ? translatePhase(j.message, lang) : t("processing"));
       if (j.status === "done") { setMessage(doneMessage); return; }
-      if (j.status === "error") throw new Error(j.message || "A operação falhou.");
+      if (j.status === "error") throw new Error(j.message ? translatePhase(j.message, lang) : t("operationFailed"));
       await sleep(1200);
     }
   };
