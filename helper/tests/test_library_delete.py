@@ -239,6 +239,27 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             server.write_lib(replacement)
         self.assertEqual(server.read_lib(), replacement)
 
+    def test_audio_persist_cleanup_failure_does_not_mask_save_error(self):
+        original_replace = server.os.replace
+        original_unlink = Path.unlink
+        def fail_promotion(src, dst):
+            if Path(dst).suffix == ".wav" and Path(src).suffix == ".tmp":
+                raise OSError("simulated promotion error")
+            return original_replace(src, dst)
+        def fail_temp_cleanup(path, *args, **kwargs):
+            if path.name.endswith(".tmp"):
+                raise OSError("simulated cleanup error")
+            return original_unlink(path, *args, **kwargs)
+        with mock.patch.object(server.os, "replace", side_effect=fail_promotion):
+            with mock.patch.object(Path, "unlink", fail_temp_cleanup):
+                with self.assertRaises(server.HTTPException) as raised:
+                    server._persist_audio_content(b"payload", "wav")
+        self.assertEqual(raised.exception.status_code, 500)
+        self.assertIn("salvar o áudio", raised.exception.detail)
+        # Cleanup failure can leave a staging file, but never masks the save failure.
+        self.assertEqual(len(list(self.data.glob("*.tmp"))), 0)
+        self.assertEqual(len(list(self.data.glob(".*.tmp"))), 1)
+
     def test_batch_upsert_persists_all_tracks_atomically(self):
         items = [{"id": "voice", "file": "voice.wav"}, {"id": "inst", "file": "inst.wav"}]
         result = server.upsert_tracks_batch({"items": items})
