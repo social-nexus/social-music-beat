@@ -841,10 +841,17 @@ def run_separation(jid: str, src: Path):
 
 @app.post("/api/separate")
 def separate(payload: dict):
-    name = Path(str(payload.get("file", ""))).name
+    raw_name = payload.get("file", "")
+    if not isinstance(raw_name, str) or not raw_name:
+        raise HTTPException(400, "Nome de arquivo de áudio inválido.")
+    name = Path(raw_name).name
+    # Separation accepts only known audio types. Never allow metadata, registry,
+    # backup, or arbitrary data files to be passed to the audio-processing worker.
+    if Path(name).suffix.casefold() not in {".wav", ".flac", ".mp3"}:
+        raise HTTPException(400, "Formato de áudio não suportado para separação.")
     src = DATA / name
-    if not name or not src.is_file():
-        raise HTTPException(404, "Arquivo não encontrado.")
+    if not src.is_file():
+        raise HTTPException(404, "Arquivo de áudio não encontrado.")
     _prune_jobs()
     jid = uuid.uuid4().hex
     # Serialize job registration with library deletion so a source cannot be
