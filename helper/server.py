@@ -279,6 +279,22 @@ def load_demucs():
     return _dm
 
 
+def _commit_separation_outputs(staged_paths, final_paths):
+    """Promote both staged stems together; roll back promoted files on failure."""
+    promoted = []
+    try:
+        for staged, final in zip(staged_paths, final_paths):
+            os.replace(staged, final)
+            promoted.append(final)
+    except OSError:
+        for final in promoted:
+            final.unlink(missing_ok=True)
+        raise
+    finally:
+        for staged in staged_paths:
+            staged.unlink(missing_ok=True)
+
+
 def separate_file(src: Path, stem: str):
     """Separa em voz e instrumental. Receita igual à do próprio Demucs."""
     import soundfile as sf
@@ -304,10 +320,16 @@ def separate_file(src: Path, stem: str):
     vocals = sources[vi]
     inst = sum(sources[i] for i in range(len(model.sources)) if i != vi)
     out = {}
+    staged_paths, final_paths = [], []
     for tag, tensor in (("voz", vocals), ("instrumental", inst)):
         fname = f"{stem}_{tag}.wav"
-        sf.write(str(DATA / fname), tensor.clamp(-1, 1).T.contiguous().numpy(), model.samplerate, subtype="PCM_16")
+        final_path = DATA / fname
+        staged_path = DATA / f".{stem}_{tag}.{uuid.uuid4().hex}.tmp.wav"
+        sf.write(str(staged_path), tensor.clamp(-1, 1).T.contiguous().numpy(), model.samplerate, subtype="PCM_16")
+        staged_paths.append(staged_path)
+        final_paths.append(final_path)
         out[tag] = f"/musicas/{fname}"
+    _commit_separation_outputs(staged_paths, final_paths)
     return out
 
 
