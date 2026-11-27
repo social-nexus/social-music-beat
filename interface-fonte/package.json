@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run test:i18n && vite build",
-    "test:i18n": "node tests/i18n.test.js"
+    "build": "npm run test:i18n && npm run test:timers && vite build",
+    "test:i18n": "node tests/i18n.test.js",
+    "test:timers": "node tests/timers.test.js"
   },
   "dependencies": {
     "lucide-react": "^0.462.0",
