@@ -87,6 +87,24 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(vocals.exists())
         self.assertTrue(instrumental.exists())
 
+    def test_recovery_preserves_invalid_utf8_job_registry(self):
+        jobs_file = self.data / server._JOBS_FILE_NAME
+        original = b"\\xff\\xfe\\xfa"
+        jobs_file.write_bytes(original)
+        sentinel = "e" * 32
+        server.jobs.clear()
+        server.jobs[sentinel] = {
+            "status": "error",
+            "msg": "keep existing in-memory state",
+            "created_at": time.time(),
+            "finished_at": time.time(),
+        }
+
+        server.recover_separation_jobs()
+
+        self.assertIn(sentinel, server.jobs)
+        self.assertEqual(jobs_file.read_bytes(), original)
+
     def test_recovery_normalizes_invalid_job_timestamps(self):
         jobs_file = self.data / server._JOBS_FILE_NAME
         jobs_file.write_text(json.dumps({
