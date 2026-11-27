@@ -146,6 +146,11 @@ def cleanup_stale_staging_files(now=None):
 def recover_stale_staging_files():
     cleanup_stale_staging_files()
 
+
+@app.on_event("startup")
+def recover_interrupted_separation_jobs():
+    recover_separation_jobs()
+
 from legenda import router as legenda_router  # noqa: E402
 
 app.include_router(legenda_router)
@@ -412,22 +417,95 @@ jobs = {}
 _jobs_registry_lock = threading.Lock()
 _JOBS_TTL_SECONDS = 60 * 60
 _JOBS_MAX_COMPLETED = 200
+_JOBS_FILE_NAME = ".separation_jobs.json"
+
+
+def _persist_jobs_locked():
+    """Atomically persist job state; caller must hold the registry lock."""
+    target = DATA / _JOBS_FILE_NAME
+    staged = DATA / f".{_JOBS_FILE_NAME}.{uuid.uuid4().hex}.tmp"
+    try:
+        staged.write_text(json.dumps(jobs, ensure_ascii=False), encoding="utf-8")
+        os.replace(staged, target)
+        return True
+    except OSError:
+        # Keep the in-memory task usable even if the disk is temporarily unavailable.
+        return False
+    finally:
+        try:
+            staged.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def recover_separation_jobs():
+    """Restore completed jobs and mark work interrupted by a previous process."""
+    target = DATA / _JOBS_FILE_NAME
+    if not target.is_file():
+        return
+    try:
+        stored = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        # Preserve a damaged task file rather than silently replacing it.
+        return
+    if not isinstance(stored, dict):
+        return
+    now = time.time()
+    restored = {}
+    for jid, info in stored.items():
+        if (not isinstance(jid, str) or len(jid) != 32
+                or any(ch not in "0123456789abcdef" for ch in jid)
+                or not isinstance(info, dict)):
+            continue
+        status = info.get("status")
+        if status not in ("running", "done", "error"):
+            continue
+        task = dict(info)
+        if status == "running":
+            task.update(
+                status="error",
+                msg="A separação foi interrompida porque o Social Music Beat foi fechado ou reiniciado. Inicie a separação novamente.",
+                finished_at=now,
+            )
+        elif status == "done":
+            result = task.get("result")
+            if not isinstance(result, dict) or any(
+                not isinstance(result.get(key), str)
+                or not (DATA / Path(result[key]).name).is_file()
+                for key in ("voz", "instrumental")
+            ):
+                task.update(
+                    status="error",
+                    msg="A tarefa terminou, mas os arquivos de resultado não estão disponíveis. Execute a separação novamente.",
+                    finished_at=now,
+                )
+        restored[jid] = task
+    with _jobs_registry_lock:
+        jobs.clear()
+        jobs.update(restored)
+        _prune_jobs_locked(now)
+        _persist_jobs_locked()
+
+
+def _prune_jobs_locked(now):
+    finished = [(jid, info) for jid, info in jobs.items() if info.get("finished_at")]
+    for jid, info in finished:
+        if now - info["finished_at"] > _JOBS_TTL_SECONDS:
+            jobs.pop(jid, None)
+    finished = sorted(
+        ((jid, info) for jid, info in jobs.items() if info.get("finished_at")),
+        key=lambda pair: pair[1]["finished_at"],
+    )
+    for jid, _ in finished[:-_JOBS_MAX_COMPLETED]:
+        jobs.pop(jid, None)
 
 
 def _prune_jobs(now=None):
-    """Bound the in-memory job registry while preserving active work."""
+    """Bound the persisted and in-memory job registry while preserving active work."""
     now = time.time() if now is None else now
     with _jobs_registry_lock:
-        finished = [(jid, info) for jid, info in jobs.items() if info.get("finished_at")]
-        for jid, info in finished:
-            if now - info["finished_at"] > _JOBS_TTL_SECONDS:
-                jobs.pop(jid, None)
-        finished = sorted(
-            ((jid, info) for jid, info in jobs.items() if info.get("finished_at")),
-            key=lambda pair: pair[1]["finished_at"],
-        )
-        for jid, _ in finished[:-_JOBS_MAX_COMPLETED]:
-            jobs.pop(jid, None)
+        _prune_jobs_locked(now)
+        _persist_jobs_locked()
 
 
 _dm = None
@@ -563,6 +641,7 @@ def _update_job(jid, **changes):
     with _jobs_registry_lock:
         if jid in jobs:
             jobs[jid].update(changes)
+            _persist_jobs_locked()
 
 
 def run_separation(jid: str, src: Path):
@@ -599,6 +678,7 @@ def separate(payload: dict):
                 "created_at": time.time(),
                 "source_file": name,
             }
+            _persist_jobs_locked()
     try:
         worker = threading.Thread(target=run_separation, args=(jid, src), daemon=True)
         worker.start()
