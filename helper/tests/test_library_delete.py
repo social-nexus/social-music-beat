@@ -127,6 +127,38 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         for jid in job_ids:
             self.assertEqual(server.job_status(jid)["progress"], 79)
 
+    def test_separation_rollback_failure_reports_backup_location(self):
+        staged_vocals = self.data / ".vocals.tmp.wav"
+        staged_instrumental = self.data / ".instrumental.tmp.wav"
+        final_vocals = self.data / "vocals.wav"
+        final_instrumental = self.data / "instrumental.wav"
+        staged_vocals.write_bytes(b"staged vocals")
+        staged_instrumental.write_bytes(b"staged instrumental")
+        final_vocals.write_bytes(b"previous vocals")
+        final_instrumental.write_bytes(b"previous instrumental")
+        original_replace = server.os.replace
+
+        def fail_promotion_and_restore(src, dst):
+            if Path(src) == staged_instrumental and Path(dst) == final_instrumental:
+                raise OSError("simulated promotion failure")
+            if Path(src).name.endswith(".backup") and Path(dst) == final_instrumental:
+                raise OSError("simulated restore failure")
+            return original_replace(src, dst)
+
+        with mock.patch.object(server.os, "replace", side_effect=fail_promotion_and_restore):
+            with self.assertRaisesRegex(RuntimeError, "backup retained at"):
+                server._commit_separation_outputs(
+                    [staged_vocals, staged_instrumental],
+                    [final_vocals, final_instrumental],
+                )
+        self.assertEqual(final_vocals.read_bytes(), b"previous vocals")
+        self.assertFalse(final_instrumental.exists())
+        retained = list(self.data.glob(".*instrumental.wav.*.backup"))
+        self.assertEqual(len(retained), 1)
+        self.assertEqual(retained[0].read_bytes(), b"previous instrumental")
+        self.assertFalse(staged_vocals.exists())
+        self.assertFalse(staged_instrumental.exists())
+
     def test_separation_job_ids_are_full_uuid_and_registered(self):
         server.jobs.clear()
         with mock.patch.object(server.threading, "Thread") as thread_factory:
