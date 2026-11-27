@@ -535,15 +535,16 @@ def download_model(payload: dict, request: Request):
 @router.post("/models/import")
 async def import_model(request: Request, file: UploadFile = File(...)):
     _guard_local_request(request)
-    filename = Path(file.filename or "").name
-    if not filename.lower().endswith(".gguf"):
+    filename = Path(str(file.filename or "").replace("\\\\", "/")).name
+    if not filename.lower().endswith(".gguf") or filename in ("", ".", ".."):
         raise HTTPException(400, "Selecione um arquivo .gguf.")
     model_id = "imported-" + uuid.uuid4().hex[:10]
     folder = MODELS_DIR / model_id
-    folder.mkdir(parents=True, exist_ok=False)
-    target = folder / filename
+    staged_folder = MODELS_DIR / f".{model_id}.staging"
+    target = staged_folder / filename
     total = 0
     try:
+        staged_folder.mkdir(parents=True, exist_ok=False)
         with target.open("wb") as out:
             while True:
                 chunk = await file.read(1024 * 1024)
@@ -558,13 +559,18 @@ async def import_model(request: Request, file: UploadFile = File(...)):
         with target.open("rb") as check:
             if check.read(4) != b"GGUF":
                 raise HTTPException(400, "O arquivo selecionado não tem cabeçalho GGUF válido.")
+        metadata = {"model_id": model_id, "filename": filename,
+                    "license": "Não verificada — confirme os termos do modelo original"}
+        metadata_tmp = staged_folder / ".model.json.tmp"
+        metadata_tmp.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+        os.replace(metadata_tmp, staged_folder / "model.json")
+        # A pasta só fica visível ao gerenciador depois de arquivo e metadados validados.
+        os.replace(staged_folder, folder)
     except Exception:
-        shutil.rmtree(folder, ignore_errors=True)
+        shutil.rmtree(staged_folder, ignore_errors=True)
         raise
     finally:
         await file.close()
-    (folder / "model.json").write_text(json.dumps({"model_id": model_id, "filename": filename,
-        "license": "Não verificada — confirme os termos do modelo original"}, indent=2), encoding="utf-8")
     return {"id": model_id, "name": filename, "size_bytes": total,
             "warning": "A licença do arquivo importado não foi verificada."}
 

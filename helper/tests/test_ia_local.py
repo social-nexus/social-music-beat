@@ -344,3 +344,46 @@ class MultilingualLyricsTests(unittest.TestCase):
     def test_lyrics_header_rejects_unknown_language(self):
         with self.assertRaises(ValueError):
             ia_local._lyrics_header("francês")
+
+class ModelImportAtomicityTests(unittest.IsolatedAsyncioTestCase):
+    async def _request(self):
+        from starlette.requests import Request
+        return Request({"type": "http", "method": "POST", "headers": [
+            (b"host", b"localhost:8002"), (b"origin", b"http://localhost:8002")
+        ]})
+
+    async def _upload(self, filename="model.gguf", content=None):
+        import io
+        from starlette.datastructures import UploadFile
+        payload = content if content is not None else b"GGUF" + (b"m" * (1024 * 1024))
+        return UploadFile(filename=filename, file=io.BytesIO(payload))
+
+    async def test_import_publishes_only_after_model_and_metadata_are_complete(self):
+        root = Path(TEMP_DATA) / "model-import-success"
+        root.mkdir(parents=True, exist_ok=True)
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            result = await ia_local.import_model(await self._request(), await self._upload())
+        folder = root / result["id"]
+        self.assertTrue((folder / "model.gguf").is_file())
+        self.assertEqual((folder / "model.gguf").read_bytes()[:4], b"GGUF")
+        self.assertTrue((folder / "model.json").is_file())
+        self.assertEqual(list(root.glob(".*.staging")), [])
+
+    async def test_invalid_import_leaves_no_visible_or_staging_folder(self):
+        root = Path(TEMP_DATA) / "model-import-invalid"
+        root.mkdir(parents=True, exist_ok=True)
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with self.assertRaises(ia_local.HTTPException):
+                await ia_local.import_model(await self._request(), await self._upload(content=b"NOPE" + b"x" * (1024 * 1024)))
+        self.assertEqual(list(root.glob("imported-*")), [])
+        self.assertEqual(list(root.glob(".*.staging")), [])
+
+    async def test_import_swap_failure_cleans_staging_without_publishing_model(self):
+        root = Path(TEMP_DATA) / "model-import-swap-failure"
+        root.mkdir(parents=True, exist_ok=True)
+        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
+             mock.patch.object(ia_local.os, "replace", side_effect=OSError("simulated publish failure")):
+            with self.assertRaisesRegex(OSError, "simulated publish failure"):
+                await ia_local.import_model(await self._request(), await self._upload())
+        self.assertEqual(list(root.glob("imported-*")), [])
+        self.assertEqual(list(root.glob(".*.staging")), [])
