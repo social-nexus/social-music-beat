@@ -77,3 +77,7 @@ As versões e datas abaixo descrevem a evolução do projeto. Consulte também o
 ### Ajustes adicionais de localização
 - Textos de configuração do Whisper, validação de letra vazia e timer do compositor centralizados nos catálogos PT-BR/EN/ES.
 - Mensagens de ausência de áudio e faixa somente banda também reutilizam as traduções centralizadas.
+
+
+### Fases de geração centralizadas
+- Status da geração musical e separação de áudio agora usam catálogo único de traduções, com testes explícitos em três idiomas.

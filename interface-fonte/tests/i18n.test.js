@@ -97,6 +97,21 @@ for (const locale of requiredLocales) {
   }
 }
 
+
+const localizedGenerationPhases = {
+  pt: {"phaseStarting":"Começando...","phaseSendMusic":"Enviando para o motor de música...","phaseCreateMusic":"Criando a música... (na primeira vez demora mais)","phaseSaving":"Salvando...","phaseSepLoading":"Carregando o separador de áudio (na primeira vez pode baixar um arquivo pequeno)...","phaseSepWorking":"Separando voz e instrumental. Isso pode levar alguns minutos...","phaseSepQueued":"Na fila...","phaseSepFallback":"Separando voz e instrumental...","errLyricsRequiredCreate":"Escreva a letra (ou escolha “Só instrumental”).","errStyleRequiredCreate":"Descreva o estilo da música. Dá para clicar nos botões de estilo."},
+  en: {"phaseStarting":"Starting...","phaseSendMusic":"Sending to the music engine...","phaseCreateMusic":"Creating the song... (the first run takes longer)","phaseSaving":"Saving...","phaseSepLoading":"Loading the audio separator (first use may download a small file)...","phaseSepWorking":"Separating vocals and instrumental. This may take a few minutes...","phaseSepQueued":"Queued...","phaseSepFallback":"Separating vocals and instrumental...","errLyricsRequiredCreate":"Enter the lyrics (or choose “Instrumental only”).","errStyleRequiredCreate":"Describe the music style. You can also click the style buttons."},
+  es: {"phaseStarting":"Iniciando...","phaseSendMusic":"Enviando al motor de música...","phaseCreateMusic":"Creando la canción... (la primera vez tarda más)","phaseSaving":"Guardando...","phaseSepLoading":"Cargando el separador de audio (la primera vez puede descargar un archivo pequeño)...","phaseSepWorking":"Separando voz e instrumental. Puede tardar unos minutos...","phaseSepQueued":"En cola...","phaseSepFallback":"Separando voz e instrumental...","errLyricsRequiredCreate":"Escribe la letra (o elige “Solo instrumental”).","errStyleRequiredCreate":"Describe el estilo musical. También puedes usar los botones de estilos."},
+};
+for (const locale of requiredLocales) {
+  for (const [key, expected] of Object.entries(localizedGenerationPhases[locale])) {
+    if (uiText(locale, key) !== expected) {
+      failed = true;
+      console.error(`Locale ${locale}: expected ${key}="${expected}", got "${uiText(locale, key)}"`);
+    }
+  }
+}
+
 // Verify the library actions that were recently audited remain localized.
 const localizedLibraryLabels = {
   pt: { download: "Baixar", separate: "Separar voz e instrumental" },

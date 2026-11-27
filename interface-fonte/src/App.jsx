@@ -1140,7 +1140,7 @@ export default function App() {
     setErr("");
     const startedAt = Date.now();
     setLastJob(null);
-    setJob({ title, phase: uiLanguage === "en" ? "Starting..." : uiLanguage === "es" ? "Iniciando..." : "Começando...", startedAt });
+    setJob({ title, phase: tx("phaseStarting"), startedAt });
     const phase = (p) => setJob((j) => (j ? { ...j, phase: p } : j));
     let failed = false;
     try { await fn(phase); } catch (e) { failed = true; setErr(String(e.message || e)); }
@@ -1169,12 +1169,12 @@ export default function App() {
       const s = await http(`/api/jobs/${jid}`);
       const backendPhase = s.msg || "";
       const localizedPhase = backendPhase.includes("Carregando o separador")
-        ? (uiLanguage === "en" ? "Loading the audio separator (first use may download a small file)..." : uiLanguage === "es" ? "Cargando el separador de audio (la primera vez puede descargar un archivo pequeño)..." : backendPhase)
+        ? tx("phaseSepLoading")
         : backendPhase.includes("Separando voz e instrumental")
-          ? (uiLanguage === "en" ? "Separating vocals and instrumental. This may take a few minutes..." : uiLanguage === "es" ? "Separando voz e instrumental. Puede tardar unos minutos..." : backendPhase)
+          ? tx("phaseSepWorking")
           : backendPhase.includes("Na fila")
-            ? (uiLanguage === "en" ? "Queued..." : uiLanguage === "es" ? "En cola..." : backendPhase)
-            : (backendPhase || (uiLanguage === "en" ? "Separating vocals and instrumental..." : uiLanguage === "es" ? "Separando voz e instrumental..." : "Separando voz e instrumental..."));
+            ? tx("phaseSepQueued")
+            : (backendPhase || tx("phaseSepFallback"));
       phase(localizedPhase);
       if (s.status === "error") throw new Error(s.msg);
       if (s.status === "done") {
@@ -1190,8 +1190,8 @@ export default function App() {
   const createSong = () => {
     const title = form.title.trim() || (uiLanguage === "en" ? "My song" : uiLanguage === "es" ? "Mi canción" : "Minha música");
     return runJob(title, async (phase) => {
-      if (!form.instrumentalOnly && !form.lyrics.trim()) throw new Error(uiLanguage === "en" ? "Enter the lyrics (or choose “Instrumental only”)." : uiLanguage === "es" ? "Escribe la letra (o elige “Solo instrumental”)." : "Escreva a letra (ou escolha “Só instrumental”).");
-      if (!form.style.trim()) throw new Error(uiLanguage === "en" ? "Describe the music style. You can also click the style buttons." : uiLanguage === "es" ? "Describe el estilo musical. También puedes usar los botones de estilos." : "Descreva o estilo da música. Dá para clicar nos botões de estilo.");
+      if (!form.instrumentalOnly && !form.lyrics.trim()) throw new Error(tx("errLyricsRequiredCreate"));
+      if (!form.style.trim()) throw new Error(tx("errStyleRequiredCreate"));
       const voice = form.instrumentalOnly ? "" : form.voiceKind === "female" ? "female vocals" : form.voiceKind === "male" ? "male vocals" : "";
       const caption = [form.style.trim(), voice].filter(Boolean).join(", ");
       const params = {
@@ -1211,9 +1211,9 @@ export default function App() {
       };
       if (form.bpm) params.bpm = Number(form.bpm);
       if (form.key) params.key_scale = form.key;
-      phase(uiLanguage === "en" ? "Sending to the music engine..." : uiLanguage === "es" ? "Enviando al motor de música..." : "Enviando para o motor de música...");
+      phase(tx("phaseSendMusic"));
       const id = await submitTask(params);
-      phase(uiLanguage === "en" ? "Creating the song... (the first run takes longer)" : uiLanguage === "es" ? "Creando la canción... (la primera vez tarda más)" : "Criando a música... (na primeira vez demora mais)");
+      phase(tx("phaseCreateMusic"));
       const items = await waitResult(id);
       phase(uiLanguage === "en" ? "Saving..." : uiLanguage === "es" ? "Guardando..." : "Guardando...");
       await saveItems(items, (it, n, total) => {

@@ -69,3 +69,10 @@ Anotar sistema operacional, GPU/VRAM, modelo, idioma selecionado, operação, du
 - Timer do compositor usa a chave `elapsed` do catálogo em vez de texto condicional local.
 - A criação musical usa a tradução catalogada para ausência de áudio e etiqueta de faixa somente banda.
 - Testes explícitos adicionados para as quatro mensagens de configuração de legendas em todos os idiomas.
+
+
+## Auditoria de fases da geração e separação (27/11/2026)
+
+- Centralizadas as fases de início, envio, geração, salvamento e separação de áudio.
+- Validações de letra e estilo obrigatórios reutilizam as traduções já catalogadas.
+- Testes explícitos cobrem as fases e validações em PT-BR, EN e ES.
