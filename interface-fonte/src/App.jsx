@@ -627,7 +627,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const saveProviderKey = async () => {
-    if (!provider || provider === "local" || !apiKey.trim()) { setError("Escolha um provedor e informe a chave de API."); return; }
+    if (!provider || provider === "local" || !apiKey.trim()) { setError(t("providerChooseKey")); return; }
     setProviderStartedAt(Date.now()); setProviderBusy(true); setError(""); setMessage(t("providerSaving"));
     try {
       await jsonPost("/api/ai/providers/key", { provider, api_key: apiKey.trim() });
@@ -639,7 +639,7 @@ function CompositorPanel({ onUseLyrics }) {
     setProviderStartedAt(Date.now()); setProviderBusy(true); setError("");
     try {
       await http("/api/ai/providers/config", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, model: providerModel }) });
-      await refresh(); setMessage(provider === "local" ? "IA local selecionada." : "Provedor e modelo selecionados.");
+      await refresh(); setMessage(provider === "local" ? t("localSelected") : t("providerSelected"));
     } catch (e) { setError(e.message); }
     finally { setProviderBusy(false); }
   };
@@ -691,8 +691,8 @@ function CompositorPanel({ onUseLyrics }) {
 
   const loadMelodyReference = async (file) => {
     if (!file) return;
-    if (!file.type.startsWith("audio/")) { setError("Escolha um arquivo de áudio."); return; }
-    if (file.size > 25 * 1024 * 1024) { setError("O arquivo deve ter no máximo 25 MB."); return; }
+    if (!file.type.startsWith("audio/")) { setError(t("audioChoose")); return; }
+    if (file.size > 25 * 1024 * 1024) { setError(t("audioLimit")); return; }
     setMelodyStartedAt(Date.now()); setMelodyBusy(true); setError(""); setMessage(t("melodyAnalyzing"));
     try {
       const analysis = await analyzeMelodyReference(file);
@@ -701,7 +701,7 @@ function CompositorPanel({ onUseLyrics }) {
       setMessage(t("melodyAnalyzed"));
     } catch (e) {
       setMelodyFile(null); setMelodyAnalysis(null);
-      setError("Não consegui analisar este áudio. Tente WAV, MP3 ou M4A em outro navegador. " + e.message);
+      setError(t("melodyAnalyzeError") + e.message);
     } finally { setMelodyBusy(false); }
   };
 
@@ -732,7 +732,7 @@ function CompositorPanel({ onUseLyrics }) {
     } catch (e) {
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null; setRecording(false);
-      setError(e.message || "Não foi possível acessar o microfone.");
+      setError(e.message || t("micError"));
     }
   };
 
@@ -741,7 +741,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const transcribeMelodyReference = async () => {
-    if (!melodyFile) { setError("Grave ou importe uma referência de áudio primeiro."); return; }
+    if (!melodyFile) { setError(t("melodyRequired")); return; }
     setTranscriptionStartedAt(Date.now()); setTranscriptionBusy(true); setTranscriptionMessage(t("whisperPreparing")); setError("");
     try {
       const { blob } = await toWavBlob(melodyFile, 30);
@@ -765,7 +765,7 @@ function CompositorPanel({ onUseLyrics }) {
         }
       }
     } catch (e) {
-      setError("Não consegui transcrever a gravação: " + String(e.message || e).slice(0, 260));
+      setError(t("transcribeError") + String(e.message || e).slice(0, 260));
       setTranscriptionMessage("");
     } finally { setTranscriptionBusy(false); }
   };
@@ -776,8 +776,8 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const generate = async () => {
-    if (compositionMode !== "full" && !sourceLyrics.trim()) { setError("Cole sua composição antes de continuar ou criar o refrão."); return; }
-    if (compositionMode === "full" && !theme.trim()) { setError("Informe o tema ou a história da música."); return; }
+    if (compositionMode !== "full" && !sourceLyrics.trim()) { setError(t("lyricsRequired")); return; }
+    if (compositionMode === "full" && !theme.trim()) { setError(t("themeRequired")); return; }
     setBusySince(Date.now()); setBusy(true); setError(""); setMessage(provider === "local" ? t("lyricsComposing") : t("providerSending")); setResult("");
     try {
       const r = await jsonPost("/api/ai/generate-lyrics", { mode: compositionMode, provider, provider_model: providerModel, source_lyrics: sourceLyrics, theme, genre, mood, voice, duration, language, melody_reference: melodyAnalysis?.summary || "", melody_role: melodyRole, melody_words: melodyWords });
