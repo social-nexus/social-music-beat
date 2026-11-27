@@ -218,6 +218,18 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(self.audio_file.read_bytes(), b"new file at same path")
         self.assertEqual(backup.read_bytes(), b"previous output")
 
+    def test_startup_keeps_separation_backup_when_restore_fails(self):
+        backup = self.data / (".track.wav." + "c" * 32 + ".backup")
+        backup.write_bytes(b"recoverable previous output")
+
+        with mock.patch.object(server.os, "replace", side_effect=OSError("simulated restore failure")):
+            recovered = server.recover_separation_backups()
+
+        self.assertEqual(recovered, [])
+        self.assertTrue(backup.exists())
+        self.assertEqual(backup.read_bytes(), b"recoverable previous output")
+        self.assertFalse(self.audio_file.exists())
+
     def test_startup_runs_separation_backup_recovery_before_stale_cleanup(self):
         calls = []
         with mock.patch.object(server, "recover_staged_deletions", side_effect=lambda: calls.append("deletions")):
