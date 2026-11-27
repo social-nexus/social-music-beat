@@ -1165,7 +1165,14 @@ export default function App() {
       n += 1;
       const saved = await jsonPost("/api/save", { url: it.file });
       if (!saved?.file) throw new Error(tx("errNoAudio"));
-      await addTrack({ id: uid(), file: saved.file, createdAt: Date.now(), ...make(it, n, items.length) });
+      const track = { id: uid(), file: saved.file, createdAt: Date.now(), ...make(it, n, items.length) };
+      try {
+        await addTrack(track);
+      } catch (persistError) {
+        // If metadata could not be persisted, remove the downloaded orphan file.
+        try { await jsonPost("/api/audio/cleanup", { file: saved.file }); } catch { /* preserve the original persistence error */ }
+        throw persistError;
+      }
     }
     if (!n) throw new Error(tx("errNoAudio"));
   };

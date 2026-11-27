@@ -246,6 +246,24 @@ def sniff_ext(data: bytes) -> str:
     return "wav"
 
 
+@app.post("/api/audio/cleanup")
+def cleanup_unregistered_audio(payload: dict):
+    """Remove an audio file only when it is not referenced by the library."""
+    name = Path(str(payload.get("file", ""))).name
+    if not name or name in (".", ".."):
+        raise HTTPException(400, "Nome de arquivo inválido.")
+    target = DATA / name
+    with _lib_lock:
+        if any(Path(str(item.get("file", ""))).name == name for item in read_lib()):
+            raise HTTPException(409, "O áudio está registrado na biblioteca e não pode ser removido.")
+        if target.is_file():
+            try:
+                target.unlink()
+            except OSError as exc:
+                raise HTTPException(500, "Não foi possível limpar o áudio temporário.") from exc
+    return {"ok": True}
+
+
 @app.post("/api/save")
 async def save_audio(payload: dict):
     """Baixa o áudio gerado pelo ACE-Step e guarda na pasta musicas."""

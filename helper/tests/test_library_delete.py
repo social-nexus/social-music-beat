@@ -83,6 +83,17 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertFalse(staged_vocals.exists())
         self.assertFalse(staged_instrumental.exists())
 
+    def test_cleanup_removes_unregistered_audio(self):
+        server.write_lib([])
+        result = server.cleanup_unregistered_audio({"file": str(self.audio_file)})
+        self.assertEqual(result, {"ok": True})
+        self.assertFalse(self.audio_file.exists())
+
+    def test_cleanup_does_not_remove_library_audio(self):
+        result = server.cleanup_unregistered_audio({"file": str(self.audio_file)})
+        self.assertEqual(result, {"ok": True})
+        self.assertTrue(self.audio_file.exists())
+
     def test_delete_unknown_id_is_noop(self):
         result = server.delete_track("missing")
         self.assertEqual(result, {"ok": True})
