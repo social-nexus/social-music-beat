@@ -216,6 +216,34 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertEqual(update.call_args.kwargs["status"], "done")
         self.assertEqual(list(target_dir.glob("*.download*")), [])
 
+    def test_model_download_metadata_publish_failure_restores_previous_pair(self):
+        root = Path(TEMP_DATA) / "model-metadata-rollback"
+        folder = root / "qwen3-4b-q4km"
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / ia_local.MODEL_CATALOG["qwen3-4b-q4km"]["filename"]
+        metadata = folder / "model.json"
+        target.write_bytes(b"previous-model")
+        metadata.write_text("previous-metadata", encoding="utf-8")
+        staged = folder / ".new-model.download"
+        metadata_staged = folder / ".new-metadata.json.tmp"
+        staged.write_bytes(b"verified-new-model")
+        metadata_staged.write_text("new-metadata", encoding="utf-8")
+        real_replace = ia_local.os.replace
+
+        def fail_metadata_publish(source, destination):
+            if Path(source) == metadata_staged and Path(destination) == metadata:
+                raise OSError("metadata publish failed")
+            return real_replace(source, destination)
+
+        with mock.patch.object(ia_local.os, "replace", side_effect=fail_metadata_publish):
+            with self.assertRaises(OSError):
+                ia_local._publish_model_files(staged, target, metadata_staged, metadata)
+        self.assertEqual(target.read_bytes(), b"previous-model")
+        self.assertEqual(metadata.read_text(encoding="utf-8"), "previous-metadata")
+        self.assertEqual(list(folder.glob("*.backup")), [])
+        self.assertFalse(staged.exists())
+        self.assertTrue(metadata_staged.exists())
+
     def test_archive_path_rejects_parent_traversal(self):
         root = Path(TEMP_DATA) / "extract"
         with self.assertRaises(ValueError):

@@ -399,6 +399,34 @@ def _hf_file_digest(repo: str, filename: str) -> tuple[str, int]:
         raise ValueError("O repositório não forneceu um tamanho verificável para este modelo.")
     return digest, size
 
+def _publish_model_files(staged: Path, target: Path, metadata_staged: Path, metadata: Path):
+    """Publish the GGUF and its metadata together, restoring the old pair on failure."""
+    token = uuid.uuid4().hex
+    target_backup = target.with_name(f".{target.name}.{token}.backup")
+    metadata_backup = metadata.with_name(f".{metadata.name}.{token}.backup")
+    target_backed_up = False
+    metadata_backed_up = False
+    try:
+        if target.exists():
+            os.replace(target, target_backup)
+            target_backed_up = True
+        if metadata.exists():
+            os.replace(metadata, metadata_backup)
+            metadata_backed_up = True
+        os.replace(staged, target)
+        os.replace(metadata_staged, metadata)
+    except Exception:
+        target.unlink(missing_ok=True)
+        metadata.unlink(missing_ok=True)
+        if target_backed_up:
+            os.replace(target_backup, target)
+        if metadata_backed_up:
+            os.replace(metadata_backup, metadata)
+        raise
+    else:
+        target_backup.unlink(missing_ok=True)
+        metadata_backup.unlink(missing_ok=True)
+
 def _download_model_worker(jid: str, model_id: str):
     with _model_operation_lock(model_id):
         _download_model_worker_locked(jid, model_id)
@@ -426,9 +454,8 @@ def _download_model_worker_locked(jid: str, model_id: str):
             "model_id": model_id, "repo": meta["repo"], "filename": meta["filename"],
             "sha256": digest, "license": meta["license"], "installed_at": int(time.time())
         }, indent=2), encoding="utf-8")
-        # Só publica o modelo depois de validar o arquivo completo.
-        os.replace(staged, target)
-        os.replace(metadata_staged, metadata)
+        # Arquivo e metadados são publicados como uma transação com rollback.
+        _publish_model_files(staged, target, metadata_staged, metadata)
         _update_job(jid, status="done", progress=100, message="Modelo baixado e verificado.")
     except Exception as exc:
         _update_job(jid, status="error", message=str(exc)[:350])
