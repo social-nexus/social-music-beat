@@ -563,8 +563,11 @@ async def save_audio(payload: dict):
     endpoint = f"{ACE}/v1/audio"
     if parsed.query:
         endpoint = f"{endpoint}?{parsed.query}"
-    async with httpx.AsyncClient(timeout=300.0) as c:
-        r = await c.get(endpoint)
+    try:
+        async with httpx.AsyncClient(timeout=300.0) as c:
+            r = await c.get(endpoint)
+    except httpx.HTTPError as exc:
+        raise HTTPException(502, "Não consegui conectar ao motor de áudio para baixar o arquivo.") from exc
     if r.status_code != 200:
         raise HTTPException(502, "Não consegui baixar o áudio gerado.")
     return {"file": _persist_audio_content(r.content, sniff_ext(r.content))}
