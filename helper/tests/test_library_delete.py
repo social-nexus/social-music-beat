@@ -515,6 +515,17 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(server.jobs["job-a"]["status"], "done")
         self.assertEqual(server.jobs["job-b"]["status"], "done")
 
+    def test_audio_persist_uses_collision_resistant_name_and_legacy_names_remain_valid(self):
+        first = server._persist_audio_content(b"first", "wav")
+        second = server._persist_audio_content(b"second", "wav")
+        first_name = Path(first).name
+        second_name = Path(second).name
+        self.assertRegex(first_name, r"^\d+_[0-9a-f]{12}\.wav$")
+        self.assertRegex(second_name, r"^\d+_[0-9a-f]{12}\.wav$")
+        self.assertNotEqual(first_name, second_name)
+        self.assertTrue(server._AUDIO_FINAL_RE.fullmatch("1234567890_abcdef.wav"))
+        self.assertTrue(server._AUDIO_FINAL_RE.fullmatch(first_name))
+
     def test_audio_persist_publishes_complete_file(self):
         result = server._persist_audio_content(b"full-audio-payload", "wav")
         target = self.data / Path(result).name
