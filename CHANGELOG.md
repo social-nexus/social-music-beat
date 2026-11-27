@@ -8,6 +8,7 @@
 - Primeiras traduções aplicadas à navegação, avisos do motor, títulos principais, estado vazio da biblioteca e seletor de idioma da música.
 - Cronômetro do compositor durante geração, instalação/download/ativação de modelos, análise de referência melódica e transcrição Whisper.
 - Reforço dos prompts multilíngues para Qwen/Gemma e APIs: título, descrições e letra seguem o idioma escolhido, mantendo tags estruturais em inglês.
+- Cabeçalhos do resultado (título, estilo, configurações e letra) localizados para português, inglês e espanhol.
 - Testes de regressão para português do Brasil, inglês e espanhol.
 - Faixas passam a guardar o idioma vocal selecionado; a criação posterior de banda reutiliza o idioma da faixa original, sem depender da seleção atual do formulário.
 - Cronômetro das operações de áudio visível também em dispositivos móveis e ao navegar entre abas; o tempo final permanece na tela após a conclusão.
