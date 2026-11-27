@@ -420,7 +420,8 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
         if (s.status !== "rodando") throw new Error(tx("errUnexpectedTaskStatus"));
       }
     } catch (e) {
-      setMsg(String(e.message || e).slice(0, 300));
+      // Avoid leaking backend-only Portuguese details into the selected UI language.
+      setMsg(tx("errOperationFailed"));
     } finally {
       setLastElapsed(Math.floor((Date.now() - operationStartedAt) / 1000));
       setStartedAt(null);
