@@ -203,6 +203,26 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         for jid in job_ids:
             self.assertEqual(server.job_status(jid)["progress"], 79)
 
+    def test_separation_staging_failure_cleans_partial_stems(self):
+        writes = []
+
+        def fake_writer(path, tensor, samplerate):
+            path.write_bytes(b"partial output")
+            writes.append(path)
+            if len(writes) == 2:
+                raise OSError("simulated instrumental write failure")
+
+        with self.assertRaisesRegex(OSError, "instrumental write failure"):
+            server._stage_separation_outputs(
+                "batch-1",
+                (("voz", object()), ("instrumental", object())),
+                44100,
+                fake_writer,
+            )
+        self.assertEqual(len(writes), 2)
+        self.assertTrue(all(not path.exists() for path in writes))
+        self.assertFalse(any(self.data.glob("*.tmp.wav")))
+
     def test_separation_rollback_failure_reports_backup_location(self):
         staged_vocals = self.data / ".vocals.tmp.wav"
         staged_instrumental = self.data / ".instrumental.tmp.wav"
