@@ -398,3 +398,81 @@ class ModelImportAtomicityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(calls, 2)
         self.assertEqual(list(root.glob("imported-*")), [])
         self.assertEqual(list(root.glob(".*.staging")), [])
+
+
+class ModelDeleteSafetyTests(unittest.TestCase):
+    def _request(self):
+        from starlette.requests import Request
+        return Request({"type": "http", "method": "DELETE", "headers": [
+            (b"host", b"localhost:8002"), (b"origin", b"http://localhost:8002")
+        ]})
+
+    def _model(self, root, model_id="imported-0123456789"):
+        folder = root / model_id
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "model.gguf").write_bytes(b"GGUF" + b"x" * 32)
+        return folder
+
+    def test_invalid_model_id_does_not_stop_runtime(self):
+        with mock.patch.object(ia_local, "_stop_runtime") as stop:
+            with self.assertRaises(ia_local.HTTPException) as ctx:
+                ia_local.delete_model("../outside", self._request())
+        self.assertEqual(ctx.exception.status_code, 400)
+        stop.assert_not_called()
+
+    def test_missing_model_does_not_stop_runtime(self):
+        root = Path(TEMP_DATA) / "model-delete-missing"
+        root.mkdir(parents=True, exist_ok=True)
+        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
+             mock.patch.object(ia_local, "_stop_runtime") as stop:
+            with self.assertRaises(ia_local.HTTPException) as ctx:
+                ia_local.delete_model("imported-0123456789", self._request())
+        self.assertEqual(ctx.exception.status_code, 404)
+        stop.assert_not_called()
+
+    def test_delete_atomically_hides_then_removes_model(self):
+        root = Path(TEMP_DATA) / "model-delete-success"
+        root.mkdir(parents=True, exist_ok=True)
+        folder = self._model(root)
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            result = ia_local.delete_model(folder.name, self._request())
+        self.assertEqual(result, {"ok": True})
+        self.assertFalse(folder.exists())
+        self.assertEqual(list(root.glob(".*.deleting-*")), [])
+
+    def test_delete_rename_failure_preserves_installed_model(self):
+        root = Path(TEMP_DATA) / "model-delete-rename-failure"
+        root.mkdir(parents=True, exist_ok=True)
+        folder = self._model(root)
+        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
+             mock.patch.object(ia_local.os, "replace", side_effect=OSError("rename failed")):
+            with self.assertRaises(ia_local.HTTPException) as ctx:
+                ia_local.delete_model(folder.name, self._request())
+        self.assertEqual(ctx.exception.status_code, 500)
+        self.assertTrue((folder / "model.gguf").is_file())
+
+    def test_delete_cleanup_failure_keeps_partial_folder_hidden(self):
+        root = Path(TEMP_DATA) / "model-delete-cleanup-failure"
+        root.mkdir(parents=True, exist_ok=True)
+        folder = self._model(root)
+        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
+             mock.patch.object(ia_local.shutil, "rmtree", side_effect=OSError("cleanup failed")):
+            with self.assertRaises(ia_local.HTTPException) as ctx:
+                ia_local.delete_model(folder.name, self._request())
+        self.assertEqual(ctx.exception.status_code, 500)
+        self.assertFalse(folder.exists())
+        quarantined = list(root.glob(".*.deleting-*"))
+        self.assertEqual(len(quarantined), 1)
+        self.assertTrue((quarantined[0] / "model.gguf").is_file())
+
+    def test_active_model_is_stopped_before_directory_isolation(self):
+        root = Path(TEMP_DATA) / "model-delete-active"
+        root.mkdir(parents=True, exist_ok=True)
+        folder = self._model(root)
+        with mock.patch.object(ia_local, "MODELS_DIR", root), \\
+             mock.patch.object(ia_local, "ACTIVE_MODEL", folder.name), \\
+             mock.patch.object(ia_local, "_stop_runtime") as stop:
+            result = ia_local.delete_model(folder.name, self._request())
+        self.assertEqual(result, {"ok": True})
+        stop.assert_called_once_with()
+        self.assertFalse(folder.exists())

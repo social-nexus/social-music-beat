@@ -603,16 +603,35 @@ def ai_job(jid: str):
 @router.delete("/models/{model_id}")
 def delete_model(model_id: str, request: Request):
     _guard_local_request(request)
-    if model_id == ACTIVE_MODEL:
-        _stop_runtime()
     if model_id in MODEL_CATALOG:
         folder = MODELS_DIR / model_id
     elif re.fullmatch(r"imported-[0-9a-f]{10}", model_id):
         folder = MODELS_DIR / model_id
     else:
         raise HTTPException(400, "Modelo inválido.")
-    if folder.exists():
-        shutil.rmtree(folder)
+
+    # Não pare o runtime nem altere arquivos para IDs inválidos ou ausentes.
+    if not folder.is_dir() or folder.is_symlink():
+        raise HTTPException(404, "Modelo instalado não encontrado.")
+    if model_id == ACTIVE_MODEL:
+        try:
+            _stop_runtime()
+        except Exception as exc:
+            raise HTTPException(503, "Não foi possível parar o runtime; o modelo foi mantido.") from exc
+
+    # A renomeação no mesmo volume é atômica: o modelo só sai da lista
+    # depois que a pasta inteira é isolada, nunca durante uma exclusão parcial.
+    quarantine = MODELS_DIR / f".{model_id}.deleting-{uuid.uuid4().hex}"
+    try:
+        os.replace(folder, quarantine)
+    except OSError as exc:
+        raise HTTPException(500, "Não foi possível isolar o modelo; os arquivos foram mantidos.") from exc
+
+    try:
+        shutil.rmtree(quarantine)
+    except OSError as exc:
+        # A pasta incompleta permanece oculta e não será listada como modelo instalado.
+        raise HTTPException(500, "O modelo foi isolado, mas a limpeza dos arquivos não terminou.") from exc
     return {"ok": True}
 
 def _language_directive(language: str) -> str:
