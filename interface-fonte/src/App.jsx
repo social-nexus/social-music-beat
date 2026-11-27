@@ -298,6 +298,15 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
   const [whisper, setWhisper] = useState(false);
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
+  const [startedAt, setStartedAt] = useState(null);
+  const [elapsedTick, setElapsedTick] = useState(0);
+  const [lastElapsed, setLastElapsed] = useState(null);
+  useEffect(() => {
+    if (!startedAt) return undefined;
+    const timer = setInterval(() => setElapsedTick((n) => n + 1), 1000);
+    return () => clearInterval(timer);
+  }, [startedAt]);
+  const elapsed = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : (lastElapsed ?? 0);
   const [res, setRes] = useState(null);
   const inputRef = useRef(null);
 
@@ -308,6 +317,9 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
     setMsg("");
     if (!letra.trim()) { setMsg(language === "en" ? "The lyrics are empty." : language === "es" ? "La letra está vacía." : "A letra está vazia."); return; }
     if (modo === "whisper" && !whisper) { setMsg(language === "en" ? "Whisper is not installed. Run instalar.bat again and reopen the app." : language === "es" ? "Whisper no está instalado. Ejecuta instalar.bat otra vez y vuelve a abrir el programa." : "O Whisper não está instalado. Rode o instalar.bat de novo e abra o programa outra vez."); return; }
+    const operationStartedAt = Date.now();
+    setStartedAt(operationStartedAt);
+    setLastElapsed(null);
     setOcupado(true);
     try {
       let jid;
@@ -332,8 +344,11 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
       }
     } catch (e) {
       setMsg(String(e.message || e).slice(0, 300));
+    } finally {
+      setLastElapsed(Math.floor((Date.now() - operationStartedAt) / 1000));
+      setStartedAt(null);
+      setOcupado(false);
     }
-    setOcupado(false);
   };
 
   const baixar = (conteudo, ext) => {
@@ -402,6 +417,7 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
         >
           {ocupado ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} {ocupado ? tx("working") : tx("makeCaption")}
         </button>
+        {lastElapsed !== null && !ocupado && <p className="text-[11px] text-zinc-500">{res ? tx("operationDone") : tx("operationInterrupted")} · {tx("elapsed")}: {mmss(lastElapsed)}</p>}
         {msg && <div className={`rounded-lg border p-3 text-xs break-words ${ocupado ? "border-white/10 text-zinc-300" : "border-red-500/30 bg-red-500/10 text-red-200"}`}>{msg}</div>}
 
         {res && (
