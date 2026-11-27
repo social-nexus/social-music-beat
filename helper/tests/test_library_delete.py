@@ -817,6 +817,22 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(job["status"], "running")
         thread_factory.assert_called_once()
 
+    def test_separation_rejects_non_audio_files_before_creating_jobs(self):
+        server.jobs.clear()
+        for invalid in ("biblioteca.json", server._JOBS_FILE_NAME, ".manual.backup", "track.exe", "", None, 42):
+            with self.subTest(file=invalid):
+                with self.assertRaises(server.HTTPException) as raised:
+                    server.separate({"file": invalid})
+                self.assertEqual(raised.exception.status_code, 400)
+        self.assertEqual(server.jobs, {})
+
+    def test_separation_missing_audio_returns_404_without_job(self):
+        server.jobs.clear()
+        with self.assertRaises(server.HTTPException) as raised:
+            server.separate({"file": "missing.wav"})
+        self.assertEqual(raised.exception.status_code, 404)
+        self.assertEqual(server.jobs, {})
+
     def test_separation_thread_start_failure_marks_job_failed(self):
         server.jobs.clear()
         worker = mock.Mock()
