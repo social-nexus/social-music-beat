@@ -1023,7 +1023,7 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
             <input type="file" accept=".gguf" className="hidden" disabled={busy} onChange={(e) => { importModel(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
           <button disabled={busy || !runtimeInstalled || !installedSelected} onClick={activate} className="rounded-xl bg-pink-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">{tx("activateModel")}</button>
-          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage(tx("msgEngineStopped")); } catch (e) { setError(e.message); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{tx("stopAI")}</button>}
+          {status.runtime_running && <button disabled={busy} onClick={async () => { setBusy(true); setError(""); setMessage(tx("msgStoppingEngine")); try { await http("/api/ai/runtime/stop", { method: "POST" }); await refresh(); setMessage(tx("msgEngineStopped")); } catch (e) { setError(tx("errOperationFailed")); } finally { setBusy(false); } }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm">{tx("stopAI")}</button>}
         </div>
         <p className="text-xs text-zinc-500">{tx("importNote")}</p>
       </section>
