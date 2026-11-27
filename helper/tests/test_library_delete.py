@@ -1202,5 +1202,22 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                 self.assertIsNone(server.sniff_ext(payload))
 
 
+    def test_sniff_ext_rejects_invalid_mpeg_layer_three_headers(self):
+        invalid_frames = (
+            b"\xff\xeb\x90\x64audio-frame",  # reserved MPEG version
+            b"\xff\xf9\x90\x64audio-frame",  # reserved MPEG layer
+            b"\xff\xfb\xf0\x64audio-frame",  # invalid bitrate index
+            b"\xff\xfb\xfc\x64audio-frame",  # invalid sample-rate index
+        )
+        for payload in invalid_frames:
+            with self.subTest(payload=payload[:4]):
+                self.assertIsNone(server.sniff_ext(payload))
+
+    def test_sniff_ext_rejects_invalid_mpeg_frame_after_id3_tag(self):
+        # A valid ID3v2.4 header must not make an invalid MPEG frame look like MP3.
+        payload = b"ID3\x04\x00\x00\x00\x00\x00\x00\xff\xeb\x90\x64"
+        self.assertIsNone(server.sniff_ext(payload))
+
+
 if __name__ == "__main__":
     unittest.main()
