@@ -1015,8 +1015,8 @@ export default function App() {\n  const { lang, setLang, t } = useLocale();
 
   const runJob = async (title, fn) => {
     setErr("");
-    setJob({ title, phase: "Começando...", startedAt: Date.now() });
-    const phase = (p) => setJob((j) => (j ? { ...j, phase: p } : j));
+    setJob({ title, phase: "Começando...", startedAt: Date.now(), phaseStartedAt: Date.now() });
+    const phase = (p) => setJob((j) => (j ? (j.phase === p ? j : { ...j, phase: p, phaseStartedAt: Date.now() }) : j));
     try { await fn(phase); } catch (e) { setErr(String(e.message || e)); } finally { setJob(null); }
   };
 
