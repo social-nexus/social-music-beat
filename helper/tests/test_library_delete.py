@@ -539,6 +539,14 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(server._AUDIO_FINAL_RE.fullmatch("1234567890_abcdef.wav"))
         self.assertTrue(server._AUDIO_FINAL_RE.fullmatch(first_name))
 
+    def test_audio_persist_normalizes_extension_to_supported_audio_formats(self):
+        for extension in ("exe", "../wav", "", None, "WAV"):
+            with self.subTest(extension=extension):
+                result = server._persist_audio_content(b"audio", extension)
+                name = Path(result).name
+                self.assertRegex(name, r"^\\d+_[0-9a-f]{12}\\.(wav|flac|mp3)$")
+                self.assertTrue((self.data / name).is_file())
+
     def test_audio_persist_publishes_complete_file(self):
         result = server._persist_audio_content(b"full-audio-payload", "wav")
         target = self.data / Path(result).name
