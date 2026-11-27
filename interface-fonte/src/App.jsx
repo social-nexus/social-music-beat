@@ -593,6 +593,16 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  // O mesmo relógio acompanha instalação, download, ativação, análise, transcrição e composição.
+  useEffect(() => {
+    const operationBusy = busy || providerBusy || melodyBusy || transcriptionBusy;
+    if (operationBusy && !operationStartedAt) {
+      setOperationStartedAt(Date.now());
+      setOperationTick(0);
+    } else if (!operationBusy && operationStartedAt) {
+      setOperationStartedAt(null);
+    }
+  }, [busy, providerBusy, melodyBusy, transcriptionBusy, operationStartedAt]);
 
   useEffect(() => () => {
     if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
@@ -817,6 +827,12 @@ function CompositorPanel({ onUseLyrics, uiLanguage = "pt" }) {
       {(error || message) && (
         <div className={error ? "rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200" : "rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-sm text-sky-200"}>
           {error || message}
+          {operationStartedAt && (
+            <p className="mt-2 flex items-center gap-2 border-t border-white/10 pt-2 font-mono text-xs text-zinc-300">
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-pink-400" />
+              {uiLanguage === "en" ? "Elapsed time" : uiLanguage === "es" ? "Tiempo transcurrido" : "Tempo decorrido"}: {mmss(operationElapsed)}
+            </p>
+          )}
         </div>
       )}
 
