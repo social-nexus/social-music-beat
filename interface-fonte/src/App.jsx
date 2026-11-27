@@ -415,7 +415,7 @@ function LegendaModal({ track, tracks, onClose, language = "pt" }) {
           disabled={ocupado}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 py-3 font-bold text-white disabled:opacity-50"
         >
-          {ocupado ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} {ocupado ? tx("working") : tx("makeCaption")}
+          {ocupado ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} {ocupado ? tx("working") : tx("makeCaption")} {ocupado && <span className="ml-2 font-mono text-xs">{mmss(elapsed)}</span>}
         </button>
         {lastElapsed !== null && !ocupado && <p className="text-[11px] text-zinc-500">{res ? tx("operationDone") : tx("operationInterrupted")} · {tx("elapsed")}: {mmss(lastElapsed)}</p>}
         {msg && <div className={`rounded-lg border p-3 text-xs break-words ${ocupado ? "border-white/10 text-zinc-300" : "border-red-500/30 bg-red-500/10 text-red-200"}`}>{msg}</div>}
