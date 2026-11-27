@@ -13,7 +13,7 @@
 2. Idioma da interface: Português do Brasil, English e Español.
 3. Idioma do conteúdo musical independente do idioma da interface.
 4. Compositor Qwen/Gemma e provedores por API orientados explicitamente ao idioma solicitado.
-5. ACE-Step recebe o idioma vocal correto para a geração cantada.
+5. ACE-step recebe o idioma vocal correto para a geração cantada.
 
 ## Situação técnica encontrada na v3.0.0
 
@@ -28,24 +28,29 @@
 - Adicionada preferência de idioma da interface com persistência local, com opções Português do Brasil, English e Español.
 - Camada central de textos ampliada para português do Brasil, inglês e espanhol, cobrindo navegação, criação musical, ajuda, compositor IA, seleção/instalação de modelos, configuração de provedores, janelas de voz e legendas, mensagens de validação e análise melódica.
 - Categorias musicais e nomes dos 55 estilos predefinidos também localizados para inglês e espanhol, sem alterar os prompts técnicos enviados ao ACE-Step.
-- Timer do compositor de letras: o relógio agora cobre geração de letras, instalação/download/ativação do modelo, análise da referência melódica e transcrição Whisper, além de permanecer visível no painel de status enquanto a operação estiver ativa.
+- Timer do compositor de letras: relógio cobre geração de letras, instalação/download/ativação do modelo, análise da referência melódica e transcrição Whisper, e permanece visível no painel de status durante a operação.
 - Timer próprio para geração de legendas SRT/LRC, com tempo durante o processamento e duração final após concluir ou falhar.
 - Prompt multilíngue Qwen/Gemma/API reforçado com instruções explícitas para escrever título, valores descritivos e letra no idioma escolhido (português brasileiro, inglês ou espanhol), mantendo tags estruturais em inglês.
 - Cabeçalhos do resultado da composição (título, estilo, configurações e letra) agora acompanham o idioma escolhido.
 - Testes de regressão adicionados para as três diretivas de idioma e rejeição de idiomas não suportados.
-- Timer de operações de áudio: o indicador da tarefa passou a ficar visível no layout principal, inclusive em telas móveis e ao navegar entre abas.
+- Timer de operações de áudio: indicador da tarefa fica visível no layout principal, inclusive em telas móveis e ao navegar entre abas.
 - Ao terminar uma tarefa de áudio, o tempo total permanece visível até a próxima operação.
 - Versão do pacote da interface atualizada para `3.1.0`.
 
+## Revisão/validação desta continuação
+
+- Adicionado `docs/TESTES-VALIDACAO-3.1.0.md`, roteiro para teste manual organizado por idioma e operação, incluindo Gemma, Qwen, ACE-Step, separação, criação de banda e cronômetros.
+- A extração do catálogo inline para arquivos de idioma foi identificada como manutenção desejável, mas será feita numa etapa dedicada com teste de build e revisão de chaves. Evitar refatorar o catálogo monolítico de forma mecânica, pois há risco de regressão em strings duplicadas e chaves reutilizadas.
+- Não há confirmação de geração de áudio real em pt/en/es neste ambiente; esses testes dependem do ACE-Step e dos pesos instalados no computador do usuário.
+
 ## Próximas etapas
 
-1. Fazer revisão final de cobertura de tradução, especialmente mensagens retornadas pelo backend, textos dinâmicos de provedores/modelos e acessibilidade; extrair o catálogo para arquivos de idioma próprios.
-2. Centralizar as traduções em arquivos próprios para facilitar manutenção e futuras línguas.
-3. Concluir a localização de fases e mensagens de operações, inclusive as mensagens de erro retornadas pelos serviços.
-4. Revisar e testar os idiomas musicais em todos os fluxos do ACE-Step, inclusive criação de banda com voz do usuário.
-5. Validar em execução real Qwen3, Gemma 3 e provedores API nos três idiomas; conferir preservação de letras originais ao continuar uma composição.
-6. Adicionar testes automatizados para preferência de idioma, persistência, cronômetros e payloads de idioma.
-7. Executar build da interface e testes Python; validar geração real em Windows antes de publicar.
+1. Revisar cobertura de tradução, especialmente mensagens retornadas pelo backend, textos dinâmicos de provedores/modelos e acessibilidade; extrair o catálogo para arquivos de idioma próprios com validação de chaves.
+2. Concluir localização de fases e mensagens de operações, inclusive mensagens de erro dos serviços; traduzir mensagens reconhecidas e preservar mensagens desconhecidas para diagnóstico.
+3. Revisar e testar idiomas musicais em todos os fluxos ACE-step, inclusive criação de banda com voz do usuário.
+4. Validar em execução real Qwen, Gemma e provedores API nos três idiomas; conferir preservação de letras originais ao continuar composição.
+5. Adicionar testes automatizados para preferência de idioma, persistência, cronômetros e payloads de idioma.
+6. Executar build da interface e testes Python; validar geração real em Windows antes de publicar.
 
 ## Regras de compatibilidade
 
