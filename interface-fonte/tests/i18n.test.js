@@ -52,6 +52,21 @@ for (const locale of requiredLocales) {
   }
 }
 
+// Verify the library actions that were recently audited remain localized.
+const localizedLibraryLabels = {
+  pt: { download: "Baixar", separate: "Separar voz e instrumental" },
+  en: { download: "Download", separate: "Separate vocals and instrumental" },
+  es: { download: "Descargar", separate: "Separar voz y pista instrumental" },
+};
+for (const locale of requiredLocales) {
+  for (const [key, expected] of Object.entries(localizedLibraryLabels[locale])) {
+    if (uiText(locale, key) !== expected) {
+      failed = true;
+      console.error(`Locale ${locale}: expected ${key}="${expected}", got "${uiText(locale, key)}"`);
+    }
+  }
+}
+
 if (uiText("pt", "language") !== UI_TEXT.pt.language) {
   failed = true;
   console.error("Portuguese lookup failed.");
