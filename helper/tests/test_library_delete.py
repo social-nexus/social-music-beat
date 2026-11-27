@@ -436,6 +436,8 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(server.read_lib()[:2], items)
 
     def test_batch_upsert_is_idempotent_for_retried_recovery_commit(self):
+        # This case starts from an empty library; setUp normally seeds one track.
+        server.write_lib([])
         first = [
             {"id": "stable-voice", "file": "voice.wav", "kind": "voz"},
             {"id": "stable-inst", "file": "inst.wav", "kind": "instrumental"},
