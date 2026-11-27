@@ -206,17 +206,17 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertEqual(self.audio_file.read_bytes(), b"audio sample")
         self.assertFalse(backup.exists())
 
-    def test_startup_discards_separation_backup_when_final_output_exists(self):
+    def test_startup_preserves_separation_backup_when_final_path_was_recreated(self):
         backup = self.data / (".track.wav." + "b" * 32 + ".backup")
         backup.write_bytes(b"previous output")
-        self.audio_file.write_bytes(b"new committed output")
+        self.audio_file.write_bytes(b"new file at same path")
 
         recovered = server.recover_separation_backups()
 
-        self.assertIn(("discarded", backup.name), recovered)
+        self.assertIn(("preserved_conflict", backup.name), recovered)
         self.assertTrue(self.audio_file.exists())
-        self.assertEqual(self.audio_file.read_bytes(), b"new committed output")
-        self.assertFalse(backup.exists())
+        self.assertEqual(self.audio_file.read_bytes(), b"new file at same path")
+        self.assertEqual(backup.read_bytes(), b"previous output")
 
     def test_delete_removes_metadata_and_audio(self):
         result = server.delete_track("track-1")
