@@ -1546,7 +1546,7 @@ export default function App() {
                         download={`${t.title}.${String(t.file).split(".").pop()}`}
                         className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10"
                       >
-                        <Download size={14} /> Baixar
+                        <Download size={14} /> {tx("download")}
                       </a>
                       {(t.kind === "song" || t.kind === "banda") && (
                         <button disabled={busy} onClick={() => separateTrack(t)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/10 disabled:opacity-40">
