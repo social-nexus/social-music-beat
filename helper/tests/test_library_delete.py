@@ -105,6 +105,12 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertIn(sentinel, server.jobs)
         self.assertEqual(jobs_file.read_bytes(), original)
 
+    def test_startup_recovery_handles_directory_scan_errors(self):
+        with mock.patch.object(server.DATA, "iterdir", side_effect=PermissionError("denied")):
+            self.assertEqual(server.recover_staged_deletions(), [])
+            self.assertEqual(server.recover_separation_backups(), [])
+            self.assertEqual(server.cleanup_stale_staging_files())
+
     def test_recovery_normalizes_invalid_job_timestamps(self):
         jobs_file = self.data / server._JOBS_FILE_NAME
         jobs_file.write_text(json.dumps({
