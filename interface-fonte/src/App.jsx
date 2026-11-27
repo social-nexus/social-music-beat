@@ -576,8 +576,12 @@ function CompositorPanel({ onUseLyrics }) {
   const [language, setLanguage] = useState("português do Brasil");
   const [result, setResult] = useState("");
   const [busy, setBusy] = useState(false);
+  const [busySince, setBusySince] = useState(0);
+  const [timerTick, setTimerTick] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => { if (!busy) return undefined; const timer = window.setInterval(() => setTimerTick((n) => n + 1), 1000); return () => window.clearInterval(timer); }, [busy]);
 
   useEffect(() => () => {
     if (recordingTimerRef.current) window.clearTimeout(recordingTimerRef.current);
@@ -646,7 +650,7 @@ function CompositorPanel({ onUseLyrics }) {
   };
 
   const installRuntime = async () => {
-    setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Preparando o motor local…");
+    setBusySince(Date.now()); setBusySince(Date.now()); setBusy(true); setError(""); setMessage("Preparando o motor local…");
     try {
       const r = await jsonPost("/api/ai/runtime/install", { variant: runtime });
       if (r.job_id) await waitJob(r.job_id, "Motor instalado e verificado.");
@@ -802,6 +806,7 @@ function CompositorPanel({ onUseLyrics }) {
       {(error || message) && (
         <div className={error ? "rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200" : "rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-sm text-sky-200"}>
           {error || message}
+          {busy && busySince > 0 && <div className="mt-2 font-mono text-xs opacity-80">Tempo decorrido: {mmss(Math.floor((Date.now() - busySince) / 1000))}</div>}
         </div>
       )}
 
