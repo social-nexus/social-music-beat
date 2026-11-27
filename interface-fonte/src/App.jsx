@@ -1190,7 +1190,7 @@ export default function App() {
             ? tx("phaseSepQueued")
             : (backendPhase || tx("phaseSepFallback"));
       phase(localizedPhase);
-      if (s.status === "error") throw new Error(s.msg || tx("errUnexpectedJobStatus"));
+      if (s.status === "error") throw new Error((s.msg || "").toLowerCase().includes("interrompida") ? tx("errSepInterrupted") : (s.msg || tx("errUnexpectedJobStatus")));
       if (s.status === "done") {
         if (!s.result?.voz || !s.result?.instrumental) throw new Error(tx("errUnexpectedJobStatus"));
         const base = { createdAt: Date.now(), parent: t.id, style: t.style, lyrics: t.lyrics, bpm: t.bpm, key: t.key, language: t.language || form.lang };
