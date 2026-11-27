@@ -1015,5 +1015,51 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(self.audio_file.exists())
 
 
+    def test_orphan_cleanup_removes_only_stale_unreferenced_generated_audio(self):
+        old_orphan = self.data / "1234567890_abcdef.wav"
+        referenced = self.data / "1234567891_abcdef.flac"
+        fresh_orphan = self.data / "1234567892_abcdef.mp3"
+        unrelated = self.data / "user-recording.wav"
+        for path in (old_orphan, referenced, fresh_orphan, unrelated):
+            path.write_bytes(b"audio")
+        server.write_lib([{"id": "keep", "file": referenced.name}])
+        old_time = time.time() - server._STALE_STAGING_SECONDS - 5
+        os.utime(old_orphan, (old_time, old_time))
+        os.utime(referenced, (old_time, old_time))
+        os.utime(unrelated, (old_time, old_time))
+
+        removed = server.cleanup_orphaned_audio_files()
+
+        self.assertEqual(removed, [old_orphan.name])
+        self.assertFalse(old_orphan.exists())
+        self.assertTrue(referenced.exists())
+        self.assertTrue(fresh_orphan.exists())
+        self.assertTrue(unrelated.exists())
+
+    def test_orphan_cleanup_matches_library_references_case_insensitively(self):
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"registered audio")
+        old_time = time.time() - server._STALE_STAGING_SECONDS - 5
+        os.utime(generated, (old_time, old_time))
+        server.write_lib([{"id": "keep", "file": "1234567890_ABCDEF.WAV"}])
+
+        self.assertEqual(server.cleanup_orphaned_audio_files(), [])
+        self.assertTrue(generated.exists())
+
+    def test_orphan_cleanup_fails_closed_when_library_is_corrupt_or_missing(self):
+        generated = self.data / "1234567890_abcdef.wav"
+        generated.write_bytes(b"audio")
+        old_time = time.time() - server._STALE_STAGING_SECONDS - 5
+        os.utime(generated, (old_time, old_time))
+
+        self.library_file.write_text("{corrupt", encoding="utf-8")
+        self.assertEqual(server.cleanup_orphaned_audio_files(), [])
+        self.assertTrue(generated.exists())
+
+        self.library_file.unlink()
+        self.assertEqual(server.cleanup_orphaned_audio_files(), [])
+        self.assertTrue(generated.exists())
+
+
 if __name__ == "__main__":
     unittest.main()
