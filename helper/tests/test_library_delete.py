@@ -996,7 +996,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
 
     def test_save_audio_fetches_from_configured_ace_host_and_persists(self):
         import asyncio
-        response = mock.Mock(status_code=200, content=b"audio-bytes")
+        response = mock.Mock(status_code=200, content=b"RIFF\\x00\\x00\\x00\\x00WAVEaudio")
         request = mock.AsyncMock(return_value=response)
         client = mock.Mock()
         client.get = request
@@ -1010,7 +1010,7 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                 result = asyncio.run(server.save_audio({"url": "https://untrusted.example/v1/audio?filename=sample.wav"}))
         factory.assert_called_once_with(timeout=300.0)
         request.assert_awaited_once_with(f"{server.ACE}/v1/audio?filename=sample.wav")
-        persist.assert_called_once_with(b"audio-bytes", server.sniff_ext(b"audio-bytes"))
+        persist.assert_called_once_with(b"RIFF\\x00\\x00\\x00\\x00WAVEaudio", "wav")
         self.assertEqual(result, {"file": "/musicas/test.wav"})
 
 
@@ -1046,6 +1046,25 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
                 with self.assertRaises(server.HTTPException) as raised:
                     asyncio.run(server.save_audio({"url": "/v1/audio?filename=sample.wav"}))
         self.assertEqual(raised.exception.status_code, 502)
+        persist.assert_not_called()
+
+    def test_save_audio_rejects_unrecognized_nonempty_response_without_persisting(self):
+        import asyncio
+        response = mock.Mock(status_code=200, content=b"<html>upstream error</html>")
+        request = mock.AsyncMock(return_value=response)
+        client = mock.Mock()
+        client.get = request
+        class ClientContext:
+            async def __aenter__(self):
+                return client
+            async def __aexit__(self, *args):
+                return False
+        with mock.patch.object(server.httpx, "AsyncClient", return_value=ClientContext()):
+            with mock.patch.object(server, "_persist_audio_content") as persist:
+                with self.assertRaises(server.HTTPException) as raised:
+                    asyncio.run(server.save_audio({"url": "/v1/audio?filename=sample.wav"}))
+        self.assertEqual(raised.exception.status_code, 502)
+        self.assertIn("formato de áudio", raised.exception.detail)
         persist.assert_not_called()
 
     def test_save_audio_empty_response_returns_502_without_persisting(self):
