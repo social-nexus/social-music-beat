@@ -37,6 +37,56 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
             server.jobs.clear()
         server.write_lib([{"id": "track-1", "file": "track.wav", "title": "Test track"}])
 
+    def test_recovery_marks_running_separation_as_interrupted(self):
+        jid = "a" * 32
+        server.jobs.clear()
+        server.jobs[jid] = {
+            "status": "running",
+            "msg": "Separando voz e instrumental...",
+            "created_at": time.time() - 30,
+            "source_file": "track.wav",
+        }
+        with server._jobs_registry_lock:
+            server._persist_jobs_locked()
+        server.jobs.clear()
+
+        server.recover_separation_jobs()
+
+        recovered = server.job_status(jid)
+        self.assertEqual(recovered["status"], "error")
+        self.assertIn("interrompida", recovered["msg"].lower())
+        self.assertIsNotNone(recovered.get("finished_at"))
+        self.assertEqual(recovered["source_file"], "track.wav")
+
+    def test_recovery_preserves_completed_separation_results(self):
+        jid = "b" * 32
+        vocals = self.data / "result_voz.wav"
+        instrumental = self.data / "result_instrumental.wav"
+        vocals.write_bytes(b"vocals")
+        instrumental.write_bytes(b"instrumental")
+        server.jobs.clear()
+        server.jobs[jid] = {
+            "status": "done",
+            "msg": "Concluído",
+            "created_at": time.time() - 10,
+            "finished_at": time.time(),
+            "result": {
+                "voz": f"/musicas/{vocals.name}",
+                "instrumental": f"/musicas/{instrumental.name}",
+            },
+        }
+        with server._jobs_registry_lock:
+            server._persist_jobs_locked()
+        server.jobs.clear()
+
+        server.recover_separation_jobs()
+
+        recovered = server.job_status(jid)
+        self.assertEqual(recovered["status"], "done")
+        self.assertEqual(recovered["result"]["voz"], f"/musicas/{vocals.name}")
+        self.assertTrue(vocals.exists())
+        self.assertTrue(instrumental.exists())
+
     def test_startup_recovery_removes_only_stale_app_staging_files(self):
         old_stem = self.data / (".1234567890_abcdef_voz." + "a" * 32 + ".tmp.wav")
         old_library = self.data / (".biblioteca.json." + "b" * 32 + ".tmp")
