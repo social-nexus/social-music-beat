@@ -945,7 +945,7 @@ function CompositorPanel({ onUseLyrics }) {
               </select>
             </label>
             <button type="button" disabled={!melodyFile || melodyBusy || transcriptionBusy || recording} onClick={transcribeMelodyReference} className="self-end rounded-lg bg-pink-500/15 border border-pink-500/40 px-3 py-2 text-xs font-semibold text-pink-100 disabled:opacity-40">
-              {transcriptionBusy ? <><Loader2 size={14} className="inline animate-spin mr-1"/> {t("transcribing")} <span className="font-mono">{mmss(Math.floor((Date.now() - transcriptionStartedAt) / 1000))}</span></> : "Transcrever letra do áudio"}
+              {transcriptionBusy ? <><Loader2 size={14} className="inline animate-spin mr-1"/> {t("transcribing")} <span className="font-mono">{mmss(Math.floor((Date.now() - transcriptionStartedAt) / 1000))}</span></> : t("transcribeAudio")}
             </button>
           </div>
           {transcriptionMessage && <p className="text-[11px] text-sky-200">{transcriptionMessage}</p>}
@@ -961,7 +961,7 @@ function CompositorPanel({ onUseLyrics }) {
           </div>
           {melodyBusy && <div className="flex items-center gap-2 text-xs text-zinc-300"><Loader2 size={14} className="animate-spin"/> {t("analyzingMelody")} <span className="font-mono">{mmss(Math.floor((Date.now() - melodyStartedAt) / 1000))}</span></div>}
           {melodyAnalysis && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
-            <p className="text-xs font-semibold text-emerald-200">Referência pronta: {melodyFile?.name || "gravação"}</p>
+            <p className="text-xs font-semibold text-emerald-200">{t("referenceReady")} {melodyFile?.name || "gravação"}</p>
             <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">{melodyAnalysis.summary}</p>
           </div>}
           <p className="text-[11px] text-zinc-500">Privacidade: a análise melódica continua no navegador. Se você solicitar a transcrição, o áudio será processado somente pelo Whisper instalado neste computador (CPU), sem serviço externo, e será apagado após o processamento. O Whisper pode errar palavras cantadas ou não reconhecer sílabas inventadas; revise a letra. A transcrição não cria legendas nem timestamps.</p>
