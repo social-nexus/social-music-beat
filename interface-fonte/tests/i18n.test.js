@@ -157,6 +157,22 @@ for (const locale of requiredLocales) {
   }
 }
 
+
+// Verify timer and operation status labels used across long-running workflows.
+const localizedTimerLabels = {
+  pt: { elapsed: "Tempo decorrido", processing: "Processando", operationDone: "Operação concluída", operationInterrupted: "Operação interrompida" },
+  en: { elapsed: "Elapsed time", processing: "Processing", operationDone: "Operation completed", operationInterrupted: "Operation interrupted" },
+  es: { elapsed: "Tiempo transcurrido", processing: "Procesando", operationDone: "Operación completada", operationInterrupted: "Operación interrumpida" },
+};
+for (const locale of requiredLocales) {
+  for (const [key, expected] of Object.entries(localizedTimerLabels[locale])) {
+    if (uiText(locale, key) !== expected) {
+      failed = true;
+      console.error(`Locale ${locale}: expected timer label ${key}="${expected}", got "${uiText(locale, key)}"`);
+    }
+  }
+}
+
 if (uiText("pt", "language") !== UI_TEXT.pt.language) {
   failed = true;
   console.error("Portuguese lookup failed.");
