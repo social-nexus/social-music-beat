@@ -87,6 +87,26 @@ class LibraryDeleteTransactionTests(unittest.TestCase):
         self.assertTrue(vocals.exists())
         self.assertTrue(instrumental.exists())
 
+    def test_recovery_normalizes_invalid_job_timestamps(self):
+        jid = "c" * 32
+        jobs_file = self.data / server._JOBS_FILE_NAME
+        jobs_file.write_text(json.dumps({
+            jid: {
+                "status": "error",
+                "msg": "previous error",
+                "created_at": "not-a-timestamp",
+                "finished_at": "yesterday",
+            }
+        }), encoding="utf-8")
+
+        server.recover_separation_jobs()
+
+        recovered = server.job_status(jid)
+        self.assertEqual(recovered["status"], "error")
+        self.assertIsInstance(recovered["created_at"], (int, float))
+        self.assertIsInstance(recovered["finished_at"], (int, float))
+        self.assertGreater(recovered["finished_at"], 0)
+
     def test_startup_recovery_removes_only_stale_app_staging_files(self):
         old_stem = self.data / (".1234567890_abcdef_voz." + "a" * 32 + ".tmp.wav")
         old_library = self.data / (".biblioteca.json." + "b" * 32 + ".tmp")
