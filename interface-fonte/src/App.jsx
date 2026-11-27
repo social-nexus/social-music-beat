@@ -1327,7 +1327,7 @@ export default function App() {
                 <div className="space-y-4 rounded-xl border border-white/5 p-4">
                   <div>
                     <div className="flex justify-between text-xs text-zinc-300">
-                      <span>Duração</span><span>{mmss(form.duration)}</span>
+                      <span>{t("approximateDuration")}</span><span>{mmss(form.duration)}</span>
                     </div>
                     <input type="range" min={30} max={240} step={10} value={form.duration} onChange={(e) => set("duration", Number(e.target.value))} className="w-full" />
                   </div>
