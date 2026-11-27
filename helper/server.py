@@ -592,7 +592,7 @@ def recover_separation_jobs():
         return
     try:
         stored = json.loads(target.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, UnicodeError, json.JSONDecodeError):
         # Preserve a damaged task file rather than silently replacing it.
         return
     if not isinstance(stored, dict):
