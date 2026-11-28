@@ -858,7 +858,8 @@ def download_model(payload: dict, request: Request):
         raise HTTPException(400, "Modelo não permitido pelo catálogo.")
     if MODEL_CATALOG[model_id].get("requires_license_acceptance") and payload.get("accept_license") is not True:
         raise HTTPException(400, "Leia e aceite os termos de uso do modelo antes de baixar.")
-    if _model_file(model_id).is_file():
+    model_path = _model_file(model_id)
+    if _safe_model_file(model_path.parent, model_path):
         return {"installed": True}
     jid = _job("model")
     _start_background_job(jid, _download_model_worker, model_id)
