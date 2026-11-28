@@ -639,6 +639,13 @@ def _installed_models():
             model_folder = MODELS_DIR / p.parent.name
             if model_folder.is_symlink() or p.is_symlink() or not p.is_file():
                 continue
+            # Imported GGUFs must be structurally recognizable before being exposed.
+            with p.open("rb") as stream:
+                if stream.read(4) != b"GGUF":
+                    continue
+            # Only show imports with one GGUF; ambiguous folders need manual review.
+            if len(list(model_folder.glob("*.gguf"))) != 1:
+                continue
             found.append({"id": p.parent.name, "name": p.name, "path": str(p),
                           "size_bytes": p.stat().st_size, "license": "Licença definida pelo usuário"})
         except OSError:
