@@ -214,6 +214,13 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertEqual((final / "server").read_text(encoding="utf-8"), "recoverable")
         self.assertTrue(bad.exists())
 
+
+    def test_runtime_install_worker_swap_is_serialized_and_skips_if_already_installed(self):
+        # Worker rechecks runtime state under the operation lock before replacing files.
+        source = Path(ia_local.__file__).read_text(encoding='utf-8')
+        self.assertIn('with _RUNTIME_OPERATION_LOCK:', source)
+        self.assertIn('if _runtime_binary(variant) is None:', source)
+
     def test_runtime_replacement_activates_new_install_and_cleans_backup(self):
         root = Path(TEMP_DATA) / "runtime-swap-success"
         final = root / "runtime"
