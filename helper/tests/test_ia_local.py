@@ -89,6 +89,21 @@ class RuntimeCatalogTests(unittest.TestCase):
             (b"sec-fetch-site", b"same-origin"),
         ]))
 
+    def test_local_request_guard_rejects_cross_origin_read_requests(self):
+        from starlette.requests import Request
+
+        def get_request(headers):
+            return Request({"type": "http", "method": "GET", "headers": headers})
+
+        with self.assertRaises(ia_local.HTTPException):
+            ia_local._guard_local_request(get_request([(b"host", b"evil.example")]))
+        with self.assertRaises(ia_local.HTTPException):
+            ia_local._guard_local_request(get_request([
+                (b"host", b"localhost:8002"),
+                (b"origin", b"https://attacker.example"),
+            ]))
+        ia_local._guard_local_request(get_request([(b"host", b"127.0.0.1:8002")]))
+
     def test_runtime_assets_are_pinned_and_https(self):
         self.assertTrue(ia_local.RUNTIME_CATALOG)
         for variant, item in ia_local.RUNTIME_CATALOG.items():
