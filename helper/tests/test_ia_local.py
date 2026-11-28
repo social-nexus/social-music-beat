@@ -636,6 +636,27 @@ class ModelDeleteSafetyTests(unittest.TestCase):
         self.assertEqual(ctx.exception.status_code, 404)
         stop.assert_not_called()
 
+    def test_delete_rejects_symlinked_model_folder_and_preserves_target(self):
+        root = Path(TEMP_DATA) / "model-delete-symlink"
+        root.mkdir(parents=True, exist_ok=True)
+        outside = Path(TEMP_DATA) / "model-delete-symlink-target"
+        outside.mkdir(parents=True, exist_ok=True)
+        target_file = outside / "model.gguf"
+        target_file.write_bytes(b"GGUF" + b"protected")
+        link = root / "imported-0123456789"
+        try:
+            link.symlink_to(outside, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlink creation not supported in this environment")
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with mock.patch.object(ia_local, "_stop_runtime") as stop:
+                with self.assertRaises(ia_local.HTTPException) as ctx:
+                    ia_local.delete_model(link.name, self._request())
+        self.assertEqual(ctx.exception.status_code, 404)
+        stop.assert_not_called()
+        self.assertEqual(target_file.read_bytes(), b"GGUF" + b"protected")
+        self.assertTrue(link.is_symlink())
+
     def test_delete_atomically_hides_then_removes_model(self):
         root = Path(TEMP_DATA) / "model-delete-success"
         root.mkdir(parents=True, exist_ok=True)
