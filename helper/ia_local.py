@@ -544,7 +544,11 @@ def _download_model_worker_locked(jid: str, model_id: str):
         digest, size = _hf_file_digest(meta["repo"], meta["filename"])
         target_dir = MODELS_DIR / model_id
         target_dir.mkdir(parents=True, exist_ok=True)
+        if target_dir.is_symlink():
+            raise ValueError("A pasta do modelo é um link simbólico; download bloqueado por segurança.")
         target = target_dir / meta["filename"]
+        if target.is_symlink():
+            raise ValueError("O arquivo do modelo é um link simbólico; download bloqueado por segurança.")
         staged = target.with_name(f".{target.name}.{uuid.uuid4().hex}.download")
         metadata = target_dir / "model.json"
         metadata_staged = target_dir / f".model.{uuid.uuid4().hex}.json.tmp"
@@ -573,12 +577,24 @@ def _installed_models():
     found = []
     for model_id, meta in MODEL_CATALOG.items():
         p = _model_file(model_id)
-        if p.is_file():
-            found.append({"id": model_id, "name": meta["name"], "path": str(p),
-                          "size_bytes": p.stat().st_size, "license": meta["license"]})
+        # Catalog model directories/files must not be symlinks into arbitrary paths.
+        if p.parent.is_symlink() or p.is_symlink():
+            continue
+        try:
+            if p.is_file():
+                found.append({"id": model_id, "name": meta["name"], "path": str(p),
+                              "size_bytes": p.stat().st_size, "license": meta["license"]})
+        except OSError:
+            continue
     for p in MODELS_DIR.glob("imported-*/**/*.gguf"):
-        found.append({"id": p.parent.name, "name": p.name, "path": str(p),
-                      "size_bytes": p.stat().st_size, "license": "Licença definida pelo usuário"})
+        try:
+            model_folder = MODELS_DIR / p.parent.name
+            if model_folder.is_symlink() or p.is_symlink() or not p.is_file():
+                continue
+            found.append({"id": p.parent.name, "name": p.name, "path": str(p),
+                          "size_bytes": p.stat().st_size, "license": "Licença definida pelo usuário"})
+        except OSError:
+            continue
     return found
 
 def _stop_runtime():
