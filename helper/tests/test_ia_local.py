@@ -926,7 +926,7 @@ class RuntimeArchiveHardeningTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ia_local._safe_member_path(root, "C:/outside.exe")
         with self.assertRaises(ValueError):
-            ia_local._safe_member_path(root, "bad\\x00name")
+            ia_local._safe_member_path(root, "bad" + chr(0) + "name")
 
     def test_zip_extraction_rejects_duplicate_case_insensitive_paths(self):
         import zipfile
