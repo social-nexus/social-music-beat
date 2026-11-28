@@ -733,6 +733,15 @@ class ModelDeleteRecoveryTests(unittest.TestCase):
         self.assertTrue((root / "imported-0123456789" / "model.gguf").is_file())
         self.assertFalse(q.exists())
 
+    def test_imported_quarantine_with_multiple_gguf_files_is_not_restored(self):
+        root = Path(TEMP_DATA) / "model-delete-recovery-ambiguous"
+        root.mkdir(parents=True, exist_ok=True)
+        q = self._quarantine(root)
+        (q / "extra.gguf").write_bytes(b"GGUF" + b"z" * 32)
+        self.assertEqual(ia_local._recover_model_delete_quarantines(root, ia_local.MODEL_CATALOG), 0)
+        self.assertTrue(q.exists())
+        self.assertFalse((root / "imported-0123456789").exists())
+
     def test_quarantine_preserved_when_final_exists_or_candidate_invalid(self):
         root = Path(TEMP_DATA) / "model-delete-recovery-preserve"
         root.mkdir(parents=True, exist_ok=True)
