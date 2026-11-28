@@ -123,7 +123,7 @@ def _recover_model_delete_quarantines(root: Path, catalog: dict) -> int:
     candidates remain hidden for manual inspection.
     """
     restored = 0
-    if not root.is_dir():
+    if root.is_symlink() or not root.is_dir():
         return 0
     pattern = re.compile(r"^\.(?P<model>[^/]+)\.deleting-[0-9a-f]{32}$")
     for quarantine in root.iterdir():
