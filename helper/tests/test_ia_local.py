@@ -11,6 +11,19 @@ import ia_local
 
 
 class RuntimeCatalogTests(unittest.TestCase):
+    def test_safe_model_file_rejects_symlinked_model_folder(self):
+        root = Path(TEMP_DATA) / "safe-model-folder-link"
+        external = root / "external"
+        external.mkdir(parents=True, exist_ok=True)
+        target = external / "model.gguf"
+        target.write_bytes(b"GGUF")
+        linked_folder = root / "model"
+        try:
+            linked_folder.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation is not available on this platform")
+        self.assertFalse(ia_local._safe_model_file(linked_folder, linked_folder / "model.gguf"))
+
     def test_safe_model_file_rejects_paths_outside_model_directory(self):
         root = Path(TEMP_DATA) / "safe-model-path"
         model_folder = root / "model"
