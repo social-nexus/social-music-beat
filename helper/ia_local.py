@@ -696,23 +696,38 @@ def _download_model_worker_locked(jid: str, model_id: str):
         if metadata_staged is not None:
             metadata_staged.unlink(missing_ok=True)
 
+def _safe_model_file(model_folder: Path, candidate: Path) -> bool:
+    """Reject symlinks and paths resolving outside a model's own directory."""
+    try:
+        if model_folder.is_symlink() or candidate.is_symlink() or not candidate.is_file():
+            return False
+        resolved_folder = model_folder.resolve()
+        resolved_candidate = candidate.resolve()
+        resolved_candidate.relative_to(resolved_folder)
+        current = candidate.parent
+        while current != model_folder and current != current.parent:
+            if current.is_symlink():
+                return False
+            current = current.parent
+        return True
+    except (OSError, ValueError):
+        return False
+
+
 def _installed_models():
     found = []
     for model_id, meta in MODEL_CATALOG.items():
         p = _model_file(model_id)
-        # Catalog model directories/files must not be symlinks into arbitrary paths.
-        if p.parent.is_symlink() or p.is_symlink():
-            continue
         try:
-            if p.is_file():
+            if _safe_model_file(p.parent, p):
                 found.append({"id": model_id, "name": meta["name"], "path": str(p),
                               "size_bytes": p.stat().st_size, "license": meta["license"]})
         except OSError:
             continue
     for p in MODELS_DIR.glob("imported-*/**/*.gguf"):
         try:
-            model_folder = MODELS_DIR / p.parent.name
-            if model_folder.is_symlink() or p.is_symlink() or not p.is_file():
+            model_folder = MODELS_DIR / p.parts[len(MODELS_DIR.parts)]
+            if not _safe_model_file(model_folder, p):
                 continue
             # Imported GGUFs must be structurally recognizable before being exposed.
             with p.open("rb") as stream:
@@ -721,9 +736,9 @@ def _installed_models():
             # Only show imports with one GGUF; ambiguous folders need manual review.
             if len(list(model_folder.glob("*.gguf"))) != 1:
                 continue
-            found.append({"id": p.parent.name, "name": p.name, "path": str(p),
+            found.append({"id": model_folder.name, "name": p.name, "path": str(p),
                           "size_bytes": p.stat().st_size, "license": "Licença definida pelo usuário"})
-        except OSError:
+        except (OSError, IndexError):
             continue
     return found
 
@@ -815,7 +830,7 @@ def ai_catalog():
                 for k, v in RUNTIME_CATALOG.items()]
     models = [{"id": k, **{x: v[x] for x in ("name", "family", "repo", "filename", "license",
                "license_url", "model_url", "approx_size_gb", "description", "requires_license_acceptance")},
-               "installed": _model_file(k).is_file()} for k, v in MODEL_CATALOG.items()]
+               "installed": _safe_model_file(_model_file(k).parent, _model_file(k))} for k, v in MODEL_CATALOG.items()]
     return {"runtimes": runtimes, "models": models, "installed_models": _installed_models()}
 
 @router.post("/runtime/install")
