@@ -80,6 +80,17 @@ def models_dir() -> Path:
 # O runtime llama.cpp e os logs continuam locais a esta instalacao.
 MODELS_DIR = models_dir()
 LOG_DIR = ROOT / "logs"
+
+def _assert_models_root_safe() -> Path:
+    if MODELS_DIR.is_symlink() or not MODELS_DIR.is_dir():
+        raise ValueError("A pasta de modelos está ausente ou é um link simbólico; operação bloqueada.")
+    try:
+        resolved = MODELS_DIR.resolve()
+        if resolved != MODELS_DIR.absolute():
+            raise ValueError("A pasta de modelos não pode redirecionar para outro caminho.")
+    except OSError as exc:
+        raise ValueError("Não foi possível validar a pasta de modelos.") from exc
+    return resolved
 for directory in (RUNTIME_DIR, MODELS_DIR, LOG_DIR):
     directory.mkdir(parents=True, exist_ok=True)
 
