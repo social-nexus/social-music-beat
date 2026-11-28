@@ -92,6 +92,8 @@ def _assert_models_root_safe() -> Path:
         raise ValueError("Não foi possível validar a pasta de modelos.") from exc
     return resolved
 for directory in (RUNTIME_DIR, MODELS_DIR, LOG_DIR):
+    if directory.is_symlink():
+        continue
     directory.mkdir(parents=True, exist_ok=True)
 
 
@@ -682,6 +684,7 @@ def _download_model_worker_locked(jid: str, model_id: str):
     staged = None
     metadata_staged = None
     try:
+        _assert_models_root_safe()
         meta = MODEL_CATALOG[model_id]
         _update_job(jid, status="verifying", message="Consultando hash e tamanho no Hugging Face…")
         digest, size = _hf_file_digest(meta["repo"], meta["filename"])
@@ -914,6 +917,10 @@ def _safe_import_filename(raw: str) -> str:
 @router.post("/models/import")
 async def import_model(request: Request, file: UploadFile = File(...)):
     _guard_local_request(request)
+    try:
+        _assert_models_root_safe()
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
     filename = _safe_import_filename(str(file.filename or ""))
     model_id = "imported-" + uuid.uuid4().hex[:10]
     folder = MODELS_DIR / model_id
@@ -981,6 +988,10 @@ def ai_job(jid: str, request: Request):
 @router.delete("/models/{model_id}")
 def delete_model(model_id: str, request: Request):
     _guard_local_request(request)
+    try:
+        _assert_models_root_safe()
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
     if model_id in MODEL_CATALOG:
         folder = MODELS_DIR / model_id
     elif re.fullmatch(r"imported-[0-9a-f]{10}", model_id):
