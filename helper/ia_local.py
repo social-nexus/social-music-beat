@@ -101,7 +101,7 @@ def _cleanup_stale_model_downloads(root: Path, *, older_than_seconds: int = 48 *
     """Remove only stale hidden download artifacts; never touch model files/backups."""
     cutoff = time.time() - max(0, older_than_seconds)
     removed = 0
-    if not root.is_dir():
+    if root.is_symlink() or not root.is_dir():
         return 0
     for pattern in (".*.download", ".*.download.part"):
         for artifact in root.glob(pattern):
@@ -162,7 +162,6 @@ def _recover_model_delete_quarantines(root: Path, catalog: dict) -> int:
     return restored
 
 
-_cleanup_stale_model_import_staging(MODELS_DIR)
 # Restore valid deletion quarantines only if the original model folder is missing.
 _recover_model_delete_quarantines(MODELS_DIR, MODEL_CATALOG)
 
@@ -474,16 +473,20 @@ def _cleanup_stale_model_import_staging(root: Path, *, older_than_seconds: int =
     """Remove abandoned hidden import staging folders after 48h; never touch published models."""
     cutoff = time.time() - max(0, older_than_seconds)
     removed = 0
-    if not root.is_dir():
+    if root.is_symlink() or not root.is_dir():
         return 0
     for folder in root.glob(".imported-*.staging"):
         try:
-            if folder.is_dir() and folder.stat().st_mtime < cutoff:
+            if not folder.is_symlink() and folder.is_dir() and folder.stat().st_mtime < cutoff:
                 shutil.rmtree(folder)
                 removed += 1
         except OSError:
             continue
     return removed
+
+
+# Startup cleanup only after helper definition; safe against a redirected model root.
+_cleanup_stale_model_import_staging(MODELS_DIR)
 
 
 def _runtime_binary(variant: str) -> Path | None:
