@@ -11,6 +11,33 @@ import ia_local
 
 
 class RuntimeCatalogTests(unittest.TestCase):
+    def test_installed_import_discovery_only_accepts_direct_gguf(self):
+        root = Path(TEMP_DATA) / "import-discovery-safe"
+        model_folder = root / "imported-0123456789"
+        nested = model_folder / "nested"
+        nested.mkdir(parents=True, exist_ok=True)
+        (model_folder / "model.gguf").write_bytes(b"GGUF" + b"0" * 8)
+        (nested / "hidden.gguf").write_bytes(b"GGUF" + b"0" * 8)
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            installed = ia_local._installed_models()
+        imported = [item for item in installed if item["id"] == model_folder.name]
+        self.assertEqual(len(imported), 1)
+        self.assertEqual(imported[0]["name"], "model.gguf")
+
+    def test_installed_import_discovery_rejects_symlinked_models_root(self):
+        root = Path(TEMP_DATA) / "import-discovery-root-link"
+        external = root / "external"
+        external.mkdir(parents=True, exist_ok=True)
+        (external / "imported-0123456789").mkdir()
+        (external / "imported-0123456789" / "model.gguf").write_bytes(b"GGUF" + b"0" * 8)
+        linked_root = root / "models"
+        try:
+            linked_root.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation is not available on this platform")
+        with mock.patch.object(ia_local, "MODELS_DIR", linked_root):
+            self.assertEqual(ia_local._installed_models(), [])
+
     def test_safe_model_file_rejects_symlinked_model_folder(self):
         root = Path(TEMP_DATA) / "safe-model-folder-link"
         external = root / "external"
