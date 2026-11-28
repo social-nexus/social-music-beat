@@ -622,3 +622,49 @@ class ModelOperationLockTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertNotIn("qwen3-4b-q4km", ia_local._MODEL_LOCKS)
         self.assertNotIn("gemma3-4b-it-q4km", ia_local._MODEL_LOCKS)
+
+
+class InterruptedInstallRecoveryTests(unittest.TestCase):
+    def test_runtime_backup_restored_only_when_final_missing_and_binary_valid(self):
+        root = Path(TEMP_DATA) / "runtime-recovery"
+        root.mkdir(parents=True, exist_ok=True)
+        backup = root / ".variant.backup-test"
+        (backup / "bin").mkdir(parents=True)
+        (backup / "bin" / "llama-server").write_bytes(b"runtime")
+        restored = ia_local._recover_runtime_backups(root, {"variant": {"binary": "llama-server"}})
+        self.assertEqual(restored, 1)
+        self.assertTrue((root / "variant" / "bin" / "llama-server").is_file())
+        self.assertFalse(backup.exists())
+
+    def test_runtime_backup_is_preserved_if_final_exists_or_backup_invalid(self):
+        root = Path(TEMP_DATA) / "runtime-recovery-preserve"
+        root.mkdir(parents=True, exist_ok=True)
+        final = root / "variant"
+        final.mkdir()
+        backup = root / ".variant.backup-test"
+        backup.mkdir()
+        (backup / "llama-server").write_bytes(b"runtime")
+        restored = ia_local._recover_runtime_backups(root, {"variant": {"binary": "llama-server"}})
+        self.assertEqual(restored, 0)
+        self.assertTrue(backup.exists())
+        final.rmdir()
+        (backup / "llama-server").unlink()
+        restored = ia_local._recover_runtime_backups(root, {"variant": {"binary": "llama-server"}})
+        self.assertEqual(restored, 0)
+        self.assertTrue(backup.exists())
+
+    def test_stale_import_staging_cleanup_is_age_gated_and_scope_limited(self):
+        root = Path(TEMP_DATA) / "import-staging-cleanup"
+        root.mkdir(parents=True, exist_ok=True)
+        stale = root / ".imported-abcdef1234.staging"
+        recent = root / ".imported-ffff000000.staging"
+        published = root / "imported-abcdef1234"
+        stale.mkdir()
+        recent.mkdir()
+        published.mkdir()
+        old = time.time() - 72 * 60 * 60
+        os.utime(stale, (old, old))
+        self.assertEqual(ia_local._cleanup_stale_model_import_staging(root), 1)
+        self.assertFalse(stale.exists())
+        self.assertTrue(recent.exists())
+        self.assertTrue(published.exists())
