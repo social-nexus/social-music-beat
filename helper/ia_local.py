@@ -847,6 +847,23 @@ def download_model(payload: dict, request: Request):
     _start_background_job(jid, _download_model_worker, model_id)
     return {"job_id": jid}
 
+def _safe_import_filename(raw: str) -> str:
+    """Normalize user-supplied GGUF names for cross-platform filesystem safety."""
+    basename = Path(str(raw or "").replace(chr(92), "/")).name
+    basename = re.sub(r"[^A-Za-z0-9._-]", "_", basename).strip(" .")
+    if not basename.lower().endswith(".gguf"):
+        raise HTTPException(400, "Selecione um arquivo .gguf.")
+    basename = basename[:180]
+    if not basename.lower().endswith(".gguf"):
+        basename = basename[:-5] + ".gguf"
+    stem = basename[:-5].strip(" .")
+    if not stem or stem in (".", ".."):
+        raise HTTPException(400, "Nome de arquivo GGUF inválido.")
+    if stem.upper() in {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}:
+        basename = f"model_{basename}"
+    return basename
+
+
 @router.post("/models/import")
 async def import_model(request: Request, file: UploadFile = File(...)):
     _guard_local_request(request)
