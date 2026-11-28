@@ -22,6 +22,21 @@ class RuntimeCatalogTests(unittest.TestCase):
         inside.write_bytes(b"GGUF")
         self.assertTrue(ia_local._safe_model_file(model_folder, inside))
 
+    def test_safe_model_file_rejects_symlinked_nested_directory(self):
+        root = Path(TEMP_DATA) / "safe-model-nested-link"
+        model_folder = root / "model"
+        external = root / "external"
+        model_folder.mkdir(parents=True, exist_ok=True)
+        external.mkdir(parents=True, exist_ok=True)
+        target = external / "model.gguf"
+        target.write_bytes(b"GGUF")
+        linked_dir = model_folder / "nested"
+        try:
+            linked_dir.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation is not available on this platform")
+        self.assertFalse(ia_local._safe_model_file(model_folder, linked_dir / "model.gguf"))
+
     def test_safe_model_file_rejects_symlinked_model_file(self):
         root = Path(TEMP_DATA) / "safe-model-symlink"
         model_folder = root / "model"
