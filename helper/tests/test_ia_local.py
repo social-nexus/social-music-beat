@@ -335,6 +335,34 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertFalse(staged.exists())
         self.assertTrue(metadata_staged.exists())
 
+    def test_backup_stage_failure_preserves_original_files(self):
+        root = Path(TEMP_DATA) / "model-backup-stage-failure"
+        folder = root / "qwen3-4b-q4km"
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / ia_local.MODEL_CATALOG["qwen3-4b-q4km"]["filename"]
+        metadata = folder / "model.json"
+        target.write_bytes(b"original-model")
+        metadata.write_text("original-metadata", encoding="utf-8")
+        staged = folder / ".new-model.download"
+        metadata_staged = folder / ".new-metadata.json.tmp"
+        staged.write_bytes(b"replacement-model")
+        metadata_staged.write_text("replacement-metadata", encoding="utf-8")
+        real_replace = os.replace
+
+        def fail_metadata_backup(source, destination):
+            if Path(source) == metadata and Path(destination).name.endswith(".backup"):
+                raise OSError("metadata backup move failed")
+            return real_replace(source, destination)
+
+        with mock.patch.object(ia_local.os, "replace", side_effect=fail_metadata_backup):
+            with self.assertRaisesRegex(OSError, "metadata backup move failed"):
+                ia_local._publish_model_files(staged, target, metadata_staged, metadata)
+        self.assertEqual(target.read_bytes(), b"original-model")
+        self.assertEqual(metadata.read_text(encoding="utf-8"), "original-metadata")
+        self.assertFalse(staged.exists())
+        self.assertTrue(metadata_staged.exists())
+        self.assertEqual(list(folder.glob("*.backup")), [])
+
     def test_backup_cleanup_failure_does_not_fail_successful_publish(self):
         root = Path(TEMP_DATA) / "model-backup-cleanup-failure"
         folder = root / "qwen3-4b-q4km"
