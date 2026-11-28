@@ -397,9 +397,12 @@ def _recover_runtime_backups(root: Path, catalog: dict) -> int:
         backups.sort(key=backup_mtime, reverse=True)
         for backup in backups:
             try:
-                if not backup.is_dir():
+                if backup.is_symlink() or not backup.is_dir():
                     continue
-                binary = next((p for p in backup.rglob(meta["binary"]) if p.is_file()), None)
+                binary = next(
+                    (p for p in backup.rglob(meta["binary"]) if p.is_file() and not p.is_symlink()),
+                    None,
+                )
                 if binary is None:
                     continue
                 os.replace(backup, final)
@@ -432,7 +435,12 @@ def _runtime_binary(variant: str) -> Path | None:
     if not meta:
         return None
     root = RUNTIME_DIR / variant
-    candidates = list(root.rglob(meta["binary"])) if root.exists() else []
+    if root.is_symlink() or not root.is_dir():
+        return None
+    candidates = [
+        p for p in root.rglob(meta["binary"])
+        if p.is_file() and not p.is_symlink()
+    ]
     return candidates[0] if candidates else None
 
 # Recover interrupted runtime swaps only if the published directory is absent.
