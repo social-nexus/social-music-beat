@@ -192,6 +192,28 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertTrue(staged.exists())
         self.assertFalse(any(root.glob(".runtime.backup-*")))
 
+
+    def test_runtime_backup_recovery_ignores_unreadable_stat_candidates(self):
+        root = Path(TEMP_DATA) / "runtime-backup-stat-error"
+        root.mkdir(parents=True, exist_ok=True)
+        final = root / "variant"
+        bad = root / ".variant.backup-bad"
+        good = root / ".variant.backup-good"
+        bad.mkdir()
+        good.mkdir()
+        (good / "server").write_text("recoverable", encoding="utf-8")
+        catalog = {"variant": {"binary": "server"}}
+        real_stat = Path.stat
+        def fail_bad_stat(path, *args, **kwargs):
+            if path == bad:
+                raise OSError("permission denied")
+            return real_stat(path, *args, **kwargs)
+        with mock.patch.object(Path, "stat", fail_bad_stat):
+            restored = ia_local._recover_runtime_backups(root, catalog)
+        self.assertEqual(restored, 1)
+        self.assertEqual((final / "server").read_text(encoding="utf-8"), "recoverable")
+        self.assertTrue(bad.exists())
+
     def test_runtime_replacement_activates_new_install_and_cleans_backup(self):
         root = Path(TEMP_DATA) / "runtime-swap-success"
         final = root / "runtime"
