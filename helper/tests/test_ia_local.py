@@ -56,6 +56,30 @@ class RuntimeCatalogTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ia_local._normalize_sha256("not-a-sha")
 
+    def test_stale_model_download_cleanup_removes_only_old_download_artifacts(self):
+        root = Path(TEMP_DATA) / "stale-download-cleanup"
+        root.mkdir(parents=True, exist_ok=True)
+        stale_download = root / ".model.gguf.older.download"
+        stale_part = root / ".other.gguf.download.part"
+        recent = root / ".recent.gguf.download"
+        backup = root / ".model.gguf.backup"
+        nested = root / "nested"
+        nested.mkdir(exist_ok=True)
+        nested_stale = nested / ".nested.gguf.download"
+        for path in (stale_download, stale_part, recent, backup, nested_stale):
+            path.write_text("artifact", encoding="utf-8")
+        old_time = 1
+        os.utime(stale_download, (old_time, old_time))
+        os.utime(stale_part, (old_time, old_time))
+        os.utime(nested_stale, (old_time, old_time))
+        removed = ia_local._cleanup_stale_model_downloads(root, older_than_seconds=3600)
+        self.assertEqual(removed, 2)
+        self.assertFalse(stale_download.exists())
+        self.assertFalse(stale_part.exists())
+        self.assertTrue(recent.exists())
+        self.assertTrue(backup.exists())
+        self.assertTrue(nested_stale.exists())
+
     def test_download_stops_when_over_expected_size_and_cleans_partial(self):
         import io
         class FakeResponse:
