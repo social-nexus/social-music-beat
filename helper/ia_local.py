@@ -490,19 +490,43 @@ def _runtime_binary(variant: str) -> Path | None:
 _recover_runtime_backups(RUNTIME_DIR, RUNTIME_CATALOG)
 
 def _replace_runtime_directory(staged: Path, final: Path, *, expected_binary: str | None = None):
-    """Swap runtime folders, validating staged and active binaries before discarding backup."""
+    """Swap runtime folders only after validating non-symlink staged and active binaries."""
+    if staged.is_symlink() or not staged.is_dir():
+        raise ValueError("A pasta temporária do runtime é inválida.")
+    if final.is_symlink():
+        raise ValueError("A pasta instalada do runtime é um link simbólico; substituição bloqueada.")
     if expected_binary:
-        staged_binary = next((p for p in staged.rglob(expected_binary) if p.is_file()), None)
+        staged_binary = next(
+            (p for p in staged.rglob(expected_binary) if p.is_file() and not p.is_symlink()),
+            None,
+        )
         if staged_binary is None:
             raise ValueError("A instalação temporária não contém o executável esperado.")
+        try:
+            staged_binary.resolve().relative_to(staged.resolve())
+        except ValueError:
+            raise ValueError("O executável temporário está fora da pasta de instalação.") from None
     backup = final.with_name(f".{final.name}.backup-{uuid.uuid4().hex}")
     had_existing = final.exists()
+    if had_existing and (not final.is_dir() or final.is_symlink()):
+        raise ValueError("A instalação atual do runtime não é uma pasta segura.")
     if had_existing:
         os.replace(final, backup)
     try:
         os.replace(staged, final)
-        if expected_binary and not any(p.is_file() for p in final.rglob(expected_binary)):
-            raise ValueError("O runtime ativado não contém o executável esperado.")
+        if final.is_symlink() or not final.is_dir():
+            raise ValueError("A pasta ativada do runtime é inválida.")
+        if expected_binary:
+            active_binary = next(
+                (p for p in final.rglob(expected_binary) if p.is_file() and not p.is_symlink()),
+                None,
+            )
+            if active_binary is None:
+                raise ValueError("O runtime ativado não contém o executável esperado.")
+            try:
+                active_binary.resolve().relative_to(final.resolve())
+            except ValueError:
+                raise ValueError("O executável ativado está fora da pasta do runtime.") from None
     except Exception:
         # Move the failed activation aside first, then restore the previous install.
         if final.exists() and staged and not staged.exists():
