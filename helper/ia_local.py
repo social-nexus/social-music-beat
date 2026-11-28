@@ -128,6 +128,9 @@ def _recover_model_delete_quarantines(root: Path, catalog: dict) -> int:
                 candidates = [quarantine / catalog[model_id]["filename"]]
             else:
                 candidates = list(quarantine.glob("*.gguf"))
+                # Require a single imported GGUF; ambiguous recovery stays quarantined.
+                if len(candidates) != 1:
+                    continue
             valid = False
             for candidate in candidates:
                 if candidate.is_symlink() or not candidate.is_file():
