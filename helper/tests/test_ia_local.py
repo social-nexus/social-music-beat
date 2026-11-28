@@ -11,6 +11,25 @@ import ia_local
 
 
 class RuntimeCatalogTests(unittest.TestCase):
+    def test_runtime_root_safe_accepts_normal_directory(self):
+        root = Path(TEMP_DATA) / "runtime-root-normal"
+        root.mkdir(parents=True, exist_ok=True)
+        with mock.patch.object(ia_local, "RUNTIME_DIR", root):
+            self.assertEqual(ia_local._assert_runtime_root_safe(), root.resolve())
+
+    def test_runtime_root_safe_rejects_symlinked_directory(self):
+        root = Path(TEMP_DATA) / "runtime-root-link"
+        external = root / "external"
+        external.mkdir(parents=True, exist_ok=True)
+        linked = root / "runtime"
+        try:
+            linked.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation is not available on this platform")
+        with mock.patch.object(ia_local, "RUNTIME_DIR", linked):
+            with self.assertRaisesRegex(ValueError, "link simbólico"):
+                ia_local._assert_runtime_root_safe()
+
     def test_models_root_safe_accepts_normal_directory(self):
         root = Path(TEMP_DATA) / "models-root-normal"
         root.mkdir(parents=True, exist_ok=True)
