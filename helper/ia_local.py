@@ -339,7 +339,14 @@ def _recover_runtime_backups(root: Path, catalog: dict) -> int:
         final = root / variant
         if final.exists():
             continue
-        backups = sorted(root.glob(f".{variant}.backup-*"), key=lambda p: p.stat().st_mtime if p.exists() else 0, reverse=True)
+        backups = list(root.glob(f".{variant}.backup-*"))
+        # Unreadable backup timestamps must not abort application startup.
+        def backup_mtime(path: Path) -> float:
+            try:
+                return path.stat().st_mtime
+            except OSError:
+                return 0.0
+        backups.sort(key=backup_mtime, reverse=True)
         for backup in backups:
             try:
                 if not backup.is_dir():
