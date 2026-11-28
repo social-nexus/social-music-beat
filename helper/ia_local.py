@@ -97,6 +97,18 @@ for directory in (RUNTIME_DIR, MODELS_DIR, LOG_DIR):
     directory.mkdir(parents=True, exist_ok=True)
 
 
+def _assert_runtime_root_safe() -> Path:
+    if RUNTIME_DIR.is_symlink() or not RUNTIME_DIR.is_dir():
+        raise ValueError("A pasta do runtime está ausente ou é um link simbólico; operação bloqueada.")
+    try:
+        resolved = RUNTIME_DIR.resolve()
+        if resolved != RUNTIME_DIR.absolute():
+            raise ValueError("A pasta do runtime não pode redirecionar para outro caminho.")
+    except OSError as exc:
+        raise ValueError("Não foi possível validar a pasta do runtime.") from exc
+    return resolved
+
+
 def _cleanup_stale_model_downloads(root: Path, *, older_than_seconds: int = 48 * 60 * 60) -> int:
     """Remove only stale hidden download artifacts; never touch model files/backups."""
     cutoff = time.time() - max(0, older_than_seconds)
@@ -493,6 +505,10 @@ def _runtime_binary(variant: str) -> Path | None:
     meta = RUNTIME_CATALOG.get(variant)
     if not meta:
         return None
+    try:
+        _assert_runtime_root_safe()
+    except ValueError:
+        return None
     root = RUNTIME_DIR / variant
     if root.is_symlink() or not root.is_dir():
         return None
@@ -570,6 +586,7 @@ def _replace_runtime_directory(staged: Path, final: Path, *, expected_binary: st
 def _install_runtime_worker(jid: str, variant: str):
     meta = RUNTIME_CATALOG[variant]
     try:
+        _assert_runtime_root_safe()
         _update_job(jid, status="downloading", progress=0, message="Baixando runtime oficial llama.cpp…")
         with tempfile.TemporaryDirectory(prefix="smb-llama-") as td:
             temp = Path(td)
