@@ -619,6 +619,8 @@ def _install_runtime_worker(jid: str, variant: str):
                 if os.name != "nt":
                     staged_binary.chmod(staged_binary.stat().st_mode | 0o111)
                 with _RUNTIME_OPERATION_LOCK:
+                    # Revalidate root immediately before publishing the staged runtime.
+                    _assert_runtime_root_safe()
                     # Serialize final swaps when duplicate install requests race.
                     if _runtime_binary(variant) is None:
                         _replace_runtime_directory(staged, final, expected_binary=meta['binary'])
