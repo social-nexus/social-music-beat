@@ -725,6 +725,12 @@ def _safe_model_file(model_folder: Path, candidate: Path) -> bool:
 
 def _installed_models():
     found = []
+    try:
+        if MODELS_DIR.is_symlink() or not MODELS_DIR.is_dir():
+            return found
+        models_root = MODELS_DIR.resolve()
+    except OSError:
+        return found
     for model_id, meta in MODEL_CATALOG.items():
         p = _model_file(model_id)
         try:
@@ -735,8 +741,11 @@ def _installed_models():
             continue
     for p in MODELS_DIR.glob("imported-*/**/*.gguf"):
         try:
-            model_folder = MODELS_DIR / p.parts[len(MODELS_DIR.parts)]
-            if not _safe_model_file(model_folder, p):
+            relative = p.relative_to(MODELS_DIR)
+            if not relative.parts or len(relative.parts) != 2:
+                continue  # Imports must be a GGUF directly inside their own folder.
+            model_folder = MODELS_DIR / relative.parts[0]
+            if model_folder.parent.resolve() != models_root or not _safe_model_file(model_folder, p):
                 continue
             # Imported GGUFs must be structurally recognizable before being exposed.
             with p.open("rb") as stream:
@@ -747,7 +756,7 @@ def _installed_models():
                 continue
             found.append({"id": model_folder.name, "name": p.name, "path": str(p),
                           "size_bytes": p.stat().st_size, "license": "Licença definida pelo usuário"})
-        except (OSError, IndexError):
+        except (OSError, ValueError):
             continue
     return found
 
