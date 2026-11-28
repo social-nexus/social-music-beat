@@ -83,6 +83,27 @@ LOG_DIR = ROOT / "logs"
 for directory in (RUNTIME_DIR, MODELS_DIR, LOG_DIR):
     directory.mkdir(parents=True, exist_ok=True)
 
+
+def _cleanup_stale_model_downloads(root: Path, *, older_than_seconds: int = 48 * 60 * 60) -> int:
+    """Remove only stale hidden download artifacts; never touch model files/backups."""
+    cutoff = time.time() - max(0, older_than_seconds)
+    removed = 0
+    if not root.is_dir():
+        return 0
+    for pattern in (".*.download", ".*.download.part"):
+        for artifact in root.glob(pattern):
+            try:
+                if artifact.is_file() and artifact.stat().st_mtime < cutoff:
+                    artifact.unlink()
+                    removed += 1
+            except OSError:
+                # Best-effort cleanup: preserve files if they cannot be inspected/removed.
+                continue
+    return removed
+
+# Startup cleanup is age-gated (48h) and limited to hidden download staging files.
+_cleanup_stale_model_downloads(MODELS_DIR)
+
 RUNTIME_CATALOG = {
     "win-cpu-x64": {
         "label": "Windows x64 — CPU",
