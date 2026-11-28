@@ -1,6 +1,9 @@
 # Histórico de alterações
 
 ## [3.1.0]
+- Hardening of local model/runtime storage roots: symlink and redirected-path validation before installation, model download, import, activation, deletion, and runtime recovery.
+- GGUF imports are staged and validated (size, header, safe filename, metadata) and storage is revalidated immediately before atomic publication; regression coverage verifies cleanup when storage validation changes mid-upload.
+- Runtime installation uses validated staged packages, pinned SHA-256 checks, guarded replacement/rollback, and recovery validation.
 - Display localized playback errors when audio files cannot load in the library player.
 - Synchronize separation-job registry access and use full UUIDs to prevent concurrent status races and ID collisions.
 - Bound the separation job registry: expired completed jobs are pruned after one hour and the completed-job history is capped at 200.
