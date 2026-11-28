@@ -812,7 +812,8 @@ def _start_runtime_locked(model_id: str, variant: str, gpu_layers: int = 0):
     raise RuntimeError("O modelo demorou demais para iniciar. Verifique memória RAM/VRAM e o log.")
 
 @router.get("/status")
-def ai_status():
+def ai_status(request: Request):
+    _guard_local_request(request)
     proc = PROCESS
     running = bool(proc and proc.poll() is None)
     return {"runtime_installed": any(_runtime_binary(k) for k in RUNTIME_CATALOG),
@@ -822,7 +823,8 @@ def ai_status():
             "jobs": list(JOBS.values())[-8:]}
 
 @router.get("/catalog")
-def ai_catalog():
+def ai_catalog(request: Request):
+    _guard_local_request(request)
     system, machine = platform.system(), platform.machine().lower()
     runtimes = [{"id": k, "label": v["label"], "backend": v["backend"],
                  "size_bytes": v["size"] + sum(x["size"] for x in v.get("extras", [])), "installed": _runtime_binary(k) is not None,
@@ -940,7 +942,8 @@ def stop_runtime(request: Request):
     return {"ok": True}
 
 @router.get("/jobs/{jid}")
-def ai_job(jid: str):
+def ai_job(jid: str, request: Request):
+    _guard_local_request(request)
     if jid not in JOBS:
         raise HTTPException(404, "Tarefa não encontrada.")
     return JOBS[jid]
