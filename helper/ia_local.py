@@ -150,7 +150,9 @@ def _recover_model_delete_quarantines(root: Path, catalog: dict) -> int:
 
 
 _cleanup_stale_model_import_staging(MODELS_DIR)
-# Restore valid deletion quarantines only if the original model folder is missing.\n_recover_model_delete_quarantines(MODELS_DIR, MODEL_CATALOG)\n
+# Restore valid deletion quarantines only if the original model folder is missing.
+_recover_model_delete_quarantines(MODELS_DIR, MODEL_CATALOG)
+
 RUNTIME_CATALOG = {
     "win-cpu-x64": {
         "label": "Windows x64 — CPU",
