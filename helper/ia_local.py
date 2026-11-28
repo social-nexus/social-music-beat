@@ -101,8 +101,9 @@ def _cleanup_stale_model_downloads(root: Path, *, older_than_seconds: int = 48 *
                 continue
     return removed
 
-# Startup cleanup is age-gated (48h) and limited to hidden download staging files.
+# Startup cleanup is age-gated (48h) and restricted to abandoned hidden staging artifacts.
 _cleanup_stale_model_downloads(MODELS_DIR)
+_cleanup_stale_model_import_staging(MODELS_DIR)
 
 RUNTIME_CATALOG = {
     "win-cpu-x64": {
@@ -329,6 +330,48 @@ def _extract_archive(archive: Path, dest: Path, kind: str):
                         with src, target.open("wb") as out:
                             shutil.copyfileobj(src, out)
 
+def _recover_runtime_backups(root: Path, catalog: dict) -> int:
+    """Restore a valid backup only when its final runtime folder is missing."""
+    restored = 0
+    if not root.is_dir():
+        return 0
+    for variant, meta in catalog.items():
+        final = root / variant
+        if final.exists():
+            continue
+        backups = sorted(root.glob(f".{variant}.backup-*"), key=lambda p: p.stat().st_mtime if p.exists() else 0, reverse=True)
+        for backup in backups:
+            try:
+                if not backup.is_dir():
+                    continue
+                binary = next((p for p in backup.rglob(meta["binary"]) if p.is_file()), None)
+                if binary is None:
+                    continue
+                os.replace(backup, final)
+                restored += 1
+                break
+            except OSError:
+                # Leave the recovery copy untouched if restore cannot complete.
+                continue
+    return restored
+
+
+def _cleanup_stale_model_import_staging(root: Path, *, older_than_seconds: int = 48 * 60 * 60) -> int:
+    """Remove abandoned hidden import staging folders after 48h; never touch published models."""
+    cutoff = time.time() - max(0, older_than_seconds)
+    removed = 0
+    if not root.is_dir():
+        return 0
+    for folder in root.glob(".imported-*.staging"):
+        try:
+            if folder.is_dir() and folder.stat().st_mtime < cutoff:
+                shutil.rmtree(folder)
+                removed += 1
+        except OSError:
+            continue
+    return removed
+
+
 def _runtime_binary(variant: str) -> Path | None:
     meta = RUNTIME_CATALOG.get(variant)
     if not meta:
@@ -336,6 +379,9 @@ def _runtime_binary(variant: str) -> Path | None:
     root = RUNTIME_DIR / variant
     candidates = list(root.rglob(meta["binary"])) if root.exists() else []
     return candidates[0] if candidates else None
+
+# Recover interrupted runtime swaps only if the published directory is absent.
+_recover_runtime_backups(RUNTIME_DIR, RUNTIME_CATALOG)
 
 def _replace_runtime_directory(staged: Path, final: Path):
     """Replace a runtime directory without deleting the working install first."""
