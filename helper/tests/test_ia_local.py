@@ -11,6 +11,20 @@ import ia_local
 
 
 class RuntimeCatalogTests(unittest.TestCase):
+    def test_safe_import_filename_normalizes_cross_platform_names(self):
+        self.assertEqual(ia_local._safe_import_filename("folder\\unsafe name.gguf"), "unsafe_name.gguf")
+        self.assertEqual(ia_local._safe_import_filename("C:\\models\\model.gguf"), "model.gguf")
+        self.assertEqual(ia_local._safe_import_filename("CON.gguf"), "model_CON.gguf")
+        safe = ia_local._safe_import_filename("x" * 250 + ".gguf")
+        self.assertLessEqual(len(safe), 180)
+        self.assertTrue(safe.lower().endswith(".gguf"))
+
+    def test_safe_import_filename_rejects_non_gguf(self):
+        with self.assertRaises(ia_local.HTTPException):
+            ia_local._safe_import_filename("model.exe")
+        with self.assertRaises(ia_local.HTTPException):
+            ia_local._safe_import_filename("..\\.gguf")
+
     def test_local_request_guard_requires_exact_host_and_same_origin_for_mutations(self):
         from starlette.requests import Request
 
