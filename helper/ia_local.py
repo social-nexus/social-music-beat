@@ -329,7 +329,7 @@ def _download(url: str, dest: Path, expected_size: int | None, jid: str):
 
 def _safe_member_path(root: Path, member_name: str) -> Path:
     """Resolve archive members while rejecting traversal and drive-qualified paths."""
-    if not isinstance(member_name, str) or not member_name or "\\x00" in member_name:
+    if not isinstance(member_name, str) or not member_name or any(ord(ch) == 0 for ch in member_name):
         raise ValueError("Nome de arquivo inválido no pacote do runtime.")
     normalized = member_name.replace("\\", "/")
     pure = PurePosixPath(normalized)
