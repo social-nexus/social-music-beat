@@ -30,6 +30,38 @@ class RuntimeCatalogTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "link simbólico"):
                 ia_local._assert_models_root_safe()
 
+    def test_runtime_activation_rejects_symlinked_model_root(self):
+        root = Path(TEMP_DATA) / "activate-model-root-link"
+        external = root / "external"
+        external.mkdir(parents=True, exist_ok=True)
+        linked_root = root / "models"
+        try:
+            linked_root.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation is not available on this platform")
+        with mock.patch.object(ia_local, "MODELS_DIR", linked_root), \
+             mock.patch.object(ia_local, "_runtime_binary", return_value=Path("fake-llama-server")):
+            with self.assertRaisesRegex(ValueError, "validação de segurança"):
+                ia_local._start_runtime_locked("imported-0123456789", "win-cpu-x64")
+
+    def test_runtime_activation_rejects_imported_model_file_symlink(self):
+        root = Path(TEMP_DATA) / "activate-model-file-link"
+        model_folder = root / "imported-0123456789"
+        model_folder.mkdir(parents=True, exist_ok=True)
+        outside = root / "outside.gguf"
+        outside.write_bytes(b"GGUF" + b"0" * 8)
+        linked = model_folder / "model.gguf"
+        try:
+            linked.symlink_to(outside)
+        except (OSError, NotImplementedError):
+            self.skipTest("File symlink creation is not available on this platform")
+        installed = [{"id": model_folder.name, "path": str(linked)}]
+        with mock.patch.object(ia_local, "MODELS_DIR", root), \
+             mock.patch.object(ia_local, "_runtime_binary", return_value=Path("fake-llama-server")), \
+             mock.patch.object(ia_local, "_installed_models", return_value=installed):
+            with self.assertRaisesRegex(ValueError, "caminho inseguro"):
+                ia_local._start_runtime_locked(model_folder.name, "win-cpu-x64")
+
     def test_installed_import_discovery_only_accepts_direct_gguf(self):
         root = Path(TEMP_DATA) / "import-discovery-safe"
         model_folder = root / "imported-0123456789"
