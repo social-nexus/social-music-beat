@@ -383,15 +383,28 @@ def _runtime_binary(variant: str) -> Path | None:
 # Recover interrupted runtime swaps only if the published directory is absent.
 _recover_runtime_backups(RUNTIME_DIR, RUNTIME_CATALOG)
 
-def _replace_runtime_directory(staged: Path, final: Path):
-    """Replace a runtime directory without deleting the working install first."""
+def _replace_runtime_directory(staged: Path, final: Path, *, expected_binary: str | None = None):
+    """Swap runtime folders, validating staged and active binaries before discarding backup."""
+    if expected_binary:
+        staged_binary = next((p for p in staged.rglob(expected_binary) if p.is_file()), None)
+        if staged_binary is None:
+            raise ValueError("A instalação temporária não contém o executável esperado.")
     backup = final.with_name(f".{final.name}.backup-{uuid.uuid4().hex}")
     had_existing = final.exists()
     if had_existing:
         os.replace(final, backup)
     try:
         os.replace(staged, final)
+        if expected_binary and not any(p.is_file() for p in final.rglob(expected_binary)):
+            raise ValueError("O runtime ativado não contém o executável esperado.")
     except Exception:
+        # Move the failed activation aside first, then restore the previous install.
+        if final.exists() and staged and not staged.exists():
+            try:
+                os.replace(final, staged)
+            except OSError:
+                # Keep the failed final directory and backup visible for manual recovery.
+                raise
         if had_existing and backup.exists() and not final.exists():
             os.replace(backup, final)
         raise
@@ -428,7 +441,7 @@ def _install_runtime_worker(jid: str, variant: str):
                 staged_binary = staged / binary.relative_to(extracted)
                 if os.name != "nt":
                     staged_binary.chmod(staged_binary.stat().st_mode | 0o111)
-                _replace_runtime_directory(staged, final)
+                _replace_runtime_directory(staged, final, expected_binary=meta['binary'])
             finally:
                 if staged.exists():
                     shutil.rmtree(staged, ignore_errors=True)
