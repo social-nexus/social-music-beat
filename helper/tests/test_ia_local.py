@@ -155,6 +155,45 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertFalse(any(root.glob(".runtime.backup-*")))
 
 
+    def test_runtime_swap_rejects_symlinked_final_directory(self):
+        root = Path(TEMP_DATA) / "runtime-swap-final-symlink"
+        root.mkdir(parents=True, exist_ok=True)
+        external = root / "external"
+        external.mkdir(exist_ok=True)
+        (external / "llama-server").write_text("external", encoding="utf-8")
+        final = root / "runtime"
+        staged = root / ".runtime.staging"
+        staged.mkdir(exist_ok=True)
+        (staged / "llama-server").write_text("candidate", encoding="utf-8")
+        try:
+            final.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlink directory creation is not available in this environment")
+        with self.assertRaisesRegex(ValueError, "link simbólico"):
+            ia_local._replace_runtime_directory(staged, final, expected_binary="llama-server")
+        self.assertEqual((external / "llama-server").read_text(encoding="utf-8"), "external")
+        self.assertTrue(final.is_symlink())
+        self.assertTrue(staged.exists())
+
+    def test_runtime_swap_rejects_symlinked_staged_executable(self):
+        root = Path(TEMP_DATA) / "runtime-swap-staged-exe-symlink"
+        root.mkdir(parents=True, exist_ok=True)
+        final = root / "runtime"
+        staged = root / ".runtime.staging"
+        final.mkdir(exist_ok=True)
+        staged.mkdir(exist_ok=True)
+        (final / "llama-server").write_text("old-install", encoding="utf-8")
+        external = root / "external-executable"
+        external.write_text("outside", encoding="utf-8")
+        try:
+            (staged / "llama-server").symlink_to(external)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlink file creation is not available in this environment")
+        with self.assertRaisesRegex(ValueError, "executável esperado"):
+            ia_local._replace_runtime_directory(staged, final, expected_binary="llama-server")
+        self.assertEqual((final / "llama-server").read_text(encoding="utf-8"), "old-install")
+        self.assertEqual(external.read_text(encoding="utf-8"), "outside")
+
     def test_runtime_swap_rejects_staging_without_expected_binary_and_keeps_old(self):
         root = Path(TEMP_DATA) / "runtime-swap-invalid-stage"
         final = root / "runtime"
