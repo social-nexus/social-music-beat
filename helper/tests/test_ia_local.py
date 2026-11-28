@@ -969,6 +969,45 @@ class RuntimeArchiveHardeningTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Links e tipos especiais"):
             ia_local._extract_archive(archive, dest, "tar.gz")
 
+    def test_zip_repeated_directory_entries_are_allowed(self):
+        import zipfile
+        root = Path(TEMP_DATA) / "zip-repeated-directory"
+        root.mkdir(parents=True, exist_ok=True)
+        archive = root / "dirs.zip"
+        dest = root / "out"
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr("bin/", b"")
+            zf.writestr("bin/", b"")
+            zf.writestr("bin/server.exe", b"server")
+        ia_local._extract_archive(archive, dest, "zip")
+        self.assertEqual((dest / "bin" / "server.exe").read_bytes(), b"server")
+
+    def test_zip_rejects_file_directory_path_collision(self):
+        import zipfile
+        root = Path(TEMP_DATA) / "zip-file-directory-collision"
+        root.mkdir(parents=True, exist_ok=True)
+        archive = root / "collision.zip"
+        dest = root / "out"
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr("bin", b"file")
+            zf.writestr("bin/server.exe", b"child")
+        with self.assertRaisesRegex(ValueError, "conflitantes"):
+            ia_local._extract_archive(archive, dest, "zip")
+
+    def test_zip_rejects_special_file_types(self):
+        import zipfile
+        root = Path(TEMP_DATA) / "zip-special-type"
+        root.mkdir(parents=True, exist_ok=True)
+        archive = root / "special.zip"
+        dest = root / "out"
+        info = zipfile.ZipInfo("bin/fifo")
+        info.create_system = 3
+        info.external_attr = (0o010644 << 16)
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr(info, b"")
+        with self.assertRaisesRegex(ValueError, "Tipos especiais"):
+            ia_local._extract_archive(archive, dest, "zip")
+
     def test_unknown_archive_format_is_rejected(self):
         root = Path(TEMP_DATA) / "unknown-archive"
         root.mkdir(parents=True, exist_ok=True)
