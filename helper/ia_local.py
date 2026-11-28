@@ -480,11 +480,20 @@ def _runtime_binary(variant: str) -> Path | None:
     root = RUNTIME_DIR / variant
     if root.is_symlink() or not root.is_dir():
         return None
-    candidates = [
-        p for p in root.rglob(meta["binary"])
-        if p.is_file() and not p.is_symlink()
-    ]
-    return candidates[0] if candidates else None
+    try:
+        resolved_root = root.resolve()
+        candidates = []
+        for p in root.rglob(meta["binary"]):
+            if p.is_symlink() or not p.is_file():
+                continue
+            try:
+                p.resolve().relative_to(resolved_root)
+            except (OSError, ValueError):
+                continue
+            candidates.append(p)
+        return candidates[0] if candidates else None
+    except OSError:
+        return None
 
 # Recover interrupted runtime swaps only if the published directory is absent.
 _recover_runtime_backups(RUNTIME_DIR, RUNTIME_CATALOG)
