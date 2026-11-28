@@ -154,6 +154,44 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertTrue(staged.exists())
         self.assertFalse(any(root.glob(".runtime.backup-*")))
 
+
+    def test_runtime_swap_rejects_staging_without_expected_binary_and_keeps_old(self):
+        root = Path(TEMP_DATA) / "runtime-swap-invalid-stage"
+        final = root / "runtime"
+        staged = root / ".runtime.staging"
+        final.mkdir(parents=True, exist_ok=True)
+        staged.mkdir(parents=True, exist_ok=True)
+        (final / "llama-server").write_text("old-install", encoding="utf-8")
+        (staged / "wrong-file").write_text("bad", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "executável esperado"):
+            ia_local._replace_runtime_directory(staged, final, expected_binary="llama-server")
+        self.assertEqual((final / "llama-server").read_text(encoding="utf-8"), "old-install")
+        self.assertTrue(staged.exists())
+
+    def test_runtime_swap_validates_active_binary_before_backup_cleanup(self):
+        root = Path(TEMP_DATA) / "runtime-swap-validation"
+        final = root / "runtime"
+        staged = root / ".runtime.staging"
+        final.mkdir(parents=True, exist_ok=True)
+        staged.mkdir(parents=True, exist_ok=True)
+        (final / "llama-server").write_text("previous", encoding="utf-8")
+        (staged / "llama-server").write_text("new", encoding="utf-8")
+        real_replace = os.replace
+        calls = 0
+        def corrupt_activation(source, destination):
+            nonlocal calls
+            calls += 1
+            result = real_replace(source, destination)
+            if calls == 2:
+                (Path(destination) / "llama-server").unlink()
+            return result
+        with mock.patch.object(ia_local.os, "replace", side_effect=corrupt_activation):
+            with self.assertRaisesRegex(ValueError, "runtime ativado"):
+                ia_local._replace_runtime_directory(staged, final, expected_binary="llama-server")
+        self.assertEqual((final / "llama-server").read_text(encoding="utf-8"), "previous")
+        self.assertTrue(staged.exists())
+        self.assertFalse(any(root.glob(".runtime.backup-*")))
+
     def test_runtime_replacement_activates_new_install_and_cleans_backup(self):
         root = Path(TEMP_DATA) / "runtime-swap-success"
         final = root / "runtime"
