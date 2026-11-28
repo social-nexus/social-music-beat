@@ -572,6 +572,40 @@ class ModelImportAtomicityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(list(root.glob(".*.staging")), [])
 
 
+class ModelSymlinkSafetyTests(unittest.TestCase):
+    def test_installed_models_skips_symlinked_catalog_folder(self):
+        root = Path(TEMP_DATA) / "models-symlink-catalog"
+        root.mkdir(parents=True, exist_ok=True)
+        outside = Path(TEMP_DATA) / "outside-catalog-model"
+        outside.mkdir(parents=True, exist_ok=True)
+        model_meta = ia_local.MODEL_CATALOG["qwen3-4b-q4km"]
+        outside_file = outside / model_meta["filename"]
+        outside_file.write_bytes(b"GGUF" + b"z" * 16)
+        link = root / "qwen3-4b-q4km"
+        try:
+            link.symlink_to(outside, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlink creation not supported in this environment")
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            installed = ia_local._installed_models()
+        self.assertNotIn("qwen3-4b-q4km", [item["id"] for item in installed])
+
+    def test_installed_models_skips_symlinked_import_folder(self):
+        root = Path(TEMP_DATA) / "models-symlink-imported"
+        root.mkdir(parents=True, exist_ok=True)
+        outside = Path(TEMP_DATA) / "outside-imported-model"
+        outside.mkdir(parents=True, exist_ok=True)
+        (outside / "external.gguf").write_bytes(b"GGUF" + b"y" * 16)
+        link = root / "imported-abcdef1234"
+        try:
+            link.symlink_to(outside, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlink creation not supported in this environment")
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            installed = ia_local._installed_models()
+        self.assertNotIn("imported-abcdef1234", [item["id"] for item in installed])
+
+
 class ModelDeleteSafetyTests(unittest.TestCase):
     def _request(self):
         from starlette.requests import Request
