@@ -448,7 +448,10 @@ def _install_runtime_worker(jid: str, variant: str):
                 staged_binary = staged / binary.relative_to(extracted)
                 if os.name != "nt":
                     staged_binary.chmod(staged_binary.stat().st_mode | 0o111)
-                _replace_runtime_directory(staged, final, expected_binary=meta['binary'])
+                with _RUNTIME_OPERATION_LOCK:
+                    # Serialize final swaps when duplicate install requests race.
+                    if _runtime_binary(variant) is None:
+                        _replace_runtime_directory(staged, final, expected_binary=meta['binary'])
             finally:
                 if staged.exists():
                     shutil.rmtree(staged, ignore_errors=True)
