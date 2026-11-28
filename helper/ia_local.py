@@ -867,9 +867,7 @@ def _safe_import_filename(raw: str) -> str:
 @router.post("/models/import")
 async def import_model(request: Request, file: UploadFile = File(...)):
     _guard_local_request(request)
-    filename = Path(str(file.filename or "").replace(chr(92), "/")).name
-    if not filename.lower().endswith(".gguf") or filename in ("", ".", ".."):
-        raise HTTPException(400, "Selecione um arquivo .gguf.")
+    filename = _safe_import_filename(str(file.filename or ""))
     model_id = "imported-" + uuid.uuid4().hex[:10]
     folder = MODELS_DIR / model_id
     staged_folder = MODELS_DIR / f".{model_id}.staging"
