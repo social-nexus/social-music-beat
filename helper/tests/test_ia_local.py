@@ -590,6 +590,27 @@ class ModelSymlinkSafetyTests(unittest.TestCase):
             installed = ia_local._installed_models()
         self.assertNotIn("qwen3-4b-q4km", [item["id"] for item in installed])
 
+    def test_installed_models_skips_import_with_invalid_gguf_header(self):
+        root = Path(TEMP_DATA) / "models-invalid-import-header"
+        root.mkdir(parents=True, exist_ok=True)
+        folder = root / "imported-abcdef1234"
+        folder.mkdir()
+        (folder / "broken.gguf").write_bytes(b"NOPE" + b"x" * 32)
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            installed = ia_local._installed_models()
+        self.assertNotIn("imported-abcdef1234", [item["id"] for item in installed])
+
+    def test_installed_models_skips_import_with_ambiguous_gguf_files(self):
+        root = Path(TEMP_DATA) / "models-ambiguous-import"
+        root.mkdir(parents=True, exist_ok=True)
+        folder = root / "imported-abcdef1234"
+        folder.mkdir()
+        (folder / "one.gguf").write_bytes(b"GGUF" + b"x" * 32)
+        (folder / "two.gguf").write_bytes(b"GGUF" + b"y" * 32)
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            installed = ia_local._installed_models()
+        self.assertNotIn("imported-abcdef1234", [item["id"] for item in installed])
+
     def test_installed_models_skips_symlinked_import_folder(self):
         root = Path(TEMP_DATA) / "models-symlink-imported"
         root.mkdir(parents=True, exist_ok=True)
