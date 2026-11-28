@@ -343,16 +343,34 @@ def _safe_member_path(root: Path, member_name: str) -> Path:
 
 
 def _extract_archive(archive: Path, dest: Path, kind: str):
-    """Extract runtime archives with bounded size, no links, and no duplicate paths."""
+    """Extract bounded runtime archives while rejecting path/type collisions and links."""
     dest.mkdir(parents=True, exist_ok=True)
-    seen = set()
+    seen: dict[str, str] = {}
 
-    def register(name: str, size: int):
+    def register(name: str, size: int, entry_kind: str):
         target = _safe_member_path(dest, name)
-        key = str(target.relative_to(dest.resolve())).casefold()
-        if key in seen:
-            raise ValueError("O pacote contém caminhos duplicados ou conflitantes.")
-        seen.add(key)
+        relative = target.relative_to(dest.resolve())
+        key = str(relative).casefold()
+        # Explicitly track parent directories to prevent file/directory collisions.
+        parents = []
+        current = relative.parent
+        while str(current) not in ("", "."):
+            parents.append(str(current).casefold())
+            current = current.parent
+        for parent_key in parents:
+            if seen.get(parent_key) == "file":
+                raise ValueError("O pacote contém caminhos duplicados ou conflitantes.")
+        existing = seen.get(key)
+        if existing is not None:
+            if existing != "dir" or entry_kind != "dir":
+                raise ValueError("O pacote contém caminhos duplicados ou conflitantes.")
+            # Repeated directory records are common and harmless.
+        else:
+            seen[key] = entry_kind
+        if entry_kind == "file":
+            prefix = key + "/"
+            if any(other.startswith(prefix) for other in seen if other != key):
+                raise ValueError("O pacote contém caminhos duplicados ou conflitantes.")
         if size < 0 or size > 1024**3:
             raise ValueError("Um arquivo do pacote excede o limite de extração.")
         return target
@@ -363,11 +381,19 @@ def _extract_archive(archive: Path, dest: Path, kind: str):
             if len(members) > 20000 or sum(x.file_size for x in members) > 2 * 1024**3:
                 raise ValueError("O pacote compactado excede os limites de extração.")
             for item in members:
-                target = register(item.filename, item.file_size)
+                is_directory = item.is_dir()
                 mode = (item.external_attr >> 16) & 0xFFFF
-                if mode and (mode & 0o170000) == 0o120000:
+                file_type = mode & 0o170000
+                if file_type == 0o120000:
                     raise ValueError("Links simbólicos não são permitidos no pacote do runtime.")
-                if item.is_dir():
+                if file_type and file_type not in (0o040000, 0o100000):
+                    raise ValueError("Tipos especiais não são permitidos no pacote do runtime.")
+                if file_type == 0o040000 and not is_directory:
+                    raise ValueError("Tipo de diretório inconsistente no pacote.")
+                if file_type == 0o100000 and is_directory:
+                    raise ValueError("Tipo de arquivo inconsistente no pacote.")
+                target = register(item.filename, item.file_size, "dir" if is_directory else "file")
+                if is_directory:
                     target.mkdir(parents=True, exist_ok=True)
                     continue
                 if item.flag_bits & 0x1:
@@ -381,9 +407,9 @@ def _extract_archive(archive: Path, dest: Path, kind: str):
             if len(members) > 20000 or sum(x.size for x in members if x.isfile()) > 2 * 1024**3:
                 raise ValueError("O pacote compactado excede os limites de extração.")
             for item in members:
-                target = register(item.name, item.size if item.isfile() else 0)
                 if item.issym() or item.islnk() or item.isdev() or not (item.isfile() or item.isdir()):
                     raise ValueError("Links e tipos especiais não são permitidos no pacote do runtime.")
+                target = register(item.name, item.size if item.isfile() else 0, "file" if item.isfile() else "dir")
                 if item.isdir():
                     target.mkdir(parents=True, exist_ok=True)
                 elif item.isfile():
