@@ -11,6 +11,30 @@ import ia_local
 
 
 class RuntimeCatalogTests(unittest.TestCase):
+    def test_safe_model_file_rejects_paths_outside_model_directory(self):
+        root = Path(TEMP_DATA) / "safe-model-path"
+        model_folder = root / "model"
+        outside = root / "outside.gguf"
+        model_folder.mkdir(parents=True, exist_ok=True)
+        outside.write_bytes(b"GGUF")
+        self.assertFalse(ia_local._safe_model_file(model_folder, outside))
+        inside = model_folder / "model.gguf"
+        inside.write_bytes(b"GGUF")
+        self.assertTrue(ia_local._safe_model_file(model_folder, inside))
+
+    def test_safe_model_file_rejects_symlinked_model_file(self):
+        root = Path(TEMP_DATA) / "safe-model-symlink"
+        model_folder = root / "model"
+        model_folder.mkdir(parents=True, exist_ok=True)
+        outside = root / "outside.gguf"
+        outside.write_bytes(b"GGUF")
+        linked = model_folder / "linked.gguf"
+        try:
+            linked.symlink_to(outside)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlink creation is not available on this platform")
+        self.assertFalse(ia_local._safe_model_file(model_folder, linked))
+
     def test_safe_import_filename_normalizes_cross_platform_names(self):
         self.assertEqual(ia_local._safe_import_filename("folder\\unsafe name.gguf"), "unsafe_name.gguf")
         self.assertEqual(ia_local._safe_import_filename("C:\\models\\model.gguf"), "model.gguf")
