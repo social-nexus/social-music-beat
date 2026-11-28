@@ -496,6 +496,8 @@ def _publish_model_files(staged: Path, target: Path, metadata_staged: Path, meta
     metadata_backup = metadata.with_name(f".{metadata.name}.{token}.backup")
     target_backed_up = False
     metadata_backed_up = False
+    target_published = False
+    metadata_published = False
     try:
         if target.exists():
             os.replace(target, target_backup)
@@ -504,10 +506,15 @@ def _publish_model_files(staged: Path, target: Path, metadata_staged: Path, meta
             os.replace(metadata, metadata_backup)
             metadata_backed_up = True
         os.replace(staged, target)
+        target_published = True
         os.replace(metadata_staged, metadata)
+        metadata_published = True
     except Exception:
-        target.unlink(missing_ok=True)
-        metadata.unlink(missing_ok=True)
+        # Remove only files published by this transaction; preserve originals.
+        if target_published:
+            target.unlink(missing_ok=True)
+        if metadata_published:
+            metadata.unlink(missing_ok=True)
         if target_backed_up:
             os.replace(target_backup, target)
         if metadata_backed_up:
