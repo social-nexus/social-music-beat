@@ -805,14 +805,19 @@ def _start_runtime(model_id: str, variant: str, gpu_layers: int = 0):
 
 def _start_runtime_locked(model_id: str, variant: str, gpu_layers: int = 0):
     global PROCESS, ACTIVE_MODEL, ACTIVE_VARIANT
+    try:
+        _assert_models_root_safe()
+    except ValueError as exc:
+        raise ValueError("A pasta de modelos não passou na validação de segurança.") from exc
     if variant not in RUNTIME_CATALOG or _runtime_binary(variant) is None:
         raise ValueError("Instale primeiro o runtime escolhido.")
-    if model_id not in {m["id"] for m in _installed_models()}:
+    installed = next((m for m in _installed_models() if m["id"] == model_id), None)
+    if installed is None:
         raise ValueError("Baixe ou importe um modelo GGUF antes de ativá-lo.")
-    model_path = _model_file(model_id) if model_id in MODEL_CATALOG else next(
-        Path(m["path"]) for m in _installed_models() if m["id"] == model_id)
-    if not model_path.is_file() or model_path.suffix.lower() != ".gguf":
-        raise ValueError("Arquivo GGUF inválido.")
+    model_path = Path(installed["path"])
+    model_folder = MODELS_DIR / model_id
+    if model_path.suffix.lower() != ".gguf" or not _safe_model_file(model_folder, model_path):
+        raise ValueError("Arquivo GGUF inválido ou caminho inseguro.")
     _stop_runtime()
     time.sleep(0.25)
     with socket.socket() as probe:
