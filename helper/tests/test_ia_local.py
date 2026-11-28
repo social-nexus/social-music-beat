@@ -814,6 +814,27 @@ class ModelImportAtomicityTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue((folder / "model.json").is_file())
         self.assertEqual(list(root.glob(".*.staging")), [])
 
+    async def test_import_revalidates_storage_before_publish_and_cleans_staging(self):
+        root = Path(TEMP_DATA) / "model-import-root-revalidation"
+        root.mkdir(parents=True, exist_ok=True)
+        real_guard = ia_local._assert_models_root_safe
+        calls = 0
+
+        def reject_publish_root():
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise ValueError("storage root changed during upload")
+            return real_guard()
+
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            with mock.patch.object(ia_local, "_assert_models_root_safe", side_effect=reject_publish_root):
+                with self.assertRaisesRegex(ValueError, "storage root changed"):
+                    await ia_local.import_model(await self._request(), await self._upload())
+        self.assertEqual(calls, 2)
+        self.assertEqual(list(root.glob("imported-*")), [])
+        self.assertEqual(list(root.glob(".*.staging")), [])
+
     async def test_invalid_import_leaves_no_visible_or_staging_folder(self):
         root = Path(TEMP_DATA) / "model-import-invalid"
         root.mkdir(parents=True, exist_ok=True)
