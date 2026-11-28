@@ -877,3 +877,44 @@ class InterruptedInstallRecoveryTests(unittest.TestCase):
         self.assertFalse(stale.exists())
         self.assertTrue(recent.exists())
         self.assertTrue(published.exists())
+
+
+class RuntimeSymlinkSafetyTests(unittest.TestCase):
+    def test_runtime_discovery_rejects_symlink_binary_and_root(self):
+        root = Path(TEMP_DATA) / "runtime-symlink-safety"
+        root.mkdir(parents=True, exist_ok=True)
+        variant = "win-cpu-x64"
+        runtime_root = root / variant
+        runtime_root.mkdir(exist_ok=True)
+        outside = root / "outside.exe"
+        outside.write_bytes(b"outside")
+        link = runtime_root / "llama-server.exe"
+        try:
+            link.symlink_to(outside)
+        except (OSError, NotImplementedError) as exc:
+            self.skipTest(f"Symlink creation unavailable: {exc}")
+        old_runtime_dir = ia_local.RUNTIME_DIR
+        try:
+            ia_local.RUNTIME_DIR = root
+            self.assertIsNone(ia_local._runtime_binary(variant))
+            runtime_root.rename(root / "real-runtime")
+            (root / variant).symlink_to(root / "real-runtime", target_is_directory=True)
+            self.assertIsNone(ia_local._runtime_binary(variant))
+        finally:
+            ia_local.RUNTIME_DIR = old_runtime_dir
+
+    def test_runtime_backup_recovery_rejects_symlink_backup(self):
+        root = Path(TEMP_DATA) / "runtime-symlink-backup"
+        root.mkdir(parents=True, exist_ok=True)
+        target = root / "real-backup"
+        target.mkdir(exist_ok=True)
+        (target / "llama-server").write_bytes(b"runtime")
+        link = root / ".variant.backup-link"
+        try:
+            link.symlink_to(target, target_is_directory=True)
+        except (OSError, NotImplementedError) as exc:
+            self.skipTest(f"Symlink creation unavailable: {exc}")
+        restored = ia_local._recover_runtime_backups(root, {"variant": {"binary": "llama-server"}})
+        self.assertEqual(restored, 0)
+        self.assertTrue(link.is_symlink())
+        self.assertTrue(target.exists())
