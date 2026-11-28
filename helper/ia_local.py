@@ -980,6 +980,15 @@ async def import_model(request: Request, file: UploadFile = File(...)):
         metadata_tmp = staged_folder / ".model.json.tmp"
         metadata_tmp.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
         os.replace(metadata_tmp, staged_folder / "model.json")
+        # Revalidate storage immediately before publishing after the streamed upload.
+        _assert_models_root_safe()
+        if staged_folder.is_symlink() or not staged_folder.is_dir():
+            raise ValueError("A pasta temporária de importação não passou na validação de segurança.")
+        try:
+            if staged_folder.resolve().parent != MODELS_DIR.resolve():
+                raise ValueError("A pasta temporária de importação foi redirecionada.")
+        except OSError as exc:
+            raise ValueError("Não foi possível validar a pasta temporária de importação.") from exc
         # A pasta só fica visível ao gerenciador depois de arquivo e metadados validados.
         os.replace(staged_folder, folder)
     except Exception:
