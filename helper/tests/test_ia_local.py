@@ -335,6 +335,28 @@ class RuntimeCatalogTests(unittest.TestCase):
         self.assertTrue(bad.exists())
 
 
+    def test_runtime_binary_rejects_symlink_escape_and_accepts_internal_binary(self):
+        root = Path(TEMP_DATA) / "runtime-binary-safe"
+        variant = "win-cpu-x64"
+        install = root / variant
+        external = root / "external"
+        install.mkdir(parents=True, exist_ok=True)
+        external.mkdir(parents=True, exist_ok=True)
+        binary_name = ia_local.RUNTIME_CATALOG[variant]["binary"]
+        internal = install / binary_name
+        internal.write_text("runtime", encoding="utf-8")
+        with mock.patch.object(ia_local, "RUNTIME_DIR", root):
+            self.assertEqual(ia_local._runtime_binary(variant), internal)
+            internal.unlink()
+            external_binary = external / binary_name
+            external_binary.write_text("external", encoding="utf-8")
+            link_dir = install / "linked"
+            try:
+                link_dir.symlink_to(external, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("Directory symlink creation is not available on this platform")
+            self.assertIsNone(ia_local._runtime_binary(variant))
+
     def test_runtime_install_worker_swap_is_serialized_and_skips_if_already_installed(self):
         # Worker rechecks runtime state under the operation lock before replacing files.
         source = Path(ia_local.__file__).read_text(encoding='utf-8')
