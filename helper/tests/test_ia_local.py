@@ -718,6 +718,35 @@ class ModelDeleteSafetyTests(unittest.TestCase):
         self.assertEqual(list(root.glob(".*.deleting-*")), [])
 
 
+class ModelDeleteRecoveryTests(unittest.TestCase):
+    def _quarantine(self, root, model_id="imported-0123456789", valid=True):
+        q = root / (f".{model_id}.deleting-" + "a" * 32)
+        q.mkdir(parents=True, exist_ok=True)
+        (q / "model.gguf").write_bytes((b"GGUF" if valid else b"NOPE") + b"x" * 32)
+        return q
+
+    def test_valid_quarantine_restored_when_original_missing(self):
+        root = Path(TEMP_DATA) / "model-delete-recovery"
+        root.mkdir(parents=True, exist_ok=True)
+        q = self._quarantine(root)
+        self.assertEqual(ia_local._recover_model_delete_quarantines(root, ia_local.MODEL_CATALOG), 1)
+        self.assertTrue((root / "imported-0123456789" / "model.gguf").is_file())
+        self.assertFalse(q.exists())
+
+    def test_quarantine_preserved_when_final_exists_or_candidate_invalid(self):
+        root = Path(TEMP_DATA) / "model-delete-recovery-preserve"
+        root.mkdir(parents=True, exist_ok=True)
+        q = self._quarantine(root)
+        final = root / "imported-0123456789"
+        final.mkdir()
+        self.assertEqual(ia_local._recover_model_delete_quarantines(root, ia_local.MODEL_CATALOG), 0)
+        self.assertTrue(q.exists())
+        final.rmdir()
+        (q / "model.gguf").write_bytes(b"NOPE" + b"x" * 32)
+        self.assertEqual(ia_local._recover_model_delete_quarantines(root, ia_local.MODEL_CATALOG), 0)
+        self.assertTrue(q.exists())
+
+
 class ModelOperationLockTests(unittest.TestCase):
     def test_same_model_operations_are_serialized_and_registry_is_cleaned(self):
         import threading
