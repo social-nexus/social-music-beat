@@ -11,6 +11,25 @@ import ia_local
 
 
 class RuntimeCatalogTests(unittest.TestCase):
+    def test_models_root_safe_accepts_normal_directory(self):
+        root = Path(TEMP_DATA) / "models-root-normal"
+        root.mkdir(parents=True, exist_ok=True)
+        with mock.patch.object(ia_local, "MODELS_DIR", root):
+            self.assertEqual(ia_local._assert_models_root_safe(), root.resolve())
+
+    def test_models_root_safe_rejects_symlinked_directory(self):
+        root = Path(TEMP_DATA) / "models-root-symlink"
+        external = root / "external"
+        external.mkdir(parents=True, exist_ok=True)
+        link = root / "models"
+        try:
+            link.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation is not available on this platform")
+        with mock.patch.object(ia_local, "MODELS_DIR", link):
+            with self.assertRaisesRegex(ValueError, "link simbólico"):
+                ia_local._assert_models_root_safe()
+
     def test_installed_import_discovery_only_accepts_direct_gguf(self):
         root = Path(TEMP_DATA) / "import-discovery-safe"
         model_folder = root / "imported-0123456789"
