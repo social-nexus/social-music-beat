@@ -30,6 +30,40 @@ class RuntimeCatalogTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "link simbólico"):
                 ia_local._assert_runtime_root_safe()
 
+    def test_runtime_install_worker_refuses_symlinked_runtime_root(self):
+        root = Path(TEMP_DATA) / "runtime-install-root-link"
+        external = root / "external"
+        external.mkdir(parents=True, exist_ok=True)
+        linked = root / "runtime"
+        try:
+            linked.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation is not available on this platform")
+        jid = ia_local._job("runtime")
+        with mock.patch.object(ia_local, "RUNTIME_DIR", linked), \
+             mock.patch.object(ia_local, "_download") as download:
+            ia_local._install_runtime_worker(jid, "win-cpu-x64")
+        self.assertEqual(ia_local.JOBS[jid]["status"], "error")
+        self.assertIn("link simbólico", ia_local.JOBS[jid]["message"])
+        download.assert_not_called()
+
+    def test_model_download_worker_refuses_symlinked_models_root(self):
+        root = Path(TEMP_DATA) / "model-download-root-link"
+        external = root / "external"
+        external.mkdir(parents=True, exist_ok=True)
+        linked = root / "models"
+        try:
+            linked.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation is not available on this platform")
+        jid = ia_local._job("model")
+        with mock.patch.object(ia_local, "MODELS_DIR", linked), \
+             mock.patch.object(ia_local, "_hf_file_digest") as digest:
+            ia_local._download_model_worker(jid, "qwen3-4b-q4km")
+        self.assertEqual(ia_local.JOBS[jid]["status"], "error")
+        self.assertIn("link simbólico", ia_local.JOBS[jid]["message"])
+        digest.assert_not_called()
+
     def test_models_root_safe_accepts_normal_directory(self):
         root = Path(TEMP_DATA) / "models-root-normal"
         root.mkdir(parents=True, exist_ok=True)
