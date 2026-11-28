@@ -448,7 +448,12 @@ def _extract_archive(archive: Path, dest: Path, kind: str):
 def _recover_runtime_backups(root: Path, catalog: dict) -> int:
     """Restore a valid backup only when its final runtime folder is missing."""
     restored = 0
-    if not root.is_dir():
+    if root.is_symlink() or not root.is_dir():
+        return 0
+    try:
+        if root.resolve() != root.absolute():
+            return 0
+    except OSError:
         return 0
     for variant, meta in catalog.items():
         final = root / variant
