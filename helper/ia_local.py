@@ -103,8 +103,51 @@ def _cleanup_stale_model_downloads(root: Path, *, older_than_seconds: int = 48 *
 
 # Startup cleanup is age-gated (48h) and restricted to abandoned hidden staging artifacts.
 _cleanup_stale_model_downloads(MODELS_DIR)
-_cleanup_stale_model_import_staging(MODELS_DIR)
+def _recover_model_delete_quarantines(root: Path, catalog: dict) -> int:
+    """Restore a valid quarantined model only when its published folder is missing.
 
+    Quarantines are never purged automatically: invalid or ambiguous recovery
+    candidates remain hidden for manual inspection.
+    """
+    restored = 0
+    if not root.is_dir():
+        return 0
+    pattern = re.compile(r"^\\.(?P<model>[^/]+)\\.deleting-[0-9a-f]{32}$")
+    for quarantine in root.iterdir():
+        match = pattern.fullmatch(quarantine.name)
+        if not match or quarantine.is_symlink() or not quarantine.is_dir():
+            continue
+        model_id = match.group("model")
+        if model_id not in catalog and not re.fullmatch(r"imported-[0-9a-f]{10}", model_id):
+            continue
+        final = root / model_id
+        if final.exists() or final.is_symlink():
+            continue
+        try:
+            if model_id in catalog:
+                candidates = [quarantine / catalog[model_id]["filename"]]
+            else:
+                candidates = list(quarantine.glob("*.gguf"))
+            valid = False
+            for candidate in candidates:
+                if candidate.is_symlink() or not candidate.is_file():
+                    continue
+                with candidate.open("rb") as stream:
+                    if stream.read(4) == b"GGUF":
+                        valid = True
+                        break
+            if not valid:
+                continue
+            os.replace(quarantine, final)
+            restored += 1
+        except OSError:
+            # Recovery is best-effort; keep quarantine untouched on failure.
+            continue
+    return restored
+
+
+_cleanup_stale_model_import_staging(MODELS_DIR)
+# Restore valid deletion quarantines only if the original model folder is missing.\n_recover_model_delete_quarantines(MODELS_DIR, MODEL_CATALOG)\n
 RUNTIME_CATALOG = {
     "win-cpu-x64": {
         "label": "Windows x64 — CPU",
