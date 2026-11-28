@@ -918,3 +918,59 @@ class RuntimeSymlinkSafetyTests(unittest.TestCase):
         self.assertEqual(restored, 0)
         self.assertTrue(link.is_symlink())
         self.assertTrue(target.exists())
+
+
+class RuntimeArchiveHardeningTests(unittest.TestCase):
+    def test_member_path_rejects_drive_qualified_and_nul_paths(self):
+        root = Path(TEMP_DATA) / "archive-path-validation"
+        with self.assertRaises(ValueError):
+            ia_local._safe_member_path(root, "C:/outside.exe")
+        with self.assertRaises(ValueError):
+            ia_local._safe_member_path(root, "bad\\x00name")
+
+    def test_zip_extraction_rejects_duplicate_case_insensitive_paths(self):
+        import zipfile
+        root = Path(TEMP_DATA) / "zip-duplicate-path"
+        root.mkdir(parents=True, exist_ok=True)
+        archive = root / "duplicate.zip"
+        dest = root / "out"
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr("bin/llama-server.exe", b"one")
+            zf.writestr("BIN/LLAMA-SERVER.EXE", b"two")
+        with self.assertRaisesRegex(ValueError, "duplicados"):
+            ia_local._extract_archive(archive, dest, "zip")
+
+    def test_zip_extraction_rejects_symlink_entries(self):
+        import zipfile
+        root = Path(TEMP_DATA) / "zip-symlink"
+        root.mkdir(parents=True, exist_ok=True)
+        archive = root / "link.zip"
+        dest = root / "out"
+        info = zipfile.ZipInfo("bin/link")
+        info.create_system = 3
+        info.external_attr = (0o120777 << 16)
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr(info, "../outside")
+        with self.assertRaisesRegex(ValueError, "Links simbólicos"):
+            ia_local._extract_archive(archive, dest, "zip")
+
+    def test_tar_extraction_rejects_symlink_members(self):
+        import io
+        import tarfile
+        root = Path(TEMP_DATA) / "tar-symlink"
+        root.mkdir(parents=True, exist_ok=True)
+        archive = root / "link.tar.gz"
+        dest = root / "out"
+        with tarfile.open(archive, "w:gz") as tf:
+            info = tarfile.TarInfo("bin/link")
+            info.type = tarfile.SYMTYPE
+            info.linkname = "../../outside"
+            tf.addfile(info)
+        with self.assertRaisesRegex(ValueError, "Links e tipos especiais"):
+            ia_local._extract_archive(archive, dest, "tar.gz")
+
+    def test_unknown_archive_format_is_rejected(self):
+        root = Path(TEMP_DATA) / "unknown-archive"
+        root.mkdir(parents=True, exist_ok=True)
+        with self.assertRaisesRegex(ValueError, "Formato"):
+            ia_local._extract_archive(root / "unknown", root / "out", "rar")
