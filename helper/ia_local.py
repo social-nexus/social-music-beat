@@ -328,48 +328,63 @@ def _download(url: str, dest: Path, expected_size: int | None, jid: str):
         raise
 
 def _safe_member_path(root: Path, member_name: str) -> Path:
-    pure = PurePosixPath(member_name.replace("\\", "/"))
-    if pure.is_absolute() or any(part in ("..", "") for part in pure.parts):
+    """Resolve archive members while rejecting traversal and drive-qualified paths."""
+    if not isinstance(member_name, str) or not member_name or "\\x00" in member_name:
+        raise ValueError("Nome de arquivo inválido no pacote do runtime.")
+    normalized = member_name.replace("\\", "/")
+    pure = PurePosixPath(normalized)
+    if pure.is_absolute() or (pure.parts and ":" in pure.parts[0]) or any(part == ".." for part in pure.parts):
         raise ValueError("Arquivo inseguro no pacote do runtime.")
     target = (root / Path(*pure.parts)).resolve()
-    if root.resolve() not in target.parents and target != root.resolve():
+    resolved_root = root.resolve()
+    if resolved_root not in target.parents and target != resolved_root:
         raise ValueError("Caminho fora da pasta de instalação.")
     return target
 
+
 def _extract_archive(archive: Path, dest: Path, kind: str):
+    """Extract runtime archives with bounded size, no links, and no duplicate paths."""
     dest.mkdir(parents=True, exist_ok=True)
+    seen = set()
+
+    def register(name: str, size: int):
+        target = _safe_member_path(dest, name)
+        key = str(target.relative_to(dest.resolve())).casefold()
+        if key in seen:
+            raise ValueError("O pacote contém caminhos duplicados ou conflitantes.")
+        seen.add(key)
+        if size < 0 or size > 1024**3:
+            raise ValueError("Um arquivo do pacote excede o limite de extração.")
+        return target
+
     if kind == "zip":
         with zipfile.ZipFile(archive) as zf:
             members = zf.infolist()
             if len(members) > 20000 or sum(x.file_size for x in members) > 2 * 1024**3:
                 raise ValueError("O pacote compactado excede os limites de extração.")
             for item in members:
-                target = _safe_member_path(dest, item.filename)
+                target = register(item.filename, item.file_size)
+                mode = (item.external_attr >> 16) & 0xFFFF
+                if mode and (mode & 0o170000) == 0o120000:
+                    raise ValueError("Links simbólicos não são permitidos no pacote do runtime.")
                 if item.is_dir():
                     target.mkdir(parents=True, exist_ok=True)
                     continue
+                if item.flag_bits & 0x1:
+                    raise ValueError("Arquivos ZIP criptografados não são aceitos.")
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with zf.open(item) as src, target.open("wb") as out:
                     shutil.copyfileobj(src, out)
-    else:
+    elif kind == "tar.gz":
         with tarfile.open(archive, "r:gz") as tf:
             members = tf.getmembers()
             if len(members) > 20000 or sum(x.size for x in members if x.isfile()) > 2 * 1024**3:
                 raise ValueError("O pacote compactado excede os limites de extração.")
             for item in members:
-                target = _safe_member_path(dest, item.name)
-                if item.isdev() or item.islnk():
-                    continue
-                if item.issym():
-                    link = PurePosixPath(item.linkname.replace("\\", "/"))
-                    if link.is_absolute():
-                        raise ValueError("Link simbólico inseguro no pacote.")
-                    resolved_link = (target.parent / Path(*link.parts)).resolve()
-                    if dest.resolve() not in resolved_link.parents and resolved_link != dest.resolve():
-                        raise ValueError("Link simbólico fora da pasta de instalação.")
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    target.symlink_to(item.linkname)
-                elif item.isdir():
+                target = register(item.name, item.size if item.isfile() else 0)
+                if item.issym() or item.islnk() or item.isdev() or not (item.isfile() or item.isdir()):
+                    raise ValueError("Links e tipos especiais não são permitidos no pacote do runtime.")
+                if item.isdir():
                     target.mkdir(parents=True, exist_ok=True)
                 elif item.isfile():
                     target.parent.mkdir(parents=True, exist_ok=True)
@@ -377,6 +392,8 @@ def _extract_archive(archive: Path, dest: Path, kind: str):
                     if src:
                         with src, target.open("wb") as out:
                             shutil.copyfileobj(src, out)
+    else:
+        raise ValueError("Formato de pacote do runtime desconhecido.")
 
 def _recover_runtime_backups(root: Path, catalog: dict) -> int:
     """Restore a valid backup only when its final runtime folder is missing."""
